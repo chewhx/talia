@@ -2,6 +2,8 @@ import { openai } from "@ai-sdk/openai";
 import { createDataStreamResponse, streamText, UIMessage } from "ai";
 import { tools } from "./tools";
 import { processToolCalls } from "./utils";
+import { env } from "@/env";
+import { Resend } from "resend";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -39,9 +41,25 @@ export async function POST(req: Request) {
               });
               return `Posted to Parents Gateway: ${result}`;
             },
-            sendEmail: async ({ emailAddresses, emailContent }) => {
-              console.log({ emailAddresses, emailContent });
-              return `Sent email to ${JSON.stringify(emailAddresses)}`;
+            sendEmail: async ({
+              emailAddresses,
+              emailContent,
+              emailSubject,
+            }) => {
+              if (emailAddresses.length) {
+                const resend = new Resend(env.RESEND_API_KEY);
+
+                await resend.emails.send({
+                  from: "Talia<me@chewhx.com>",
+                  to: emailAddresses,
+                  subject: emailSubject,
+                  text: emailContent,
+                });
+              }
+
+              return `Inform the user: "Email sent to ${emailAddresses.join(
+                ", "
+              )}"`;
             },
           }
         );

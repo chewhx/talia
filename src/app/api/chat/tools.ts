@@ -19,8 +19,11 @@ const postToParentsGateway = tool({
 const sendEmail = tool({
   description: "Send an email to a specified recipient.",
   parameters: z.object({
-    emailContent: z.string(),
-    emailAddresses: z.array(z.string()),
+    emailContent: z.string().describe("Markdown content of the email"),
+    emailSubject: z
+      .string()
+      .describe("Email subject that defines the email content"),
+    emailAddresses: z.array(z.string()).describe("List of email addresses"),
   }),
   // no execute function, we want human in the loop
 });
@@ -36,7 +39,6 @@ const retrieveResource = tool({
       ),
   }),
   execute: async ({ query }) => {
-    console.log({ query });
     const awsBedrockClient = new BedrockAgentRuntimeClient({});
 
     const retrieveCommand = new RetrieveCommand({
