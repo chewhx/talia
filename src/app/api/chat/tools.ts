@@ -1,3 +1,7 @@
+import {
+  BedrockAgentRuntimeClient,
+  RetrieveCommand,
+} from "@aws-sdk/client-bedrock-agent-runtime";
 import { tool } from "ai";
 import { z } from "zod";
 import { APPROVAL, PG_POSTS_TYPE } from "./utils";
@@ -21,9 +25,44 @@ const sendEmail = tool({
   // no execute function, we want human in the loop
 });
 
+const retrieveResource = tool({
+  description:
+    "Retrieve a relevant resource from database, should the user mention to reference to past materials",
+  parameters: z.object({
+    query: z
+      .string()
+      .describe(
+        "the user prompt or query string to search the database for relevant resources"
+      ),
+  }),
+  execute: async ({ query }) => {
+    console.log({ query });
+    const awsBedrockClient = new BedrockAgentRuntimeClient({});
+
+    const retrieveCommand = new RetrieveCommand({
+      knowledgeBaseId: process.env.AWS_BEDROCK_KNOWLEDGEBASE_ID,
+      retrievalQuery: {
+        text: query,
+      },
+    });
+
+    const response = await awsBedrockClient.send(retrieveCommand);
+
+    const relevantPastContent = response.retrievalResults
+      ?.filter((e) => (e?.score || 0) >= 0.5)
+      .slice(0, 5)
+      .map((e) => e.content?.text);
+
+    return `Based the tone and style of your writing on the following past references (if any):
+    ${relevantPastContent?.join("\n----\n")}
+    `;
+  },
+});
+
 export const tools = {
   postToParentsGateway,
   sendEmail,
+  retrieveResource,
 };
 
 export const renderToolUIVariables = (

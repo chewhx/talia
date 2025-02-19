@@ -41,6 +41,10 @@ export default function MainPage() {
     )
   );
 
+  // TODO: Listen to the chrome extension for the schema
+  // TODO: Pass this schema to the LLM upon tool result return by
+  // TODO: Post final message with filled in schema to extension
+
   return (
     <Container size="sm">
       <TypographyStylesProvider>
