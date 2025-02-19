@@ -1,5 +1,7 @@
 import { openai } from "@ai-sdk/openai";
-import { streamText, UIMessage } from "ai";
+import { createDataStreamResponse, streamText, UIMessage } from "ai";
+import { tools } from "./tools";
+import { processToolCalls } from "./utils";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -58,12 +60,42 @@ export async function POST(req: Request) {
   // Logging to check the messages sent are correct
   // console.log(JSON.stringify(messages, null, 2));
 
-  const result = streamText({
-    model: openai("gpt-4o-mini"),
-    system:
-      "You are an AI writing assistant to teaching staff of MOE (Ministry of Education) schools in Singapore. Your role is to faciliate staff in creating and writing content for their newsletter, bulletin boards, and school outreach.",
-    messages,
-  });
+  return createDataStreamResponse({
+    execute: async (dataStream) => {
+      // Utility function to handle tools that require human confirmation
+      // Checks for confirmation in last message and then runs associated tool
+      const processedMessages = await processToolCalls(
+        {
+          messages,
+          dataStream,
+          tools,
+        },
+        {
+          // type-safe object for tools without an execute function
+          postToParentsGateway: async ({ result, postType }) => {
+            // The real action to post to PG
+            console.log(`Posted to Parents Gateway: `, {
+              result,
+              postType,
+            });
+            return `Posted to Parents Gateway: ${result}`;
+          },
+          sendEmail: async ({ emailAddresses, emailContent }) => {
+            console.log({ emailAddresses, emailContent });
+            return `Sent email to ${JSON.stringify(emailAddresses)}`;
+          },
+        }
+      );
 
-  return result.toDataStreamResponse();
+      const result = streamText({
+        model: openai("gpt-4o-mini"),
+        system:
+          "You are an AI writing assistant to teaching staff of MOE (Ministry of Education) schools in Singapore. Your role is to faciliate staff in creating and writing content for their newsletter, bulletin boards, and school outreach. When asked to send email, do not assume the email addresses. Ask the user for the email addresses.",
+        messages: processedMessages,
+        tools,
+      });
+
+      result.mergeIntoDataStream(dataStream);
+    },
+  });
 }

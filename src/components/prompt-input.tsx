@@ -22,12 +22,13 @@ import React from "react";
 import { IMAGE_MIME_TYPE } from "./constants";
 
 export default function PromptInput({
+  disabled = true,
   status,
   input,
   handleInputChange,
   handleSubmit,
   stop,
-}: Pick<
+}: { disabled?: boolean } & Pick<
   ReturnType<typeof useChat>,
   "input" | "handleInputChange" | "status" | "handleSubmit" | "stop"
 >) {
@@ -39,7 +40,7 @@ export default function PromptInput({
   return (
     <Affix bottom={0} left={0} bg="var(--talia-gray)" py="md">
       <Container size="sm">
-        <Paper bg="white" py="xs" px="sm" w="100%">
+        <Paper bg={disabled ? "gray.1" : "white"} py="xs" px="sm" w="100%">
           <form
             onSubmit={(ev) => {
               const dataTransfer = new DataTransfer();
@@ -59,6 +60,7 @@ export default function PromptInput({
           >
             <Stack>
               <Textarea
+                disabled={disabled}
                 name="prompt"
                 value={input}
                 onChange={handleInputChange}
@@ -81,6 +83,7 @@ export default function PromptInput({
               <Group justify="space-between">
                 <Group>
                   <FileButton
+                    disabled={disabled}
                     accept={IMAGE_MIME_TYPE.join(",")}
                     onChange={(newFiles) => {
                       newFiles.forEach((file) => {
@@ -92,7 +95,11 @@ export default function PromptInput({
                     multiple
                   >
                     {(props) => (
-                      <ActionIcon {...props} variant="light">
+                      <ActionIcon
+                        disabled={disabled}
+                        {...props}
+                        variant="light"
+                      >
                         <IconPaperclip size="18" />
                       </ActionIcon>
                     )}
@@ -125,7 +132,7 @@ export default function PromptInput({
                   <ActionIcon
                     type="submit"
                     ref={btnRef}
-                    disabled={status === "submitted"}
+                    disabled={status === "submitted" || disabled}
                     variant="filled"
                     radius="lg"
                   >

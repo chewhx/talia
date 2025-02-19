@@ -3,18 +3,42 @@
 import AIMessage from "@/components/ai-message";
 import HumanMessage from "@/components/human-message";
 import PromptInput from "@/components/prompt-input";
-import { useChat } from "@ai-sdk/react";
+import { Message, useChat } from "@ai-sdk/react";
 import {
   Container,
+  Group,
+  Loader,
   Space,
   Stack,
   Text,
   TypographyStylesProvider,
 } from "@mantine/core";
+import { getToolsRequiringConfirmation } from "./api/chat/utils";
+import { tools } from "./api/chat/tools";
 
 export default function Home() {
-  const { messages, input, handleInputChange, handleSubmit, status, stop } =
-    useChat();
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    status,
+    stop,
+    addToolResult,
+  } = useChat({ maxSteps: 5 });
+
+  const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
+
+  // used to disable input while confirmation is pending
+  const pendingToolCallConfirmation = messages.some((m: Message) =>
+    m.parts?.some(
+      (part) =>
+        part.type === "tool-invocation" &&
+        part.toolInvocation.state === "call" &&
+        toolsRequiringConfirmation.includes(part.toolInvocation.toolName)
+    )
+  );
+
   return (
     <Container size="sm">
       <TypographyStylesProvider>
@@ -35,7 +59,12 @@ export default function Home() {
                 case "user":
                   return <HumanMessage message={message} />;
                 case "assistant":
-                  return <AIMessage>{message.content}</AIMessage>;
+                  return (
+                    <AIMessage
+                      message={message}
+                      addToolResult={addToolResult}
+                    />
+                  );
                 default:
                   return null;
               }
@@ -43,8 +72,16 @@ export default function Home() {
           </Stack>
         )}
       </TypographyStylesProvider>
+      {pendingToolCallConfirmation ||
+      status === "streaming" ||
+      status === "submitted" ? (
+        <Group justify="center" py="md">
+          <Loader type="dots" />
+        </Group>
+      ) : null}
       <Space h={300} />
       <PromptInput
+        disabled={pendingToolCallConfirmation}
         stop={stop}
         status={status}
         input={input}
