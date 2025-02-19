@@ -39,25 +39,36 @@ const retrieveResource = tool({
       ),
   }),
   execute: async ({ query }) => {
-    const awsBedrockClient = new BedrockAgentRuntimeClient({});
+    try {
+      const awsBedrockClient = new BedrockAgentRuntimeClient({
+        region: process.env.AWS_REGION!,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        },
+      });
 
-    const retrieveCommand = new RetrieveCommand({
-      knowledgeBaseId: process.env.AWS_BEDROCK_KNOWLEDGEBASE_ID,
-      retrievalQuery: {
-        text: query,
-      },
-    });
+      const retrieveCommand = new RetrieveCommand({
+        knowledgeBaseId: process.env.AWS_BEDROCK_KNOWLEDGEBASE_ID,
+        retrievalQuery: {
+          text: query,
+        },
+      });
 
-    const response = await awsBedrockClient.send(retrieveCommand);
+      const response = await awsBedrockClient.send(retrieveCommand);
 
-    const relevantPastContent = response.retrievalResults
-      ?.filter((e) => (e?.score || 0) >= 0.5)
-      .slice(0, 5)
-      .map((e) => e.content?.text);
+      const relevantPastContent = response.retrievalResults
+        ?.filter((e) => (e?.score || 0) >= 0.5)
+        .slice(0, 5)
+        .map((e) => e.content?.text);
 
-    return `Based the tone and style of your writing on the following past references (if any):
-    ${relevantPastContent?.join("\n----\n")}
-    `;
+      return `Based the tone and style of your writing on the following past references (if any):
+      ${relevantPastContent?.join("\n----\n")}
+      `;
+    } catch (err) {
+      console.error(err);
+      return "";
+    }
   },
 });
 
