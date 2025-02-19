@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "HeyTalia",
+  "version": "1.0",
+  "description": "HeyTalia extension",
+  "permissions": ["notification", "activeTab", "storage", "scripting", "tabs"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_icon": {
+      "16": "robot.png",
+      "48": "robot.png",
+      "128": "robot.png"
+    }
+  },
+  "externally_connectable": {
+    "matches": ["http://localhost:3000/"]
+  }
+}
