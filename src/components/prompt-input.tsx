@@ -4,7 +4,6 @@ import { useChat } from "@ai-sdk/react";
 import {
   ActionIcon,
   Affix,
-  Chip,
   Container,
   FileButton,
   Group,
@@ -16,7 +15,6 @@ import {
 import { useListState } from "@mantine/hooks";
 import {
   IconArrowUp,
-  IconBulb,
   IconPaperclip,
   IconPlayerStopFilled,
 } from "@tabler/icons-react";

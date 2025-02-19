@@ -1,21 +1,5 @@
 import { openai } from "@ai-sdk/openai";
-import {
-  Attachment,
-  CoreMessage,
-  CoreUserMessage,
-  createDataStreamResponse,
-  streamText,
-  tool,
-  UIMessage,
-} from "ai";
-import { readFileSync } from "fs";
-import { z } from "zod";
-import {
-  BedrockAgentRuntimeClient,
-  KnowledgeBaseRetrievalResult,
-  RetrieveCommand,
-} from "@aws-sdk/client-bedrock-agent-runtime"; // ES Modules import
-import { nanoid } from "nanoid";
+import { streamText, UIMessage } from "ai";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -23,7 +7,6 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   const {
     messages: uiMessages,
-    doRetrieval,
   }: { messages: UIMessage[]; doRetrieval: boolean } = await req.json();
 
   const messages = [...uiMessages];
