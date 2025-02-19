@@ -1,15 +1,8 @@
 import {
-  AppShell,
-  AppShellHeader,
-  AppShellMain,
   ColorSchemeScript,
-  Container,
   createTheme,
-  Group,
   mantineHtmlProps,
   MantineProvider,
-  Space,
-  Text,
 } from "@mantine/core";
 import "@mantine/core/styles.css";
 import type { Metadata } from "next";
@@ -49,23 +42,7 @@ export default function RootLayout({
         <ColorSchemeScript />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <MantineProvider theme={theme}>
-          <AppShell header={{ height: 50 }} withBorder={false}>
-            <AppShellHeader>
-              <Container size="sm">
-                <Group align="center" h="50">
-                  <Text fz="lg" fw={600} style={{ letterSpacing: "-0.03em" }}>
-                    HeyTalia
-                  </Text>
-                </Group>
-              </Container>
-            </AppShellHeader>
-            <AppShellMain>
-              <Space h={10} />
-              {children}
-            </AppShellMain>
-          </AppShell>
-        </MantineProvider>
+        <MantineProvider theme={theme}>{children}</MantineProvider>
       </body>
     </html>
   );
