@@ -20,6 +20,9 @@ import {
 } from "@tabler/icons-react";
 import React from "react";
 import { IMAGE_MIME_TYPE } from "./constants";
+import pdf2md from "@opendocsg/pdf2md";
+
+const ACCEPT_MIME_TYPES = [...IMAGE_MIME_TYPE, "application/pdf"];
 
 export default function PromptInput({
   disabled = true,
@@ -28,11 +31,16 @@ export default function PromptInput({
   handleInputChange,
   handleSubmit,
   stop,
-}: { disabled?: boolean } & Pick<
+}: {
+  disabled?: boolean;
+} & Pick<
   ReturnType<typeof useChat>,
   "input" | "handleInputChange" | "status" | "handleSubmit" | "stop"
 >) {
   const [_files, filesHandler] = useListState<File>([]);
+  const [_pdfs, pdfsHandler] = useListState<{ id: string; content: string }>(
+    []
+  );
   const [doRetrieval, setDoRetrieval] = React.useState<boolean>(false);
 
   const btnRef = React.useRef<HTMLButtonElement>(null);
@@ -46,15 +54,16 @@ export default function PromptInput({
               const dataTransfer = new DataTransfer();
               _files.forEach((file) => {
                 dataTransfer.items.add(file);
+                // if (file.type.includes("image")) {
+                // }
               });
               const files = dataTransfer.files;
               handleSubmit(ev, {
                 experimental_attachments: files,
-                body: {
-                  doRetrieval,
-                },
+                body: { doRetrieval, pdfs: _pdfs },
               });
               filesHandler.setState([]);
+              pdfsHandler.setState([]);
               setDoRetrieval(false);
             }}
           >
@@ -84,11 +93,27 @@ export default function PromptInput({
                 <Group>
                   <FileButton
                     disabled={disabled}
-                    accept={IMAGE_MIME_TYPE.join(",")}
+                    accept={ACCEPT_MIME_TYPES.join(",")}
                     onChange={(newFiles) => {
                       newFiles.forEach((file) => {
-                        if (file) {
-                          filesHandler.append(file);
+                        if (file && !_files.find((e) => e.name === file.name)) {
+                          if (file.type === "application/pdf") {
+                            file.arrayBuffer().then((buf) => {
+                              pdf2md(buf).then((markdown) => {
+                                const blob = new Blob([markdown], {
+                                  type: "text/plain",
+                                });
+                                const markdownFile = new File(
+                                  [blob],
+                                  file.name,
+                                  { type: "text/plain" }
+                                );
+                                filesHandler.append(markdownFile);
+                              });
+                            });
+                          } else {
+                            filesHandler.append(file);
+                          }
                         }
                       });
                     }}
@@ -148,6 +173,9 @@ export default function PromptInput({
                       withRemoveButton
                       onRemove={() => {
                         filesHandler.remove(i);
+                        if (file.type === "application/pdf") {
+                          pdfsHandler.filter((f) => f.id === file.name);
+                        }
                       }}
                     >
                       {file.name}

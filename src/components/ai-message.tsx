@@ -11,9 +11,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { Message } from "ai";
-import React from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import Markdown from "./markdown";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -38,7 +36,7 @@ export default function AIMessage({
                 w="100%"
                 key={`text-${idx}`}
               >
-                <Markdown remarkPlugins={[remarkGfm]}>{part.text}</Markdown>
+                <Markdown>{part.text}</Markdown>
               </Paper>
             );
           case "tool-invocation":
@@ -57,9 +55,7 @@ export default function AIMessage({
               return (
                 <Stack key={toolCallId}>
                   <Paper px="xs" py="5" fz="sm" bg="white" w="100%">
-                    <Markdown remarkPlugins={[remarkGfm]}>
-                      {description}
-                    </Markdown>
+                    <Markdown>{description}</Markdown>
                   </Paper>
                   <SimpleGrid cols={2}>
                     {options.map((option) => (
@@ -112,9 +108,7 @@ export default function AIMessage({
                     </Text>
                   </Paper>
                   <Paper px="xs" py="5" fz="sm" bg="white" w="100%">
-                    <Markdown remarkPlugins={[remarkGfm]}>
-                      {toolInvocation.args.emailContent}
-                    </Markdown>
+                    <Markdown>{toolInvocation.args.emailContent}</Markdown>
                   </Paper>
                   <Group justify="right">
                     {options.map((option) => (

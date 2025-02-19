@@ -9,12 +9,13 @@ import {
 } from "@mantine/core";
 import { IconPaperclip } from "@tabler/icons-react";
 import { Attachment, UIMessage } from "ai";
+import Markdown from "./markdown";
 
 export default function HumanMessage({ message }: { message: UIMessage }) {
   return (
     <Stack align="end">
       <Paper px="xs" py="5" fz="sm" bg="var(--talia-orange)" maw="80%">
-        {message.content}
+        <Markdown>{message.content}</Markdown>
       </Paper>
       {message?.experimental_attachments?.map((attachment, index) => (
         <AttachmentMessage
@@ -45,7 +46,7 @@ function AttachmentMessage({ attachment }: { attachment: Attachment }) {
               {attachment.name}
             </Text>
             <Text fz="xs" tt="uppercase" m={0}>
-              {attachment?.contentType?.split("/")[1]}
+              {attachment?.name?.split(".").at(-1)}
             </Text>
           </Stack>
         </Group>

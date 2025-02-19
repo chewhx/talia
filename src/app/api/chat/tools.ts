@@ -13,11 +13,12 @@ const postToParentsGateway = tool({
 });
 
 const sendEmail = tool({
-  description: "Send an email to a specified recipient",
+  description: "Send an email to a specified recipient.",
   parameters: z.object({
     emailContent: z.string(),
     emailAddresses: z.array(z.string()),
   }),
+  // no execute function, we want human in the loop
 });
 
 export const tools = {

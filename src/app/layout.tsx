@@ -48,9 +48,7 @@ export default function RootLayout({
       <head>
         <ColorSchemeScript />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <MantineProvider theme={theme}>
           <AppShell header={{ height: 50 }} withBorder={false}>
             <AppShellHeader>

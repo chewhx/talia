@@ -13,8 +13,8 @@ import {
   Text,
   TypographyStylesProvider,
 } from "@mantine/core";
-import { getToolsRequiringConfirmation } from "./api/chat/utils";
 import { tools } from "./api/chat/tools";
+import { getToolsRequiringConfirmation } from "./api/chat/utils";
 
 export default function Home() {
   const {
@@ -25,7 +25,9 @@ export default function Home() {
     status,
     stop,
     addToolResult,
-  } = useChat({ maxSteps: 5 });
+  } = useChat({
+    maxSteps: 5,
+  });
 
   const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -57,12 +59,13 @@ export default function Home() {
             {messages.map((message) => {
               switch (message.role) {
                 case "user":
-                  return <HumanMessage message={message} />;
+                  return <HumanMessage message={message} key={message.id} />;
                 case "assistant":
                   return (
                     <AIMessage
                       message={message}
                       addToolResult={addToolResult}
+                      key={message.id}
                     />
                   );
                 default:

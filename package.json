@@ -10,11 +10,13 @@
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^2.0.1",
+    "@ai-sdk/anthropic": "^1.1.8",
     "@ai-sdk/openai": "^1.1.12",
     "@ai-sdk/react": "^1.1.16",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",
     "@mantine/core": "^7.16.3",
     "@mantine/hooks": "^7.16.3",
+    "@opendocsg/pdf2md": "^0.2.1",
     "@tabler/icons-react": "^3.30.0",
     "ai": "^4.1.41",
     "next": "14.2.18",
