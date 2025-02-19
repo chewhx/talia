@@ -5,20 +5,9 @@ import {
   MantineProvider,
 } from "@mantine/core";
 import "@mantine/core/styles.css";
-import type { Metadata } from "next";
-import localFont from "next/font/local";
+import "@fontsource/geist-sans";
 import "./globals.css";
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Hey Talia",
@@ -28,7 +17,7 @@ export const metadata: Metadata = {
 const theme = createTheme({
   primaryColor: "dark",
   defaultRadius: "md",
-  fontFamily: "Geist, sans-serif",
+  fontFamily: "Geist Sans, sans-serif",
 });
 
 export default function RootLayout({
@@ -41,7 +30,7 @@ export default function RootLayout({
       <head>
         <ColorSchemeScript />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body>
         <MantineProvider theme={theme}>{children}</MantineProvider>
       </body>
     </html>
