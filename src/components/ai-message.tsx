@@ -12,6 +12,8 @@ import {
 } from "@mantine/core";
 import { Message } from "ai";
 import Markdown from "./markdown";
+import { fillFormWithAi } from "@/app/actions";
+import { useFormFields } from "../../shared/form-fields";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -22,6 +24,8 @@ export default function AIMessage({
   message: Message;
   addToolResult: ReturnType<typeof useChat>["addToolResult"];
 }) {
+  const { formFields } = useFormFields();
+
   return (
     <Stack gap="xs">
       {message?.parts?.map((part, idx) => {
@@ -61,12 +65,26 @@ export default function AIMessage({
                     {options.map((option) => (
                       <UnstyledButton
                         key={`toolCall-${toolCallId}-option-${option.title}`}
-                        onClick={() =>
+                        onClick={async () => {
+                          // Use AI to fill up form fields
+                          const filledFormFields = await fillFormWithAi(
+                            formFields,
+                            toolInvocation.args.result || ""
+                          );
+
+                          window.parent.postMessage(
+                            {
+                              type: "PRE_FILL",
+                              data: JSON.stringify(filledFormFields),
+                            },
+                            "*"
+                          );
+
                           addToolResult({
                             toolCallId,
                             result: option.result,
-                          })
-                        }
+                          });
+                        }}
                       >
                         <Paper
                           shadow="sm"
@@ -76,7 +94,7 @@ export default function AIMessage({
                         >
                           <Stack gap={0}>
                             <Text fw={500} m={0} fz="sm">
-                              {option.title}
+                              + {option.title}
                             </Text>
                             <Text fz="xs" c="gray">
                               {option.description}
