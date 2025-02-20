@@ -1,5 +1,3 @@
-'use client'
-
 import { z } from "zod";
 import { create } from "zustand";
 
@@ -14,7 +12,7 @@ export const formFieldsSchema = z.array(
 
 export type FormFieldsSchema = z.infer<typeof formFieldsSchema>;
 
-const mockFieldsForTesting :FormFieldsSchema = [
+const mockFieldsForTesting: FormFieldsSchema = [
   {
     type: "input",
     description: "Title",
@@ -27,7 +25,7 @@ const mockFieldsForTesting :FormFieldsSchema = [
     id: "2",
     value: null,
   },
-]
+];
 
 export const useFormFields = create<{
   formFields: FormFieldsSchema;
