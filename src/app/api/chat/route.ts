@@ -4,6 +4,8 @@ import { tools } from "./tools";
 import { processToolCalls } from "./utils";
 import { env } from "@/env";
 import { Resend } from "resend";
+import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
+import { FormDraftSchema } from "@/schema/formDraft.schema";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -23,6 +25,7 @@ export async function POST(req: Request) {
       execute: async (dataStream) => {
         // Utility function to handle tools that require human confirmation
         // Checks for confirmation in last message and then runs associated tool
+
         const processedMessages = await processToolCalls(
           {
             messages,
@@ -35,10 +38,7 @@ export async function POST(req: Request) {
               // The real action to post to PG
               // Take the schema and the result, fill the result to the schema
               // Post the schema to extensions
-              console.log(`Posted to Parents Gateway: `, {
-                result,
-                postType,
-              });
+
               return `Posted to Parents Gateway: ${result}`;
             },
             sendEmail: async ({
@@ -60,6 +60,12 @@ export async function POST(req: Request) {
               return `Inform the user: "Email sent to ${emailAddresses.join(
                 ", "
               )}"`;
+            },
+
+            draftFormToParentsGateway: async ({ result }) => {
+              return `Extract details from the content and return a JSON object to user which matching the schema as user need to check the fields are correct or not:
+                      Schema: ${JSON.stringify(AnnouncementDraftSchema.shape)}
+                      Content: ${result}`;
             },
           }
         );

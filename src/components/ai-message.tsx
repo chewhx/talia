@@ -42,6 +42,8 @@ export default function AIMessage({
           case "tool-invocation":
             const toolInvocation = part.toolInvocation;
             const toolCallId = toolInvocation.toolCallId;
+
+            console.log({ toolInvocation });
             // render confirmation tool (client-side tool with user interaction)
             if (
               toolsRequiringConfirmation.includes(toolInvocation.toolName) &&
@@ -129,6 +131,54 @@ export default function AIMessage({
                 </Stack>
               );
             }
+
+            if (
+              toolsRequiringConfirmation.includes(toolInvocation.toolName) &&
+              toolInvocation.state === "call" &&
+              toolInvocation.toolName === "draftFormToParentsGateway"
+            ) {
+              const { description, options } = renderToolUIVariables(
+                toolInvocation.toolName
+              );
+              console.log(toolInvocation, toolsRequiringConfirmation);
+              return (
+                <Stack key={toolCallId}>
+                  <Paper px="xs" py="5" fz="sm" bg="white" w="100%">
+                    <Markdown>{description}</Markdown>
+                  </Paper>
+                  <SimpleGrid cols={2}>
+                    {options.map((option) => (
+                      <UnstyledButton
+                        key={`toolCall-${toolCallId}-option-${option.title}`}
+                        onClick={() =>
+                          addToolResult({
+                            toolCallId,
+                            result: option.result,
+                          })
+                        }
+                      >
+                        <Paper
+                          shadow="sm"
+                          radius={0}
+                          bg="var(--talia-orange)"
+                          p="sm"
+                        >
+                          <Stack gap={0}>
+                            <Text fw={500} m={0} fz="sm">
+                              {option.title}
+                            </Text>
+                            <Text fz="xs" c="gray">
+                              {option.description}
+                            </Text>
+                          </Stack>
+                        </Paper>
+                      </UnstyledButton>
+                    ))}
+                  </SimpleGrid>
+                </Stack>
+              );
+            }
+
           default:
             return null;
         }

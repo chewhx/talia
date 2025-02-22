@@ -135,7 +135,7 @@
             console.log("🟢 Extension: SCAN_FORM_REQUEST");
             if (iframe) {
               iframe.contentWindow.postMessage(
-                { action: "SCAN_FORM_RESPONSE", data: scanFormElements() },
+                { action: "SCAN_FORM_RESPONSE", result: scanFormElements() },
                 "http://localhost:3000"
               );
             }
@@ -155,6 +155,16 @@
             window.postMessage(data, "http://localhost:8082/");
             break;
           }
+
+          case "GO_DRAFT_PAGE": {
+            console.log("🟢 Extension: GO_DRAFT_PAGE");
+            chrome.runtime.sendMessage({
+              action: data.action,
+              draftID: data.draftID,
+            });
+
+            break;
+          }
         }
       }
 
@@ -164,6 +174,12 @@
           case "PG_DRAFT_RESPONSE": {
             console.log("🟢 Extension: PG_DRAFT_RESPONSE");
             iframe.contentWindow.postMessage(data, "http://localhost:3000/");
+            break;
+          }
+
+          case "PG_UNAUTHORIZED": {
+            console.log("🟢 Extension: PG_UNAUTHORIZED");
+            window.postMessage(data, "http://localhost:3000/");
             break;
           }
         }

@@ -37,27 +37,39 @@ const QuestionSchema = z.discriminatedUnion("type", [
   TextQuestionSchema,
 ]);
 
-const QuestionArraySchema = z.array(QuestionSchema).optional();
+const QuestionArraySchema = z
+  .array(QuestionSchema)
+  .optional()
+  .describe("The custom questions for YES_NO type form only");
 
 export const FormDraftSchema = z.object({
-  title: z.string(),
-  status: z.string().default("DRAFT"),
-  content: z.string(),
-  vanue: z.string(),
+  title: z.string().describe("The title of the consent form"),
+  status: z.string().default("DRAFT").describe("The status of the post"),
+  content: z.string().describe("The content of the consent form"),
+  venue: z.string().optional().describe("The location of the consent form"),
   eventStartDate: z
     .object({
       date: z.string(),
       time: z.string(),
     })
-    .optional(),
-  eventEndDate: z.object({
-    date: z.string(),
-    time: z.string(),
-  }),
-  reminderDate: z.string(),
-  addReminderType: z.enum(["ONE_TIME", "DAILY", "NONE"]),
-  enquiryEmailAddress: z.string(),
-  responseType: z.enum(["YES_NO", "ACKNOWLEDGEMENT"]),
+    .optional()
+    .describe("Event starting date time"),
+  eventEndDate: z
+    .object({
+      date: z.string(),
+      time: z.string(),
+    })
+    .describe("Event ending date time"),
+  reminderDate: z.string().optional().describe("The reminder trigger date"),
+  addReminderType: z
+    .enum(["ONE_TIME", "DAILY", "NONE"])
+    .describe("Reminder trigger type"),
+  enquiryEmailAddress: z
+    .string()
+    .describe("The preferred email address to receive enquiries from parents"),
+  responseType: z
+    .enum(["YES_NO", "ACKNOWLEDGEMENT"])
+    .describe("The type of the form"),
   staffGroups: z
     .array(
       z.object({
@@ -66,28 +78,46 @@ export const FormDraftSchema = z.object({
         value: z.number(),
       })
     )
-    .optional(),
-  studentGroups: z.array(
-    z.object({
-      type: z.enum([
-        "all",
-        "class",
-        "level",
-        "cca",
-        "school",
-        "group",
-        "student",
-      ]),
-      label: z.string(),
-      value: z.number(),
-    })
-  ),
-  images: z.array(z.object({})).optional(),
-  attachments: z.array(z.object({})).optional(),
+    .optional()
+    .describe(
+      "The staff who will be able to view and edit form response and delete form"
+    ),
+  studentGroups: z
+    .array(
+      z.object({
+        type: z.enum([
+          "all",
+          "class",
+          "level",
+          "cca",
+          "school",
+          "group",
+          "student",
+        ]),
+        label: z.string(),
+        value: z.number(),
+      })
+    )
+    .describe(
+      "The student groups, individual students or both that will receive the form"
+    ),
+  images: z
+    .array(z.object({}))
+    .optional()
+    .describe("The image gallery for form"),
+  attachments: z
+    .array(z.object({}))
+    .optional()
+    .describe("The attachment for form"),
   urls: z
     .array(z.object({ webLink: z.string(), linkDescription: z.string() }))
-    .optional(),
-  shortcuts: z.array(z.string()).optional(),
+    .max(3)
+    .optional()
+    .describe("The website link for the form event"),
+  shortcuts: z
+    .array(z.string())
+    .optional()
+    .describe("The url for pressing and redirect to other website/app"),
   questions: QuestionArraySchema,
 });
 

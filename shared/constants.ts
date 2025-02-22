@@ -3,6 +3,7 @@ export const TALIA_EVENTS = {
   actions: {
     SCAN_FORM_REQUEST: "SCAN_FORM_REQUEST",
     PG_DRAFT_REQUEST: "PG_DRAFT_REQUEST",
+    GO_DRAFT_PAGE: "GO_DRAFT_PAGE",
   },
   listeners: {
     SCAN_FORM_RESPONSE: "SCAN_FORM_RESPONSE",

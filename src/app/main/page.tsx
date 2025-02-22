@@ -19,6 +19,7 @@ import { getToolsRequiringConfirmation } from "../api/chat/utils";
 import { mockAnnouncement } from "@/schema/announcementDraft.schema";
 import { useWindowEvent } from "@mantine/hooks";
 import { TALIA_EVENTS } from "../../../shared/constants";
+import { mockForm } from "@/schema/formDraft.schema";
 
 export default function MainPage() {
   const {
@@ -59,13 +60,15 @@ export default function MainPage() {
 
     switch (data.action) {
       case TALIA_EVENTS.listeners.SCAN_FORM_RESPONSE: {
-        const receivedData = data.data; // This is the data passed from the extension
+        const receivedData = data.result; // This is the data passed from the extension
         console.log("🟢 Web App: SCAN_FORM_RESPONSE", JSON.parse(receivedData));
         break;
       }
 
       case TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE: {
-        console.log("🟢 WebApp: PG_DRAFT_RESPONSE", JSON.parse(data));
+        const receivedData = data.result; // This is the data passed from the extension
+        console.log("🟢 WebApp: PG_DRAFT_RESPONSE", JSON.parse(receivedData));
+        // return announcementDraftId: number or consentFormDraftId: number
         break;
       }
 
@@ -84,21 +87,34 @@ export default function MainPage() {
     );
   };
 
-  const submitDraft = async () => {
+  const submitDraft = (
+    type: "PG_ANNOUNCEMENT" | "PG_CONSENT_FORM",
+    data: any
+  ) => {
     try {
       console.log("🟢 Web App: PG_DRAFT_REQUEST");
 
       window.parent.postMessage(
         {
           action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
-          type: "announcement",
-          data: JSON.stringify(mockAnnouncement),
+          type,
+          data: JSON.stringify(data),
         },
         `http://localhost:8082`
       );
     } catch (error) {
       console.log({ error });
     }
+  };
+
+  const goToDraftPage = () => {
+    window.parent.postMessage(
+      {
+        action: "GO_DRAFT_PAGE",
+        draftID: 1009,
+      },
+      `http://localhost:8082`
+    );
   };
 
   return (
@@ -116,7 +132,16 @@ export default function MainPage() {
 
             <Button onClick={scanFormFields}>Scan</Button>
             <Space h={50} />
-            <Button onClick={submitDraft}>Draft</Button>
+            <Button onClick={() => submitDraft("PG_CONSENT_FORM", mockForm)}>
+              DraftForm
+            </Button>
+            <Button
+              onClick={() => submitDraft("PG_ANNOUNCEMENT", mockAnnouncement)}
+            >
+              DraftAnn
+            </Button>
+
+            <Button onClick={goToDraftPage}>DraftPage</Button>
           </Stack>
         ) : (
           <Stack>
