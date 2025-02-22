@@ -1,0 +1,12 @@
+// // From HeyTalia WebApp
+export const TALIA_EVENTS = {
+  actions: {
+    SCAN_FORM_REQUEST: "SCAN_FORM_REQUEST",
+    PG_DRAFT_REQUEST: "PG_DRAFT_REQUEST",
+  },
+  listeners: {
+    SCAN_FORM_RESPONSE: "SCAN_FORM_RESPONSE",
+    PG_DRAFT_RESPONSE: "PG_DRAFT_RESPONSE",
+    PG_UNAUTHORIZED: "PG_UNAUTHORIZED",
+  },
+};

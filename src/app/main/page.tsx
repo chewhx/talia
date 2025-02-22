@@ -5,6 +5,7 @@ import HumanMessage from "@/components/human-message";
 import PromptInput from "@/components/prompt-input";
 import { Message, useChat } from "@ai-sdk/react";
 import {
+  Button,
   Container,
   Group,
   Loader,
@@ -15,6 +16,9 @@ import {
 } from "@mantine/core";
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
+import { mockAnnouncement } from "@/schema/announcementDraft.schema";
+import { useWindowEvent } from "@mantine/hooks";
+import { TALIA_EVENTS } from "../../../shared/constants";
 
 export default function MainPage() {
   const {
@@ -45,6 +49,58 @@ export default function MainPage() {
   // TODO: Pass this schema to the LLM upon tool result return by
   // TODO: Post final message with filled in schema to extension
 
+  useWindowEvent("message", ({ data, origin }: MessageEvent) => {
+    const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
+    const allowedDomain = ["http://localhost:8082", chromeExtensionID];
+
+    if (!allowedDomain.includes(origin)) {
+      return;
+    }
+
+    switch (data.action) {
+      case TALIA_EVENTS.listeners.SCAN_FORM_RESPONSE: {
+        const receivedData = data.data; // This is the data passed from the extension
+        console.log("🟢 Web App: SCAN_FORM_RESPONSE", JSON.parse(receivedData));
+        break;
+      }
+
+      case TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE: {
+        console.log("🟢 WebApp: PG_DRAFT_RESPONSE", JSON.parse(data));
+        break;
+      }
+
+      case TALIA_EVENTS.listeners.PG_UNAUTHORIZED: {
+        console.log("🟢 WebApp: PG_UNAUTHORIZED");
+        break;
+      }
+    }
+  });
+
+  const scanFormFields = () => {
+    console.log("🟢 Web App: SCAN_FORM_REQUEST");
+    window.parent.postMessage(
+      { action: TALIA_EVENTS.actions.SCAN_FORM_REQUEST },
+      "*"
+    );
+  };
+
+  const submitDraft = async () => {
+    try {
+      console.log("🟢 Web App: PG_DRAFT_REQUEST");
+
+      window.parent.postMessage(
+        {
+          action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
+          type: "announcement",
+          data: JSON.stringify(mockAnnouncement),
+        },
+        `http://localhost:8082`
+      );
+    } catch (error) {
+      console.log({ error });
+    }
+  };
+
   return (
     <Container size="sm">
       <TypographyStylesProvider>
@@ -57,6 +113,10 @@ export default function MainPage() {
             <Text fz="xl" fw={600}>
               How may I help you today?
             </Text>
+
+            <Button onClick={scanFormFields}>Scan</Button>
+            <Space h={50} />
+            <Button onClick={submitDraft}>Draft</Button>
           </Stack>
         ) : (
           <Stack>

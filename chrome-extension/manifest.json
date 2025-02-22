@@ -3,13 +3,14 @@
   "name": "HeyTalia",
   "version": "1.0",
   "description": "HeyTalia extension",
-  "permissions": ["notification", "activeTab", "storage", "scripting", "tabs"],
+  "permissions": ["notifications", "storage", "scripting", "tabs", "activeTab"],
+  "host_permissions": ["http://localhost:3000/*"],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["http://localhost:3000/*", "http://localhost:8082/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
@@ -22,6 +23,9 @@
     }
   },
   "externally_connectable": {
-    "matches": ["http://localhost:3000/"]
+    "matches": ["http://localhost:3000/*", "http://localhost:8082/*"]
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none';"
   }
 }
