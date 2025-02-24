@@ -3,6 +3,8 @@
 import AIMessage from "@/components/ai-message";
 import HumanMessage from "@/components/human-message";
 import PromptInput from "@/components/prompt-input";
+import { mockAnnouncement } from "@/schema/announcementDraft.schema";
+import { mockForm } from "@/schema/formDraft.schema";
 import { Message, useChat } from "@ai-sdk/react";
 import {
   Button,
@@ -14,12 +16,11 @@ import {
   Text,
   TypographyStylesProvider,
 } from "@mantine/core";
-import { tools } from "../api/chat/tools";
-import { getToolsRequiringConfirmation } from "../api/chat/utils";
-import { mockAnnouncement } from "@/schema/announcementDraft.schema";
 import { useWindowEvent } from "@mantine/hooks";
 import { TALIA_EVENTS } from "../../../shared/constants";
-import { mockForm } from "@/schema/formDraft.schema";
+import { tools } from "../api/chat/tools";
+import { getToolsRequiringConfirmation } from "../api/chat/utils";
+import { useState } from "react";
 
 export default function MainPage() {
   const {
@@ -35,6 +36,9 @@ export default function MainPage() {
   });
 
   const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
+  const [draftID, setDraftID] = useState<string | null>();
+  const [mockData, setMockData] = useState<string>("");
+  const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
 
   // used to disable input while confirmation is pending
   const pendingToolCallConfirmation = messages.some((m: Message) =>
@@ -51,36 +55,62 @@ export default function MainPage() {
   // TODO: Post final message with filled in schema to extension
 
   useWindowEvent("message", ({ data, origin }: MessageEvent) => {
-    const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
-    const allowedDomain = ["http://localhost:8082", chromeExtensionID];
+    const allowedDomain = [chromeExtensionID];
 
+    // Only get response through chrome extension (panel.js or background.js)
     if (!allowedDomain.includes(origin)) {
       return;
     }
 
     switch (data.action) {
       case TALIA_EVENTS.listeners.SCAN_FORM_RESPONSE: {
-        const receivedData = data.result; // This is the data passed from the extension
-        console.log("🟢 Web App: SCAN_FORM_RESPONSE", JSON.parse(receivedData));
+        const receivedData = JSON.parse(data?.result ?? {});
+        console.log("🟢 HeyTalia: SCAN_FORM_RESPONSE", receivedData);
+
+        let mockData = [];
+        if (data?.currentWebsite === "SLS") {
+          mockData = receivedData.map((field) => {
+            const id = field?.id;
+
+            if (field.category === "title") {
+              return { id, value: "mock-title" };
+            } else if (field.category === "start-date") {
+              return { id, value: "25 Feb 2025" };
+            } else if (field.category === "start-time") {
+              return { id, value: "10:30" };
+            } else if (field.category === "message") {
+              return { id, value: "<b>mock-</b>message" };
+            }
+
+            return {
+              id: field.id,
+              value: "mock-" + (field?.attributes?.placeholder ?? "data"),
+            };
+          });
+        } else if (data?.currentWebsite === "GoogleClassroom") {
+        }
+        console.log({ mockData });
+        setMockData(JSON.stringify(mockData));
+
         break;
       }
 
       case TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE: {
-        const receivedData = data.result; // This is the data passed from the extension
-        console.log("🟢 WebApp: PG_DRAFT_RESPONSE", JSON.parse(receivedData));
+        const receivedData = data.result;
+        console.log("🟢 HeyTalia: PG_DRAFT_RESPONSE", JSON.parse(receivedData));
         // return announcementDraftId: number or consentFormDraftId: number
         break;
       }
 
       case TALIA_EVENTS.listeners.PG_UNAUTHORIZED: {
-        console.log("🟢 WebApp: PG_UNAUTHORIZED");
+        console.log("🟢 HeyTalia: PG_UNAUTHORIZED");
         break;
       }
     }
   });
 
   const scanFormFields = () => {
-    console.log("🟢 Web App: SCAN_FORM_REQUEST");
+    console.log("🟢 HeyTalia: SCAN_FORM_REQUEST");
     window.parent.postMessage(
       { action: TALIA_EVENTS.actions.SCAN_FORM_REQUEST },
       "*"
@@ -92,7 +122,7 @@ export default function MainPage() {
     data: any
   ) => {
     try {
-      console.log("🟢 Web App: PG_DRAFT_REQUEST");
+      console.log("🟢 HeyTalia: PG_DRAFT_REQUEST");
 
       window.parent.postMessage(
         {
@@ -100,7 +130,7 @@ export default function MainPage() {
           type,
           data: JSON.stringify(data),
         },
-        `http://localhost:8082`
+        `*`
       );
     } catch (error) {
       console.log({ error });
@@ -108,12 +138,20 @@ export default function MainPage() {
   };
 
   const goToDraftPage = () => {
+    console.log("🟢 HeyTalia: GO_DRAFT_PAGE");
     window.parent.postMessage(
       {
         action: "GO_DRAFT_PAGE",
-        draftID: 1009,
+        draftID: 1011,
       },
-      `http://localhost:8082`
+      `*`
+    );
+  };
+
+  const fillForm = () => {
+    window.parent.postMessage(
+      { action: TALIA_EVENTS.actions.FILL_FORM_REQUEST, data: mockData },
+      `${chromeExtensionID}`
     );
   };
 
@@ -130,18 +168,28 @@ export default function MainPage() {
               How may I help you today?
             </Text>
 
-            <Button onClick={scanFormFields}>Scan</Button>
-            <Space h={50} />
-            <Button onClick={() => submitDraft("PG_CONSENT_FORM", mockForm)}>
+            <Button mt={10} onClick={scanFormFields}>
+              Scan
+            </Button>
+            <Button
+              mt={10}
+              onClick={() => submitDraft("PG_CONSENT_FORM", mockForm)}
+            >
               DraftForm
             </Button>
             <Button
+              mt={10}
               onClick={() => submitDraft("PG_ANNOUNCEMENT", mockAnnouncement)}
             >
               DraftAnn
             </Button>
 
-            <Button onClick={goToDraftPage}>DraftPage</Button>
+            <Button mt={10} onClick={goToDraftPage}>
+              DraftPage
+            </Button>
+            <Button mt={10} onClick={fillForm}>
+              Fill Form
+            </Button>
           </Stack>
         ) : (
           <Stack>

@@ -1,116 +1,58 @@
 (() => {
-  // Prevent multiple injections
-  if (document.getElementById("heytalia-sidebar")) return;
+  // const chromeExtension = "chrome-extension://ncnapjdokmekfgfhpmadgemfnhckpecl";
+  // const iframe = ["http://localhost:3000"];
+  // const controlledWebsite = ["http://localhost:8082"];
 
-  let tabID = null;
-  const originalBodyWidth = document.body.style.width;
+  // Listen from `background.js` or `content.js`
+  chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
+    if (data.action === "SCAN_FORM_REQUEST") {
+      console.log("🟢 Content: SCAN_FORM_REQUEST", { data, sender });
 
-  // Create a sidebar container (taking 1/3 of the page)
-  const sidebar = document.createElement("div");
+      let targetScanner = scanFormElements;
 
-  sidebar.id = "heytalia-sidebar";
-  sidebar.style.position = "fixed";
-  sidebar.style.top = "0";
-  sidebar.style.right = "0";
-  sidebar.style.width = "33vw"; // Sidebar takes 1/3 of the page width
-  sidebar.style.height = "100vh";
-  sidebar.style.background = "white";
-  sidebar.style.boxShadow = "-5px 0 15px rgba(0, 0, 0, 0.2)";
-  sidebar.style.zIndex = "10000";
-  sidebar.style.transition = "transform 0.3s ease-in-out";
-  sidebar.style.transform = "translateX(100%)"; // Initially hidden
-
-  // // Create close button
-  // const closeButton = document.createElement("button");
-  // closeButton.innerHTML = "x";
-  // closeButton.style.position = "absolute";
-  // closeButton.style.left = "-20px"; // Adjust this value to control how far it sticks out
-  // closeButton.style.top = "1%";
-  // closeButton.style.background = "white";
-  // closeButton.style.width = "20px"; // Set a fixed width
-  // closeButton.style.display = "none";
-  // closeButton.style.alignItems = "center";
-  // closeButton.style.justifyContent = "center";
-  // closeButton.style.cursor = "pointer";
-  // closeButton.style.zIndex = "10001";
-  // closeButton.style.fontSize = "23px"; // Adjust size of the ">" symbol
-  // closeButton.style.color = "#333"; // Change color of the ">" symbol
-
-  // closeButton.style.transition = "background-color 0.3s";
-  // closeButton.addEventListener("mouseover", () => {
-  //   closeButton.style.backgroundColor = "#f0f0f0";
-  // });
-  // closeButton.addEventListener("mouseout", () => {
-  //   closeButton.style.backgroundColor = "white";
-  // });
-
-  // Create an iframe inside the sidebar
-  const iframe = document.createElement("iframe");
-
-  // iframe.src = "https://heytalia.vercel.app/"; // Replace with app url
-  iframe.src = "http://localhost:3000/"; // Replace with app url
-  iframe.style.width = "100%";
-  iframe.style.height = "100%";
-  iframe.style.border = "none";
-
-  // Append elements
-  // sidebar.appendChild(closeButton);
-  sidebar.appendChild(iframe);
-  document.body.appendChild(sidebar);
-
-  // Close sidebar on button click
-  // closeButton.addEventListener("click", toggleSidebar);
-
-  // Function to toggle sidebar visibility
-  function toggleSidebar() {
-    // For PG Sticky Footer to avoid overlap
-    const footer = document.getElementById("save-as-draft-sticky-bar");
-    if (footer) {
-      if (document.getElementById("heytalia-sidebar")) {
-        footer.style.width = "67vw";
-      } else {
-        footer.style.width = "100%";
+      if (data.currentWebsite === "SLS") {
+        targetScanner = scanSLS;
+      } else if (data.currentWebsite === "GoogleClassroom") {
+        targetScanner = fillGoogleClassroom;
       }
+
+      targetScanner().then((result) => {
+        sendResponse({
+          action: "SCAN_FORM_RESPONSE",
+          result: JSON.stringify(result),
+        });
+      });
+      return true;
     }
 
-    if (sidebar.style.transform === "translateX(0%)") {
-      sidebar.style.transform = "translateX(100%)";
+    if (data.action === "FILL_FORM_REQUEST") {
+      console.log("🟢 Content: FILL_FORM_REQUEST", { data, sender });
+      const formData = JSON.parse(data.data);
 
-      document.body.style.width = originalBodyWidth; // Restore original width
-      document.body.style.marginRight = "0"; // Reset margin
+      let targetFillForm = fillForm;
 
-      // closeButton.style.display = "none";
-
-      if (footer) {
-        footer.style.width = "100%";
+      if (data.currentWebsite === "SLS") {
+        targetFillForm = fillSLS;
+      } else if (data.currentWebsite === "GoogleClassroom") {
+        targetFillForm = fillGoogleClassroom;
       }
-    } else {
-      sidebar.style.transform = "translateX(0%)";
-      document.body.style.width = "67vw"; // Shrink page width (100% - 33vw)
-      document.body.style.marginRight = "33vw"; // Shift content left
-      // closeButton.style.display = "flex";
 
-      if (footer) {
-        footer.style.width = "67vw";
-      }
-    }
-  }
+      targetFillForm(formData);
 
-  // Listen for messages from `background.js` to open sidebar
-  chrome.runtime.onMessage.addListener((request) => {
-    if (request.action === "toggleSidebar") {
-      tabID = request?.tabID;
-      toggleSidebar();
+      return;
     }
 
-    if (request.action === "PG_UNAUTHORIZED") {
-      console.log("🟢 Extension: PG_UNAUTHORIZED");
-      if (iframe) {
-        iframe.contentWindow.postMessage(
-          { action: "PG_UNAUTHORIZED" },
-          "http://localhost:3000"
-        );
-      }
+    /* Actions for PG */
+    if (data.action === "GO_DRAFT_PAGE") {
+      console.log("🟢 Content: GO_DRAFT_PAGE", { data, sender });
+      sendToBackgroundJS(data);
+      return;
+    }
+
+    if (data.action === "PG_DRAFT_REQUEST") {
+      console.log("🟢 Content: PG_DRAFT_REQUEST", { data, sender });
+      sendToWebsite(data);
+      return;
     }
   });
 
@@ -119,66 +61,22 @@
 
     window.addEventListener("message", (event) => {
       const { origin, data } = event;
-
-      // Check origin for security purposes
-      if (
-        origin !== "http://localhost:3000" &&
-        origin !== "http://localhost:8082"
-      ) {
+      if (origin !== "http://localhost:8082") {
         return;
       }
 
-      // Handle message from heytalia
-      if (origin === "http://localhost:3000") {
-        switch (data.action) {
-          case "SCAN_FORM_REQUEST": {
-            console.log("🟢 Extension: SCAN_FORM_REQUEST");
-            if (iframe) {
-              iframe.contentWindow.postMessage(
-                { action: "SCAN_FORM_RESPONSE", result: scanFormElements() },
-                "http://localhost:3000"
-              );
-            }
-            break;
-          }
-
-          case "PRE_FILL_REQUEST": {
-            console.log("🟢 Extension: PRE_FILL_REQUEST");
-            const formData = JSON.parse(data.data);
-            console.log("🟢 Extension: ", formData);
-            fillForm(formData);
-            break;
-          }
-
-          case "PG_DRAFT_REQUEST": {
-            console.log("🟢 Extension: PG_DRAFT_REQUEST");
-            window.postMessage(data, "http://localhost:8082/");
-            break;
-          }
-
-          case "GO_DRAFT_PAGE": {
-            console.log("🟢 Extension: GO_DRAFT_PAGE");
-            chrome.runtime.sendMessage({
-              action: data.action,
-              draftID: data.draftID,
-            });
-
-            break;
-          }
-        }
-      }
-
-      // Handle message from active tab website
+      // // Handle message from active tab website
+      // // Only for PG
       if (origin === "http://localhost:8082") {
         switch (data.action) {
           case "PG_DRAFT_RESPONSE": {
-            console.log("🟢 Extension: PG_DRAFT_RESPONSE");
-            iframe.contentWindow.postMessage(data, "http://localhost:3000/");
+            console.log("🟢 Content: PG_DRAFT_RESPONSE", { origin, data });
+            chrome.runtime.sendMessage(data);
             break;
           }
 
           case "PG_UNAUTHORIZED": {
-            console.log("🟢 Extension: PG_UNAUTHORIZED");
+            console.log("🟢 Content: PG_UNAUTHORIZED", { origin, data });
             window.postMessage(data, "http://localhost:3000/");
             break;
           }
@@ -187,6 +85,16 @@
     });
   }
 })();
+
+// Send to background.js or panel.js
+function sendToBackgroundJS(data, targetOrigin = "*") {
+  chrome.runtime.sendMessage(data, targetOrigin);
+}
+
+// Send to website (PG,etc)
+function sendToWebsite(data, targetOrigin) {
+  window.postMessage(data, targetOrigin ?? "http://localhost:8082/");
+}
 
 // ==================================================
 // Scan Form Fields
@@ -217,23 +125,6 @@ function scanFormElements() {
       attributes[attr.name] = attr.value;
     });
     return attributes;
-  }
-
-  // Custom replacer function to handle circular references
-  function replacer() {
-    const seen = new WeakSet();
-    return (key, value) => {
-      if (typeof value === "object" && value !== null) {
-        if (seen.has(value)) {
-          return "[Circular]";
-        }
-        seen.add(value);
-      }
-      if (value instanceof Element) {
-        return `[Element ${value.tagName}]`;
-      }
-      return value;
-    };
   }
 
   const formElements = document.querySelectorAll("input, select, textarea");
@@ -270,6 +161,23 @@ function scanFormElements() {
 
   // return JSON.stringify(elementsInfo, null, 2);
   return JSON.stringify(elementsInfo, replacer(), 2);
+}
+
+// Custom replacer function to handle circular references
+function replacer() {
+  const seen = new WeakSet();
+  return (key, value) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) {
+        return "[Circular]";
+      }
+      seen.add(value);
+    }
+    if (value instanceof Element) {
+      return `[Element ${value.tagName}]`;
+    }
+    return value;
+  };
 }
 
 // ==================================================
@@ -331,36 +239,4 @@ function fillForm(formData) {
 
     handleGenericField(element, field);
   });
-}
-
-// ==================================================
-// Navigate to specific page
-// ==================================================
-function isLoggedIn() {
-  // Define common login button selectors
-  const loginSelectors = [
-    "button:contains('Login')",
-    "button:contains('Sign In')",
-    "a:contains('Login')",
-    "a:contains('Sign In')",
-    "[id*='login']",
-    "[class*='login']",
-  ];
-
-  // Check if a login button exists
-  let loginButton = loginSelectors.some((selector) =>
-    document.querySelector(selector)
-  );
-
-  // Get current URL
-  let currentUrl = window.location.href;
-
-  // Determine login status
-  if (loginButton) {
-    console.log("User is NOT logged in. URL:", currentUrl);
-    return { loggedIn: false, url: currentUrl };
-  } else {
-    console.log("User is logged in. URL:", currentUrl);
-    return { loggedIn: true, url: currentUrl };
-  }
 }
