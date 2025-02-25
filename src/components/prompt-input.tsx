@@ -21,6 +21,7 @@ import {
 import React from "react";
 import { IMAGE_MIME_TYPE } from "./constants";
 import pdf2md from "@opendocsg/pdf2md";
+import { notifications } from "@mantine/notifications";
 
 const ACCEPT_MIME_TYPES = [...IMAGE_MIME_TYPE, "application/pdf"];
 
@@ -96,8 +97,20 @@ export default function PromptInput({
                     accept={ACCEPT_MIME_TYPES.join(",")}
                     onChange={(newFiles) => {
                       newFiles.forEach((file) => {
+                        console.log(file);
                         if (file && !_files.find((e) => e.name === file.name)) {
-                          filesHandler.append(file);
+                          if (
+                            file.type.startsWith("image/") ||
+                            file.type.includes("pdf")
+                          ) {
+                            filesHandler.append(file);
+                          } else {
+                            notifications.show({
+                              title: "File type not supported",
+                              color: "red",
+                              message: file.name,
+                            });
+                          }
                           // if (file.type === "application/pdf") {
                           //   file.arrayBuffer().then((buf) => {
                           //     pdf2md(buf).then((markdown) => {
