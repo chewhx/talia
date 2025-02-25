@@ -36,7 +36,7 @@ export default function MainPage() {
   });
 
   const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
-  const [draftID, setDraftID] = useState<string | null>();
+  const [draftInfo, setDraftInfo] = useState<{} | null>(null);
   const [mockData, setMockData] = useState<string>("mock-data");
   const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
 
@@ -89,16 +89,26 @@ export default function MainPage() {
           });
         } else if (data?.currentWebsite === "GoogleClassroom") {
         }
-        console.log({ mockData });
         setMockData(JSON.stringify(mockData));
 
         break;
       }
 
       case TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE: {
-        const receivedData = data.result;
-        console.log("🟢 HeyTalia: PG_DRAFT_RESPONSE", JSON.parse(receivedData));
-        // return announcementDraftId: number or consentFormDraftId: number
+        const receivedData = JSON.parse(data.result ?? {});
+        console.log("🟢 HeyTalia: PG_DRAFT_RESPONSE", receivedData);
+        if (receivedData?.announcementDraftId) {
+          setDraftInfo({
+            id: receivedData.announcementDraftId,
+            type: "announcements",
+          });
+        } else if (receivedData?.consentFormDraftId) {
+          setDraftInfo({
+            id: receivedData.consentFormDraftId,
+            type: "consentForms",
+          });
+        }
+
         break;
       }
 
@@ -110,49 +120,38 @@ export default function MainPage() {
   });
 
   const scanFormFields = () => {
-    console.log("🟢 HeyTalia: SCAN_FORM_REQUEST");
-    window.parent.postMessage(
-      { action: TALIA_EVENTS.actions.SCAN_FORM_REQUEST },
-      "*"
-    );
+    sendMessageToExtension({ action: TALIA_EVENTS.actions.SCAN_FORM_REQUEST });
   };
 
   const submitDraft = (
     type: "PG_ANNOUNCEMENT" | "PG_CONSENT_FORM",
     data: any
   ) => {
-    try {
-      console.log("🟢 HeyTalia: PG_DRAFT_REQUEST");
-
-      window.parent.postMessage(
-        {
-          action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
-          type,
-          data: JSON.stringify(data),
-        },
-        `*`
-      );
-    } catch (error) {
-      console.log({ error });
-    }
+    sendMessageToExtension({
+      action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
+      type,
+      data: JSON.stringify(data),
+    });
   };
 
   const goToDraftPage = () => {
-    console.log("🟢 HeyTalia: GO_DRAFT_PAGE");
-    window.parent.postMessage(
-      {
-        action: "GO_DRAFT_PAGE",
-        draftID: 1011,
-      },
-      `*`
-    );
+    sendMessageToExtension({
+      action: TALIA_EVENTS.actions.GO_DRAFT_PAGE,
+
+      draftInfo: draftInfo,
+    });
   };
 
   const fillForm = () => {
-    window.parent.postMessage(
-      { action: TALIA_EVENTS.actions.FILL_FORM_REQUEST, data: mockData },
-      `${chromeExtensionID}`
-    );
+    sendMessageToExtension({
+      action: TALIA_EVENTS.actions.FILL_FORM_REQUEST,
+      data: mockData,
+    });
+  };
+
+  const sendMessageToExtension = (data: any) => {
+    console.log(`🟢 HeyTalia: ${data?.action}`);
+    window.parent.postMessage(data, `${chromeExtensionID}`);
   };
 
   return (

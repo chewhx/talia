@@ -28,8 +28,6 @@
     if (data.action === "FILL_FORM_REQUEST") {
       console.log("🟢 Content: FILL_FORM_REQUEST", { data, sender });
 
-      let targetFillForm = fillForm;
-
       if (data.currentWebsite === "SLS") {
         const formData = JSON.parse(data.data ?? {});
         fillSLS(formData);
@@ -37,7 +35,7 @@
         fillGoogleClassroom(data?.data); //Only one string
       }
 
-      return;
+      return true;
     }
 
     /* Actions for PG */
@@ -54,39 +52,36 @@
     }
   });
 
-  if (!window.hasContentScriptListener) {
-    window.hasContentScriptListener = true;
+  window.addEventListener("message", (event) => {
+    const { origin, data } = event;
 
-    window.addEventListener("message", (event) => {
-      const { origin, data } = event;
-      if (origin !== "http://localhost:8082") {
-        return;
-      }
+    if (origin !== "http://localhost:8082") {
+      return;
+    }
 
-      // // Handle message from active tab website
-      // // Only for PG
-      if (origin === "http://localhost:8082") {
-        switch (data.action) {
-          case "PG_DRAFT_RESPONSE": {
-            console.log("🟢 Content: PG_DRAFT_RESPONSE", { origin, data });
-            chrome.runtime.sendMessage(data);
-            break;
-          }
+    // // Handle message from active tab website
+    // // Only for PG
+    if (origin === "http://localhost:8082") {
+      switch (data.action) {
+        case "PG_DRAFT_RESPONSE": {
+          console.log("🟢 Content: PG_DRAFT_RESPONSE", { origin, data });
+          sendToBackgroundJS(data);
+          break;
+        }
 
-          case "PG_UNAUTHORIZED": {
-            console.log("🟢 Content: PG_UNAUTHORIZED", { origin, data });
-            window.postMessage(data, "http://localhost:3000/");
-            break;
-          }
+        case "PG_UNAUTHORIZED": {
+          console.log("🟢 Content: PG_UNAUTHORIZED", { origin, data });
+          window.postMessage(data, "http://localhost:3000/");
+          break;
         }
       }
-    });
-  }
+    }
+  });
 })();
 
 // Send to background.js or panel.js
-function sendToBackgroundJS(data, targetOrigin = "*") {
-  chrome.runtime.sendMessage(data, targetOrigin);
+function sendToBackgroundJS(data) {
+  chrome.runtime.sendMessage(data);
 }
 
 // Send to website (PG,etc)
@@ -115,14 +110,6 @@ function scanFormElements() {
         })),
       }),
     };
-  }
-
-  function getAttributes(element) {
-    const attributes = {};
-    Array.from(element.attributes).forEach((attr) => {
-      attributes[attr.name] = attr.value;
-    });
-    return attributes;
   }
 
   const formElements = document.querySelectorAll("input, select, textarea");
@@ -206,16 +193,6 @@ function fillForm(formData) {
     } else {
       console.warn(`Element not found for: ${JSON.stringify(element)}`);
     }
-  }
-
-  function findUniqueAttribute(attributes) {
-    const priorityAttrs = ["aria-label", "placeholder", "data-testid"];
-    for (const attr of priorityAttrs) {
-      if (attributes?.[attr]) {
-        return { name: attr, value: attributes?.[attr] };
-      }
-    }
-    return null;
   }
 
   function triggerChange(element) {

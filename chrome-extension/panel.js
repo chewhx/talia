@@ -1,8 +1,11 @@
 window.addEventListener("message", (event) => {
   const { origin, data } = event;
 
-  // Only handle request from HeyTalia
-  if (origin !== "http://localhost:3000") {
+  /*  Only handle request from HeyTalia */
+  if (
+    origin !== "http://localhost:3000" &&
+    origin !== "http://localhost:8082"
+  ) {
     return;
   }
 
@@ -31,12 +34,15 @@ window.addEventListener("message", (event) => {
       sendMessageToContentJSWithoutResponse(data);
       break;
     }
-    case "PG_DRAFT_RESPONSE": {
-      console.log("🟢 Panel: PG_DRAFT_RESPONSE", { origin, data });
+  }
+});
 
-      sendMessageToIframe(data);
-      break;
-    }
+chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
+  /*  Only handle request from background.js */
+  if (data.action === "PG_DRAFT_RESPONSE") {
+    console.log("🟢 Panel: PG_DRAFT_RESPONSE", { sender, data });
+    sendMessageToIframe(data);
+    return;
   }
 });
 
@@ -47,7 +53,6 @@ function sendMessageToContentJSWithoutResponse(data) {
 
     data.currentWebsite = identifyTargetWebsite(activeTab.url);
 
-    console.log({ withoutresponse: data });
     chrome.tabs.sendMessage(activeTab.id, data);
   });
 }
@@ -56,11 +61,9 @@ function sendMessageToContentJSWithoutResponse(data) {
 function sendMessageToContentJSWithResponse(data) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const activeTab = tabs[0];
-    console.log({ activeTab });
     data.currentWebsite = identifyTargetWebsite(activeTab.url);
     chrome.tabs.sendMessage(activeTab.id, data, (response) => {
       if (response) {
-        console.log({ response });
         response.currentWebsite = data.currentWebsite;
         sendMessageToIframe(response);
       }
