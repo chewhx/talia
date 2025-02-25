@@ -1,13 +1,13 @@
 async function scanSLS() {
-  if (!isModalOpen()) {
-    openCreateAnnouncementModal();
-    await waitForModal();
+  if (!isSLSModalOpen()) {
+    openSLSCreateAnnouncementModal();
+    await waitForSLSModal();
   }
 
   return getSLSInputFields();
 }
 
-function waitForModal(maxAttempts = 20, interval = 1000) {
+function waitForSLSModal(maxAttempts = 20, interval = 1000) {
   return new Promise((resolve, reject) => {
     let attempts = 0;
 
@@ -113,20 +113,10 @@ function getSLSInputFields() {
   return fields;
 }
 
-/*
-
-formData Format:
-[
-  { id: "uid-ad0ce357-6ce1-480b-b84c-66b96619fd5d", value:"Title"},
-  { id: "tiny-vue_45863134941740404593206", value:"<b>Message</b>"},
-  { id: "uid-af40f2c1-f788-49c5-a4d2-2f83c7edd0ce", value:"10:30"},
-  { id: "uid-c34972da-6053-46d7-a4d4-24e8d2b838ee-input-1", value:'24 Feb 2025'}
-]
-*/
 async function fillSLS(formData) {
-  if (!isModalOpen()) {
-    openCreateAnnouncementModal();
-    await waitForModal();
+  if (!isSLSModalOpen()) {
+    openSLSCreateAnnouncementModal();
+    await waitForSLSModal();
   }
 
   if (!formData) {
@@ -168,14 +158,14 @@ async function fillSLS(formData) {
 // Usage
 // const formFields = categorizeFormFields();
 
-function isModalOpen() {
+function isSLSModalOpen() {
   const modal = document.getElementsByClassName("announcement-editor");
   return !!modal[0];
 }
 
-function openCreateAnnouncementModal() {
-  const createAnn = document.getElementsByClassName("create-announcement");
-  createAnn[0].click();
+function openSLSCreateAnnouncementModal() {
+  const createAnnModal = document.getElementsByClassName("create-announcement");
+  createAnnModal[0].click();
 }
 
 /* Field Format */

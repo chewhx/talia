@@ -13,7 +13,7 @@
       if (data.currentWebsite === "SLS") {
         targetScanner = scanSLS;
       } else if (data.currentWebsite === "GoogleClassroom") {
-        targetScanner = fillGoogleClassroom;
+        targetScanner = scanClassroom; // Fake scan as we use hardcode placeholder as id
       }
 
       targetScanner().then((result) => {
@@ -27,17 +27,15 @@
 
     if (data.action === "FILL_FORM_REQUEST") {
       console.log("🟢 Content: FILL_FORM_REQUEST", { data, sender });
-      const formData = JSON.parse(data.data);
 
       let targetFillForm = fillForm;
 
       if (data.currentWebsite === "SLS") {
-        targetFillForm = fillSLS;
+        const formData = JSON.parse(data.data ?? {});
+        fillSLS(formData);
       } else if (data.currentWebsite === "GoogleClassroom") {
-        targetFillForm = fillGoogleClassroom;
+        fillGoogleClassroom(data?.data); //Only one string
       }
-
-      targetFillForm(formData);
 
       return;
     }

@@ -56,6 +56,7 @@ function sendMessageToContentJSWithoutResponse(data) {
 function sendMessageToContentJSWithResponse(data) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const activeTab = tabs[0];
+    console.log({ activeTab });
     data.currentWebsite = identifyTargetWebsite(activeTab.url);
     chrome.tabs.sendMessage(activeTab.id, data, (response) => {
       if (response) {
@@ -81,16 +82,15 @@ function sendMessageToBackground(data) {
 }
 
 function identifyTargetWebsite(url) {
-  if (url.includes("classroom.google.com")) {
-    return "GoogleClassroom";
-  } else if (url.includes("vle.learning.moe.edu.sg")) {
-    return "SLS";
-  } else if (
-    url.includes("localhost:8082") ||
-    url.includes("dev-pg.moe.edu.sg")
-  ) {
+  const urlLower = url.toLowerCase();
+
+  if (urlLower.includes("classroom.google.com")) return "GoogleClassroom";
+  if (urlLower.includes("vle.learning.moe.edu.sg")) return "SLS";
+  if (
+    urlLower.includes("localhost:8082") ||
+    urlLower.includes("dev-pg.moe.edu.sg")
+  )
     return "PG";
-  } else {
-    return "";
-  }
+
+  return "";
 }

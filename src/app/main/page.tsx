@@ -37,7 +37,7 @@ export default function MainPage() {
 
   const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
   const [draftID, setDraftID] = useState<string | null>();
-  const [mockData, setMockData] = useState<string>("");
+  const [mockData, setMockData] = useState<string>("mock-data");
   const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
 
   // used to disable input while confirmation is pending
