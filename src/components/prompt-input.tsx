@@ -97,23 +97,24 @@ export default function PromptInput({
                     onChange={(newFiles) => {
                       newFiles.forEach((file) => {
                         if (file && !_files.find((e) => e.name === file.name)) {
-                          if (file.type === "application/pdf") {
-                            file.arrayBuffer().then((buf) => {
-                              pdf2md(buf).then((markdown) => {
-                                const blob = new Blob([markdown], {
-                                  type: "text/plain",
-                                });
-                                const markdownFile = new File(
-                                  [blob],
-                                  file.name,
-                                  { type: "text/plain" }
-                                );
-                                filesHandler.append(markdownFile);
-                              });
-                            });
-                          } else {
-                            filesHandler.append(file);
-                          }
+                          filesHandler.append(file);
+                          // if (file.type === "application/pdf") {
+                          //   file.arrayBuffer().then((buf) => {
+                          //     pdf2md(buf).then((markdown) => {
+                          //       const blob = new Blob([markdown], {
+                          //         type: "text/plain",
+                          //       });
+                          //       const markdownFile = new File(
+                          //         [blob],
+                          //         file.name,
+                          //         { type: "text/plain" }
+                          //       );
+                          //       filesHandler.append(markdownFile);
+                          //     });
+                          //   });
+                          // } else {
+                          //   filesHandler.append(file);
+                          // }
                         }
                       });
                     }}
