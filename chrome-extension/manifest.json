@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "HeyTalia",
+  "version": "1.0",
+  "description": "HeyTalia extension",
+  "permissions": [
+    "sidePanel",
+    "notifications",
+    "storage",
+    "scripting",
+    "tabs",
+    "activeTab"
+  ],
+  "host_permissions": ["http://localhost:3000/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "content.js",
+        "utils/SLSScanner.js",
+        "utils/GoogleClassroomScanner.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "talia.png",
+    "48": "talia.png",
+    "128": "talia.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "talia.png",
+      "48": "talia.png",
+      "128": "talia.png"
+    },
+    "default_title": "HeyTalia"
+  },
+  "externally_connectable": {
+    "matches": ["http://localhost:3000/*", "http://localhost:8082/*"]
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none';"
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  }
+}

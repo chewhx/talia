@@ -5,6 +5,7 @@ import {
 import { tool } from "ai";
 import { z } from "zod";
 import { APPROVAL, PG_POSTS_TYPE } from "./utils";
+import { FormDraftSchema } from "@/schema/formDraft.schema";
 
 const postToParentsGateway = tool({
   description:
@@ -72,14 +73,29 @@ const retrieveResource = tool({
   },
 });
 
+const draftFormToParentsGateway = tool({
+  description: "Trigger PG API to create a consent form draft",
+  parameters: z.object({
+    result: z
+      .string()
+      .describe(
+        "The content or file from user or instructed by user to generate content by LLM"
+      ),
+    fields: FormDraftSchema.describe("The schema to create a form draft"),
+  }),
+
+  // no execute function, we want human in the loop
+});
+
 export const tools = {
   postToParentsGateway,
   sendEmail,
   retrieveResource,
+  draftFormToParentsGateway,
 };
 
 export const renderToolUIVariables = (
-  toolName: keyof typeof tools | string
+  toolName: keyof typeof tools | (string & {})
 ): {
   description: string;
   options: Array<{
@@ -113,6 +129,22 @@ export const renderToolUIVariables = (
             title: "Send",
             description: "",
             result: APPROVAL.YES,
+          },
+        ],
+      };
+    case "draftFormToParentsGateway":
+      return {
+        description: "",
+        options: [
+          {
+            title: "Confirm",
+            description: "Create a consent form draft",
+            result: APPROVAL.YES,
+          },
+          {
+            title: "No",
+            description: "Cancel to create consent form draft",
+            result: APPROVAL.NO,
           },
         ],
       };
