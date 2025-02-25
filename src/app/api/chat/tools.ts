@@ -5,6 +5,33 @@ import {
 import { tool } from "ai";
 import { z } from "zod";
 import { APPROVAL, PG_POSTS_TYPE } from "./utils";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
+
+const DAYS_OF_WEEK = {
+  0: "Sunday",
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+} as const;
+
+const getDayOfTheWeek = tool({
+  description:
+    "Get the day of the week based on a given date, for assistant to produce response with accurate date and day.",
+  parameters: z.object({
+    year: z.number().describe("Four-digit year"),
+    month: z.number().describe("Month, 2-digits, beginning at 01"),
+    day: z.number().describe("Day of month, 2-digits"),
+  }),
+  execute: async ({ year, month, day }): Promise<string> => {
+    return DAYS_OF_WEEK[dayjs(`${year}-${month}-${day}`).day()];
+  },
+});
 
 const postToParentsGateway = tool({
   description:
@@ -76,6 +103,7 @@ export const tools = {
   postToParentsGateway,
   sendEmail,
   retrieveResource,
+  getDayOfTheWeek,
 };
 
 export const renderToolUIVariables = (
