@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-export const StudentLearningSpaceFormSchema = z.array(
+// Pass to extension to fill in
+export const StudentLearningSpacePrefillSchema = z.array(
   z.object({
     id: z.string(),
     value: z.string(),
@@ -17,3 +18,22 @@ formData Format:
   { id: "uid-c34972da-6053-46d7-a4d4-24e8d2b838ee-input-1", value:'24 Feb 2025'}
 ]
 */
+
+// Scanned fields from extension
+const attributesSchema = z.object({
+  id: z.string(),
+  class: z.string(),
+  type: z.string().optional(),
+  name: z.string(),
+  placeholder: z.string().optional(),
+  role: z.string().optional(),
+});
+
+const elementSchema = z.object({
+  category: z.string(),
+  element: z.string(),
+  attributes: attributesSchema,
+  id: z.string(),
+});
+
+export const StudentLearningSpaceFieldSchema = z.array(elementSchema);

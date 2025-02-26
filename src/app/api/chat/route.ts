@@ -1,4 +1,5 @@
 import { env } from "@/env";
+import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
 import { bedrock } from "@ai-sdk/amazon-bedrock";
 import { openai } from "@ai-sdk/openai";
 import { createDataStreamResponse, streamText, UIMessage } from "ai";
@@ -6,8 +7,6 @@ import dayjs from "dayjs";
 import { Resend } from "resend";
 import { tools } from "./tools";
 import { processToolCalls } from "./utils";
-import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
-import { FormDraftSchema } from "@/schema/formDraft.schema";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -27,7 +26,7 @@ export async function POST(req: Request) {
     );
 
     // Logging to check the messages sent are correct
-    // console.log(JSON.stringify(messages, null, 2));
+    console.log(JSON.stringify(messages, null, 2));
 
     return createDataStreamResponse({
       execute: async (dataStream) => {
@@ -70,10 +69,12 @@ export async function POST(req: Request) {
               )}"`;
             },
 
-            draftFormToParentsGateway: async ({ result }) => {
-              return `Extract details from the content and return a JSON object to user which matching the schema as user need to check the fields are correct or not:
+            createPGAnnouncementDraft: async ({ result, fields }) => {
+              console.log("Route: ", { result, fields });
+
+              return `If No denied, ask user to add on or modify the content.
                       Schema: ${JSON.stringify(AnnouncementDraftSchema.shape)}
-                      Content: ${result}`;
+                      `;
             },
           }
         );

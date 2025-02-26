@@ -1,5 +1,8 @@
 import { renderToolUIVariables, tools } from "@/app/api/chat/tools";
-import { getToolsRequiringConfirmation } from "@/app/api/chat/utils";
+import {
+  getToolsRequiringConfirmation,
+  waitForScanResponse,
+} from "@/app/api/chat/utils";
 import { useChat } from "@ai-sdk/react";
 import {
   Button,
@@ -12,6 +15,7 @@ import {
 } from "@mantine/core";
 import { Message } from "ai";
 import Markdown from "./markdown";
+import { TALIA_EVENTS } from "../../shared/constants";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -43,7 +47,6 @@ export default function AIMessage({
             const toolInvocation = part.toolInvocation;
             const toolCallId = toolInvocation.toolCallId;
 
-            console.log({ toolInvocation });
             // render confirmation tool (client-side tool with user interaction)
             if (
               toolsRequiringConfirmation.includes(toolInvocation.toolName) &&
@@ -135,27 +138,64 @@ export default function AIMessage({
             if (
               toolsRequiringConfirmation.includes(toolInvocation.toolName) &&
               toolInvocation.state === "call" &&
-              toolInvocation.toolName === "draftFormToParentsGateway"
+              toolInvocation.toolName === "createPGAnnouncementDraft"
             ) {
               const { description, options } = renderToolUIVariables(
                 toolInvocation.toolName
               );
-              console.log(toolInvocation, toolsRequiringConfirmation);
+
+              const args = toolInvocation.args;
+              console.log({
+                toolsRequiringConfirmation,
+                toolInvocation,
+                args,
+                options,
+                description,
+              });
+
+              const formattedArgs =
+                "```\n" + JSON.stringify(args.fields, null, 2) + "\n```";
+
               return (
                 <Stack key={toolCallId}>
                   <Paper px="xs" py="5" fz="sm" bg="white" w="100%">
-                    <Markdown>{description}</Markdown>
+                    Your current fields are: <br />
+                    <Markdown>{formattedArgs}</Markdown>
                   </Paper>
                   <SimpleGrid cols={2}>
                     {options.map((option) => (
                       <UnstyledButton
                         key={`toolCall-${toolCallId}-option-${option.title}`}
-                        onClick={() =>
+                        onClick={async () => {
+                          const announcementDraftDetail =
+                            await waitForScanResponse(
+                              {
+                                action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
+                                data: {
+                                  ...args.fields,
+                                  content: `{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":"left"},"content":[{"type":"text","text":"Draft "},{"type":"text","marks":[{"type":"underline"}],"text":"yes "}]}]}`,
+                                },
+                                type: "PG_ANNOUNCEMENT",
+                              },
+                              TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE
+                            );
+
+                          const announcementDraftID =
+                            announcementDraftDetail.result.announcementDraftId;
+
+                          await waitForScanResponse({
+                            action: TALIA_EVENTS.actions.GO_DRAFT_PAGE,
+                            draftInfo: {
+                              id: announcementDraftID,
+                              type: "announcements",
+                            },
+                          });
+
                           addToolResult({
                             toolCallId,
-                            result: option.result,
-                          })
-                        }
+                            result: `Inform user the draft created with the content ${args.fields} and will be navigate to the draft page now.`,
+                          });
+                        }}
                       >
                         <Paper
                           shadow="sm"

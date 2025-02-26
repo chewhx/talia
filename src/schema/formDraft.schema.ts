@@ -53,13 +53,14 @@ export const FormDraftSchema = z.object({
       time: z.string(),
     })
     .optional()
-    .describe("Event starting date time"),
+    .describe("Event starting date time. This is optional"),
   eventEndDate: z
     .object({
       date: z.string(),
       time: z.string(),
     })
-    .describe("Event ending date time"),
+    .optional()
+    .describe("Event ending date time. This is optional"),
   reminderDate: z.string().optional().describe("The reminder trigger date"),
   addReminderType: z
     .enum(["ONE_TIME", "DAILY", "NONE"])
@@ -98,6 +99,7 @@ export const FormDraftSchema = z.object({
         value: z.number(),
       })
     )
+    .optional()
     .describe(
       "The student groups, individual students or both that will receive the form"
     ),

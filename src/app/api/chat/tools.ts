@@ -33,6 +33,7 @@ const getDayOfTheWeek = tool({
     return DAYS_OF_WEEK[dayjs(`${year}-${month}-${day}`).day()];
   },
 });
+import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
 
 const postToParentsGateway = tool({
   description:
@@ -100,26 +101,33 @@ const retrieveResource = tool({
   },
 });
 
-const draftFormToParentsGateway = tool({
-  description: "Trigger PG API to create a consent form draft",
+const createPGFormDraft = tool({
+  description: "Create a PG consent form draft",
   parameters: z.object({
-    result: z
-      .string()
-      .describe(
-        "The content or file from user or instructed by user to generate content by LLM"
-      ),
-    fields: FormDraftSchema.describe("The schema to create a form draft"),
+    fields: FormDraftSchema.describe(
+      "The schema to create a form draft. Return empty for optional field if the content does not match."
+    ),
   }),
+});
 
-  // no execute function, we want human in the loop
+const createPGAnnouncementDraft = tool({
+  description: `
+    Create a PG announcement draft based on the content.`,
+  parameters: z.object({
+    result: z.string().describe("The announcement original content"),
+    fields: AnnouncementDraftSchema.describe(
+      "The schema to create a announcement draft"
+    ),
+  }),
 });
 
 export const tools = {
   postToParentsGateway,
   sendEmail,
   retrieveResource,
-  draftFormToParentsGateway,
   getDayOfTheWeek,
+  createPGFormDraft,
+  createPGAnnouncementDraft,
 };
 
 export const renderToolUIVariables = (
@@ -160,7 +168,7 @@ export const renderToolUIVariables = (
           },
         ],
       };
-    case "draftFormToParentsGateway":
+    case "createPGFormDraft":
       return {
         description: "",
         options: [
@@ -170,8 +178,24 @@ export const renderToolUIVariables = (
             result: APPROVAL.YES,
           },
           {
-            title: "No",
+            title: "Cancel",
             description: "Cancel to create consent form draft",
+            result: APPROVAL.NO,
+          },
+        ],
+      };
+    case "createPGAnnouncementDraft":
+      return {
+        description: "",
+        options: [
+          {
+            title: "Confirm",
+            description: "Create a announcement draft",
+            result: APPROVAL.YES,
+          },
+          {
+            title: "Cancel",
+            description: "Cancel to create announcement draft",
             result: APPROVAL.NO,
           },
         ],

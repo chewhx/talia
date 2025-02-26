@@ -3,49 +3,54 @@ import { z } from "zod";
 export const AnnouncementDraftSchema = z.object({
   title: z.string().describe("The title of the announcement"),
   status: z.string().default("DRAFT").describe("The status of the post"),
-  content: z.string().describe("The content of the announcement"),
+  content: z
+    .string()
+    .describe(
+      "Announcement content that format from tiptap/react. Max 2000 characters"
+    ),
   enquiryEmailAddress: z
     .string()
     .describe("The preferred email address to receive enquiries from parents"),
-  staffGroups: z
-    .array(
-      z.object({
-        type: z.enum(["individual", "school", "level"]),
-        label: z.string(),
-        value: z.number(),
-      })
-    )
-    .optional()
-    .describe(
-      "The staff who will be able to view and edit form response and delete form"
-    ),
-  studentGroups: z
-    .array(
-      z.object({
-        type: z.enum([
-          "all",
-          "class",
-          "level",
-          "cca",
-          "school",
-          "group",
-          "student",
-        ]),
-        label: z.string(),
-        value: z.number(),
-      })
-    )
-    .describe(
-      "The student groups, individual students or both that will receive the announcement"
-    ),
-  images: z
-    .array(z.object({}))
-    .optional()
-    .describe("The image gallery for announcement"),
-  attachments: z
-    .array(z.object({}))
-    .optional()
-    .describe("The attachment for announcement"),
+  // staffGroups: z
+  //   .array(
+  //     z.object({
+  //       type: z.enum(["individual", "school", "level"]),
+  //       label: z.string(),
+  //       value: z.number(),
+  //     })
+  //   )
+  //   .optional()
+  //   .describe(
+  //     "The staff who will be able to view and edit form response and delete form"
+  //   ),
+  // studentGroups: z
+  //   .array(
+  //     z.object({
+  //       type: z.enum([
+  //         "all",
+  //         "class",
+  //         "level",
+  //         "cca",
+  //         "school",
+  //         "group",
+  //         "student",
+  //       ]),
+  //       label: z.string(),
+  //       value: z.number(),
+  //     })
+  //   )
+  //   .optional()
+  //   .describe(
+  //     "The student groups, individual students or both that will receive the announcement"
+  //   ),
+  // images: z
+  //   .array(z.object({}))
+  //   .optional()
+  //   .describe("The image gallery for announcement"),
+  // attachments: z
+  //   .array(z.object({}))
+  //   .optional()
+  //   .describe("The attachment for announcement"),
   urls: z
     .array(z.object({ webLink: z.string(), linkDescription: z.string() }))
     .optional()

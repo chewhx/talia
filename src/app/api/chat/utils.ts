@@ -6,6 +6,7 @@ import {
   ToolSet,
 } from "ai";
 import { z } from "zod";
+import { TALIA_EVENTS } from "../../../../shared/constants";
 
 // PG Posts types to be shared across frontend and backend
 export const PG_POSTS_TYPE = {
@@ -144,4 +145,62 @@ export function getToolsRequiringConfirmation<T extends ToolSet>(
     const maybeTool = tools[key];
     return typeof maybeTool.execute !== "function";
   }) as string[];
+}
+
+// export function waitForScanResponse(): Promise<any> {
+//   return new Promise((resolve, reject) => {
+//     const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
+//     window.parent.postMessage(
+//       { action: TALIA_EVENTS.actions.SCAN_FORM_REQUEST },
+//       `${chromeExtensionID}`
+//     );
+
+//     const handleMessage = (event: MessageEvent) => {
+//       if (event.data.action === "SCAN_FORM_RESPONSE") {
+//         window.removeEventListener("message", handleMessage); // Cleanup listener
+//         resolve(event.data.fields); // Resolve with scanned form data
+//       }
+//     };
+
+//     // Listen for messages
+//     window.addEventListener("message", handleMessage);
+
+//     // Timeout in case no response is received
+//     setTimeout(() => {
+//       window.removeEventListener("message", handleMessage);
+//     }, 5000); // Adjust timeout if needed
+//   });
+// }
+
+export function waitForScanResponse(
+  requestBody?: any,
+  responseAction?: string
+): Promise<any> {
+  return new Promise((resolve, reject) => {
+    console.log({
+      requestBody,
+      responseAction,
+    });
+    const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
+    window.parent.postMessage(requestBody, `${chromeExtensionID}`);
+
+    const handleMessage = (event: MessageEvent) => {
+      console.log("Event: ", event);
+      if (event.data.action === responseAction) {
+        window.removeEventListener("message", handleMessage); // Cleanup listener
+        resolve(event.data); // Resolve with scanned form data
+      }
+    };
+
+    if (responseAction) {
+      // Listen for messages
+      console.log(responseAction);
+      window.addEventListener("message", handleMessage);
+
+      // Timeout in case no response is received
+      setTimeout(() => {
+        window.removeEventListener("message", handleMessage);
+      }, 5000); // Adjust timeout if needed
+    }
+  });
 }
