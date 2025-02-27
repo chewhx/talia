@@ -145,13 +145,6 @@ export default function AIMessage({
               );
 
               const args = toolInvocation.args;
-              console.log({
-                toolsRequiringConfirmation,
-                toolInvocation,
-                args,
-                options,
-                description,
-              });
 
               const formattedArgs =
                 "```\n" + JSON.stringify(args.fields, null, 2) + "\n```";
@@ -160,6 +153,7 @@ export default function AIMessage({
                 <Stack key={toolCallId}>
                   <Paper px="xs" py="5" fz="sm" bg="white" w="100%">
                     Your current fields are: <br />
+                    {/* Todo: the UI of the fields, for user to confirm and check */}
                     <Markdown>{formattedArgs}</Markdown>
                   </Paper>
                   <SimpleGrid cols={2}>
@@ -167,33 +161,52 @@ export default function AIMessage({
                       <UnstyledButton
                         key={`toolCall-${toolCallId}-option-${option.title}`}
                         onClick={async () => {
-                          const announcementDraftDetail =
-                            await waitForScanResponse(
+                          if (option.title === "Confirm") {
+                            // Intercept API call to update the content to specific format
+                            const formattedContent = await fetch(
+                              "/api/generateRichText",
                               {
-                                action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
-                                data: {
-                                  ...args.fields,
-                                  content: `{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":"left"},"content":[{"type":"text","text":"Draft "},{"type":"text","marks":[{"type":"underline"}],"text":"yes "}]}]}`,
-                                },
-                                type: "PG_ANNOUNCEMENT",
-                              },
-                              TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE
+                                method: "POST",
+                                body: JSON.stringify({
+                                  prompt: args?.fields?.content,
+                                }),
+                              }
                             );
 
-                          const announcementDraftID =
-                            announcementDraftDetail.result.announcementDraftId;
+                            const content = await formattedContent.json();
 
-                          await waitForScanResponse({
-                            action: TALIA_EVENTS.actions.GO_DRAFT_PAGE,
-                            draftInfo: {
-                              id: announcementDraftID,
-                              type: "announcements",
-                            },
-                          });
+                            // TODO: Create draft error handling (unsafe url, etc)
+                            const announcementDraftDetail =
+                              await waitForScanResponse(
+                                {
+                                  action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
+                                  data: {
+                                    ...args.fields,
+                                    content: JSON.stringify(
+                                      content?.object?.content ?? ""
+                                    ),
+                                  },
+                                  type: "PG_ANNOUNCEMENT",
+                                },
+                                TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE
+                              );
 
+                            const announcementDraftID =
+                              announcementDraftDetail.result
+                                .announcementDraftId;
+
+                            // Todo: To decide either navigate automatically or let user to click the link
+                            await waitForScanResponse({
+                              action: TALIA_EVENTS.actions.GO_DRAFT_PAGE,
+                              draftInfo: {
+                                id: announcementDraftID,
+                                type: "announcements",
+                              },
+                            });
+                          }
                           addToolResult({
                             toolCallId,
-                            result: `Inform user the draft created with the content ${args.fields} and will be navigate to the draft page now.`,
+                            result: option.result,
                           });
                         }}
                       >

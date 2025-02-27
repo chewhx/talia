@@ -174,12 +174,12 @@ export const renderToolUIVariables = (
         options: [
           {
             title: "Confirm",
-            description: "Create a consent form draft",
+            description: "Proceed to create a consent form draft",
             result: APPROVAL.YES,
           },
           {
             title: "Cancel",
-            description: "Cancel to create consent form draft",
+            description: "Cancel to create a announcement draft",
             result: APPROVAL.NO,
           },
         ],
@@ -190,12 +190,12 @@ export const renderToolUIVariables = (
         options: [
           {
             title: "Confirm",
-            description: "Create a announcement draft",
+            description: "Proceed to create a announcement draft",
             result: APPROVAL.YES,
           },
           {
             title: "Cancel",
-            description: "Cancel to create announcement draft",
+            description: "Cancel to create a announcement draft",
             result: APPROVAL.NO,
           },
         ],

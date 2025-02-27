@@ -1,5 +1,4 @@
 import { env } from "@/env";
-import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
 import { bedrock } from "@ai-sdk/amazon-bedrock";
 import { openai } from "@ai-sdk/openai";
 import { createDataStreamResponse, streamText, UIMessage } from "ai";
@@ -70,11 +69,12 @@ export async function POST(req: Request) {
             },
 
             createPGAnnouncementDraft: async ({ result, fields }) => {
-              console.log("Route: ", { result, fields });
+              console.log("Route Draft: ", { result, fields });
 
-              return `If No denied, ask user to add on or modify the content.
-                      Schema: ${JSON.stringify(AnnouncementDraftSchema.shape)}
-                      `;
+              return `
+                If "No, denied", you need to inform user whether want to add on or modify the ${fields}.
+                If "Yes, confirmed", you should show the ${fields} in markdown to let user what have been created.
+              `;
             },
           }
         );

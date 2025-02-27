@@ -6,7 +6,6 @@ import {
   ToolSet,
 } from "ai";
 import { z } from "zod";
-import { TALIA_EVENTS } from "../../../../shared/constants";
 
 // PG Posts types to be shared across frontend and backend
 export const PG_POSTS_TYPE = {
@@ -147,34 +146,9 @@ export function getToolsRequiringConfirmation<T extends ToolSet>(
   }) as string[];
 }
 
-// export function waitForScanResponse(): Promise<any> {
-//   return new Promise((resolve, reject) => {
-//     const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
-//     window.parent.postMessage(
-//       { action: TALIA_EVENTS.actions.SCAN_FORM_REQUEST },
-//       `${chromeExtensionID}`
-//     );
-
-//     const handleMessage = (event: MessageEvent) => {
-//       if (event.data.action === "SCAN_FORM_RESPONSE") {
-//         window.removeEventListener("message", handleMessage); // Cleanup listener
-//         resolve(event.data.fields); // Resolve with scanned form data
-//       }
-//     };
-
-//     // Listen for messages
-//     window.addEventListener("message", handleMessage);
-
-//     // Timeout in case no response is received
-//     setTimeout(() => {
-//       window.removeEventListener("message", handleMessage);
-//     }, 5000); // Adjust timeout if needed
-//   });
-// }
-
 export function waitForScanResponse(
-  requestBody?: any,
-  responseAction?: string
+  requestBody?: any, // Request body to the Extension
+  responseAction?: string // Target action to listen in HeyTalia
 ): Promise<any> {
   return new Promise((resolve, reject) => {
     console.log({

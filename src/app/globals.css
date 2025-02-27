@@ -3,10 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --talia-gray:#F5F7FA;
-  --talia-orange:#FFF0E8;
+  --talia-gray: #f5f7fa;
+  --talia-orange: #fff0e8;
 }
 
-body{
+body {
   background-color: var(--talia-gray);
+}
+
+.markdown-container {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.markdown-container p,
+.markdown-container li,
+.markdown-container pre {
+  white-space: pre-wrap; /* Preserves whitespace and line breaks */
+  word-break: break-word; /* Allows words to break if necessary */
 }

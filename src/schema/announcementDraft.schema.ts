@@ -6,8 +6,9 @@ export const AnnouncementDraftSchema = z.object({
   content: z
     .string()
     .describe(
-      "Announcement content that format from tiptap/react. Max 2000 characters"
-    ),
+      "Announcement content with format ProseMirror JSON document. It has max 2000 characters"
+    )
+    .max(2000),
   enquiryEmailAddress: z
     .string()
     .describe("The preferred email address to receive enquiries from parents"),
