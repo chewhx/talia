@@ -1,13 +1,15 @@
+import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
+import { FormDraftSchema } from "@/schema/formDraft.schema";
+import { StudentLearningSpacePrefillSchema } from "@/schema/studentLearningSpace.schema";
 import {
   BedrockAgentRuntimeClient,
   RetrieveCommand,
 } from "@aws-sdk/client-bedrock-agent-runtime";
 import { tool } from "ai";
-import { z } from "zod";
-import { APPROVAL, PG_POSTS_TYPE } from "./utils";
-import { FormDraftSchema } from "@/schema/formDraft.schema";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { z } from "zod";
+import { APPROVAL } from "./utils";
 
 dayjs.extend(customParseFormat);
 
@@ -32,18 +34,6 @@ const getDayOfTheWeek = tool({
   execute: async ({ year, month, day }): Promise<string> => {
     return DAYS_OF_WEEK[dayjs(`${year}-${month}-${day}`).day()];
   },
-});
-import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
-import { StudentLearningSpacePrefillSchema } from "@/schema/studentLearningSpace.schema";
-
-const postToParentsGateway = tool({
-  description:
-    "Post the final message to Parents Gateway (alias PG) upon request by the user.",
-  parameters: z.object({
-    result: z.string(),
-    postType: z.enum([PG_POSTS_TYPE.ANNOUNCEMENT, PG_POSTS_TYPE.CONSENT_FORM]),
-  }),
-  // no execute function, we want human in the loop
 });
 
 const sendEmail = tool({
@@ -133,7 +123,6 @@ const prefillSLSForm = tool({
 });
 
 export const tools = {
-  postToParentsGateway,
   sendEmail,
   retrieveResource,
   getDayOfTheWeek,
@@ -153,22 +142,6 @@ export const renderToolUIVariables = (
   }>;
 } => {
   switch (toolName) {
-    case "postToParentsGateway":
-      return {
-        description: "What post would you like to create? (Select one)",
-        options: [
-          {
-            title: "Announcement",
-            description: "Provides information only.",
-            result: PG_POSTS_TYPE.ANNOUNCEMENT,
-          },
-          {
-            title: "Consent Form",
-            description: "Requires parents to acknowledge or provide consent.",
-            result: PG_POSTS_TYPE.CONSENT_FORM,
-          },
-        ],
-      };
     case "sendEmail":
       return {
         description: "",

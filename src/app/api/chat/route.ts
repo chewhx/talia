@@ -10,17 +10,6 @@ import { processToolCalls } from "./utils";
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
-const errorHandler = async (error: any) => {
-  console.error("Error in data stream:", error);
-
-  return {
-    message: "An error occurred while processing your request.",
-    suggestion:
-      "Please try again with a different prompt or adjust your input.",
-    details: error.message || "Unknown error",
-  };
-};
-
 export async function POST(req: Request) {
   try {
     const {
@@ -37,14 +26,11 @@ export async function POST(req: Request) {
 
     // Logging to check the messages sent are correct
     console.log(JSON.stringify(messages, null, 2));
-    // // Logging to check the messages sent are correct
-    // console.log(JSON.stringify(messages, null, 2));
 
     return createDataStreamResponse({
       execute: async (dataStream) => {
         // Utility function to handle tools that require human confirmation
         // Checks for confirmation in last message and then runs associated tool
-        console.log({ messages, tools });
         const processedMessages = await processToolCalls(
           {
             messages,
@@ -52,14 +38,6 @@ export async function POST(req: Request) {
             tools,
           },
           {
-            // type-safe object for tools without an execute function
-            postToParentsGateway: async ({ result, postType }) => {
-              // The real action to post to PG
-              // Take the schema and the result, fill the result to the schema
-              // Post the schema to extensions
-
-              return `Posted to Parents Gateway: ${result}`;
-            },
             sendEmail: async ({
               emailAddresses,
               emailContent,
@@ -82,17 +60,13 @@ export async function POST(req: Request) {
             },
 
             createPGAnnouncementDraft: async ({ result, fields }) => {
-              console.log("Route Draft: ", { result, fields });
-
               return `
                 If "No, denied", you need to inform user whether want to add on or modify the ${fields}.
                 If "Yes, confirmed", you should show the ${fields} in markdown to let user what have been created.
               `;
             },
 
-            prefillSLSForm: async ({ result, fields }) => {
-              console.log("SLS Route: ", { result, fields });
-
+            prefillSLSForm: async ({ result }) => {
               return `Pre-filled the SLS form: ${result}`;
             },
           }
@@ -113,7 +87,12 @@ export async function POST(req: Request) {
 
         result.mergeIntoDataStream(dataStream);
       },
-      onError: errorHandler,
+      onError(error: any) {
+        return `Oops! Something went wrong: ${
+          error?.message ?? "Unknown error"
+        }.
+        Please try again with a different input or adjust your prompt for better results.`;
+      },
     });
   } catch (err) {
     console.error(err);
