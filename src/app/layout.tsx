@@ -1,13 +1,15 @@
+import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
 import {
   ColorSchemeScript,
   createTheme,
   mantineHtmlProps,
   MantineProvider,
 } from "@mantine/core";
-import "@mantine/core/styles.css";
 import "@fontsource/geist-sans";
 import "./globals.css";
 import type { Metadata } from "next";
+import { Notifications } from "@mantine/notifications";
 
 export const metadata: Metadata = {
   title: "Hey Talia",
@@ -31,7 +33,10 @@ export default function RootLayout({
         <ColorSchemeScript />
       </head>
       <body>
-        <MantineProvider theme={theme}>{children}</MantineProvider>
+        <MantineProvider theme={theme}>
+          <Notifications />
+          {children}
+        </MantineProvider>
       </body>
     </html>
   );

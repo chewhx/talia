@@ -1,9 +1,11 @@
+import { env } from "@/env";
+import { bedrock } from "@ai-sdk/amazon-bedrock";
 import { openai } from "@ai-sdk/openai";
 import { createDataStreamResponse, streamText, UIMessage } from "ai";
+import dayjs from "dayjs";
+import { Resend } from "resend";
 import { tools } from "./tools";
 import { processToolCalls } from "./utils";
-import { env } from "@/env";
-import { Resend } from "resend";
 import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
 import { FormDraftSchema } from "@/schema/formDraft.schema";
 
@@ -17,6 +19,12 @@ export async function POST(req: Request) {
     }: {
       messages: UIMessage[];
     } = await req.json();
+
+    const messagesHavePDF = messages.some((message) =>
+      message.experimental_attachments?.some(
+        (a) => a.contentType === "application/pdf"
+      )
+    );
 
     // Logging to check the messages sent are correct
     // console.log(JSON.stringify(messages, null, 2));
@@ -71,11 +79,16 @@ export async function POST(req: Request) {
         );
 
         const result = streamText({
-          model: openai("gpt-4o-mini"),
-          system:
-            "Your name is Talia, an AI writing assistant to teaching staff of MOE (Ministry of Education) schools in Singapore. Your role is to faciliate staff in creating and writing content for their newsletter, bulletin boards, and school outreach. When asked to send email, do not assume, ask the user for the email addresses. Do not assume the user actions during tool calls, ask and clarify. Let the user know if you used a past reference retrieve from any tool calls.",
+          model: messagesHavePDF
+            ? bedrock("anthropic.claude-3-5-sonnet-20240620-v1:0")
+            : openai("gpt-4o-mini"),
+          system: `Your name is Talia, an AI writing assistant to teaching staff of MOE (Ministry of Education) schools in Singapore. Your role is to faciliate staff in creating and writing content for their newsletter, bulletin boards, and school outreach. When asked to send email, do not assume, ask the user for the email addresses. Do not assume the user actions during tool calls, ask and clarify. Let the user know if you used a past reference retrieve from any tool calls. When the user ask you to generate or create content, do not assume tool calls. You will always help the user generate content before taking any tool call actions.
+            Today's date is ${dayjs().format(
+              "MM DDDD YYYY"
+            )} and the current year is ${dayjs().format("YYYY")}`,
           messages: processedMessages,
           tools,
+          maxSteps: 5,
         });
 
         result.mergeIntoDataStream(dataStream);

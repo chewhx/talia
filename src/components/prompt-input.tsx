@@ -13,16 +13,18 @@ import {
   Textarea,
 } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import {
   IconArrowUp,
   IconPaperclip,
   IconPlayerStopFilled,
 } from "@tabler/icons-react";
+import mammoth from "mammoth";
 import React from "react";
-import { IMAGE_MIME_TYPE } from "./constants";
-import pdf2md from "@opendocsg/pdf2md";
+import { IMAGE_MIME_TYPE, MIME_TYPES } from "./constants";
+import { validateFiles } from "./prompt-input.utils";
 
-const ACCEPT_MIME_TYPES = [...IMAGE_MIME_TYPE, "application/pdf"];
+const ACCEPT_MIME_TYPES = [...IMAGE_MIME_TYPE, MIME_TYPES.pdf, MIME_TYPES.docx];
 
 export default function PromptInput({
   disabled = true,
@@ -95,27 +97,44 @@ export default function PromptInput({
                     disabled={disabled}
                     accept={ACCEPT_MIME_TYPES.join(",")}
                     onChange={(newFiles) => {
-                      newFiles.forEach((file) => {
-                        if (file && !_files.find((e) => e.name === file.name)) {
-                          if (file.type === "application/pdf") {
-                            file.arrayBuffer().then((buf) => {
-                              pdf2md(buf).then((markdown) => {
-                                const blob = new Blob([markdown], {
-                                  type: "text/plain",
-                                });
-                                const markdownFile = new File(
-                                  [blob],
-                                  file.name,
-                                  { type: "text/plain" }
-                                );
-                                filesHandler.append(markdownFile);
+                      const validationResults = validateFiles(newFiles, _files);
+                      const errors = validationResults.filter(
+                        (e) => e.success === false
+                      );
+
+                      if (errors.length) {
+                        errors.forEach((err) => {
+                          notifications.show({
+                            title: err.reason,
+                            color: "red",
+                            message: err.fileName,
+                          });
+                        });
+                      } else {
+                        Promise.all(
+                          newFiles.map(async (file) => {
+                            if (file.type === MIME_TYPES.docx) {
+                              const result = await mammoth.extractRawText({
+                                arrayBuffer: await file.arrayBuffer(),
                               });
-                            });
-                          } else {
-                            filesHandler.append(file);
-                          }
-                        }
-                      });
+                              const textContent = result.value;
+                              const fileName = file.name;
+                              const textFile = new File(
+                                [textContent],
+                                fileName,
+                                {
+                                  type: "text/plain",
+                                }
+                              );
+
+                              // Append the new text file
+                              filesHandler.append(textFile);
+                            } else {
+                              filesHandler.append(file);
+                            }
+                          })
+                        );
+                      }
                     }}
                     multiple
                   >
@@ -129,21 +148,6 @@ export default function PromptInput({
                       </ActionIcon>
                     )}
                   </FileButton>
-                  {/* <input
-                    type="hidden"
-                    name="doRetrieval"
-                    value={doRetrieval ? "yes" : "no"}
-                  />
-                  <Chip
-                    checked={doRetrieval}
-                    onChange={setDoRetrieval}
-                    color={doRetrieval ? "orange" : "gray"}
-                    variant={doRetrieval ? "filled" : "outline"}
-                    opacity={doRetrieval ? 1 : 0.4}
-                    icon={<IconBulb size="15" />}
-                  >
-                    Leverage Past Insights
-                  </Chip> */}
                 </Group>
                 {status === "streaming" ? (
                   <ActionIcon
