@@ -1,12 +1,31 @@
 import { z } from "zod";
 
 // Pass to extension to fill in
-export const StudentLearningSpacePrefillSchema = z.array(
-  z.object({
+// export const StudentLearningSpacePrefillSchema = z.array(
+//   z.object({
+//     id: z.string(),
+//     value: z.string(),
+//   })
+// );
+
+export const StudentLearningSpacePrefillSchema = z.object({
+  title: z.object({
     id: z.string(),
     value: z.string(),
-  })
-);
+  }),
+  message: z.object({
+    id: z.string(),
+    value: z.string(),
+  }),
+  startDate: z.object({
+    id: z.string(),
+    value: z.string(),
+  }),
+  startTime: z.object({
+    id: z.string(),
+    value: z.string().describe("Time in 24 hours format, format is HH:mm"),
+  }),
+});
 
 /*
 
@@ -37,3 +56,38 @@ const elementSchema = z.object({
 });
 
 export const StudentLearningSpaceFieldSchema = z.array(elementSchema);
+
+export function mapFieldsToSchema(fields: any, content: any) {
+  console.log("mapFieldsToSchema: ", { content, fields });
+
+  const requestData: any = [];
+
+  fields.forEach((field) => {
+    const { category, id } = field;
+
+    switch (category) {
+      case "title":
+        requestData.push({ id, value: content["title"].value || "" });
+        break;
+      case "message":
+        requestData.push({ id, value: content["message"].value || "" });
+        break;
+      case "startTime":
+        requestData.push({
+          id,
+          value: content["startTime"].value || "",
+        });
+        break;
+      case "startDate":
+        requestData.push({
+          id,
+          value: content["startDate"].value || "",
+        });
+        break;
+    }
+  });
+
+  console.log(requestData);
+
+  return requestData;
+}

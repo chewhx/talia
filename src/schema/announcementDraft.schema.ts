@@ -2,16 +2,19 @@ import { z } from "zod";
 
 export const AnnouncementDraftSchema = z.object({
   title: z.string().describe("The title of the announcement"),
-  status: z.string().default("DRAFT").describe("The status of the post"),
+  status: z
+    .string()
+    .default("DRAFT")
+    .describe("The default status of the post"),
   content: z
     .string()
-    .describe(
-      "Announcement content with format ProseMirror JSON document. It has max 2000 characters"
-    )
+    .describe("Announcement content. It has max 2000 characters")
     .max(2000),
   enquiryEmailAddress: z
     .string()
-    .describe("The preferred email address to receive enquiries from parents"),
+    .describe(
+      "The preferred email address to receive enquiries from parents. Must be in a valid format and end with '@gmail.com' or '@moe.edu.sg' or 'schools.gov.sg' only."
+    ),
   // staffGroups: z
   //   .array(
   //     z.object({
@@ -55,7 +58,7 @@ export const AnnouncementDraftSchema = z.object({
   urls: z
     .array(z.object({ webLink: z.string(), linkDescription: z.string() }))
     .optional()
-    .describe("The website link for the event"),
+    .describe("The website link for the event. It must be a safe link"),
   shortcuts: z
     .array(z.string())
     .optional()

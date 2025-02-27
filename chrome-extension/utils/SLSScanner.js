@@ -90,11 +90,11 @@ function getSLSInputFields() {
   if (startDateSection) {
     processElement(
       startDateSection.querySelector('input[type="text"]'),
-      "start-date"
+      "startDate"
     );
     processElement(
       startDateSection.querySelector('input[type="time"]'),
-      "start-time"
+      "startTime"
     );
   }
 

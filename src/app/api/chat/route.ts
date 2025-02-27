@@ -10,6 +10,17 @@ import { processToolCalls } from "./utils";
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
+const errorHandler = async (error: any) => {
+  console.error("Error in data stream:", error);
+
+  return {
+    message: "An error occurred while processing your request.",
+    suggestion:
+      "Please try again with a different prompt or adjust your input.",
+    details: error.message || "Unknown error",
+  };
+};
+
 export async function POST(req: Request) {
   try {
     const {
@@ -26,12 +37,14 @@ export async function POST(req: Request) {
 
     // Logging to check the messages sent are correct
     console.log(JSON.stringify(messages, null, 2));
+    // // Logging to check the messages sent are correct
+    // console.log(JSON.stringify(messages, null, 2));
 
     return createDataStreamResponse({
       execute: async (dataStream) => {
         // Utility function to handle tools that require human confirmation
         // Checks for confirmation in last message and then runs associated tool
-
+        console.log({ messages, tools });
         const processedMessages = await processToolCalls(
           {
             messages,
@@ -76,6 +89,12 @@ export async function POST(req: Request) {
                 If "Yes, confirmed", you should show the ${fields} in markdown to let user what have been created.
               `;
             },
+
+            prefillSLSForm: async ({ result, fields }) => {
+              console.log("SLS Route: ", { result, fields });
+
+              return `Pre-filled the SLS form: ${result}`;
+            },
           }
         );
 
@@ -94,6 +113,7 @@ export async function POST(req: Request) {
 
         result.mergeIntoDataStream(dataStream);
       },
+      onError: errorHandler,
     });
   } catch (err) {
     console.error(err);

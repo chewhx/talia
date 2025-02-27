@@ -34,6 +34,7 @@ const getDayOfTheWeek = tool({
   },
 });
 import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
+import { StudentLearningSpacePrefillSchema } from "@/schema/studentLearningSpace.schema";
 
 const postToParentsGateway = tool({
   description:
@@ -116,7 +117,17 @@ const createPGAnnouncementDraft = tool({
   parameters: z.object({
     result: z.string().describe("The announcement original content"),
     fields: AnnouncementDraftSchema.describe(
-      "The schema to create a announcement draft"
+      "The schema to create a announcement draft. Return empty for optional field if the content does not match."
+    ),
+  }),
+});
+
+const prefillSLSForm = tool({
+  description: "Pre fill the available form inputs",
+  parameters: z.object({
+    result: z.string().describe("The announcement original content"),
+    fields: StudentLearningSpacePrefillSchema.describe(
+      "The schema to pre fill student learning space announcement"
     ),
   }),
 });
@@ -128,6 +139,7 @@ export const tools = {
   getDayOfTheWeek,
   createPGFormDraft,
   createPGAnnouncementDraft,
+  prefillSLSForm,
 };
 
 export const renderToolUIVariables = (
@@ -196,6 +208,22 @@ export const renderToolUIVariables = (
           {
             title: "Cancel",
             description: "Cancel to create a announcement draft",
+            result: APPROVAL.NO,
+          },
+        ],
+      };
+    case "prefillSLSForm":
+      return {
+        description: "",
+        options: [
+          {
+            title: "Confirm",
+            description: "Proceed to pre-fill a announcement",
+            result: APPROVAL.YES,
+          },
+          {
+            title: "Cancel",
+            description: "Cancel to pre-fill a announcement",
             result: APPROVAL.NO,
           },
         ],
