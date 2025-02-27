@@ -22,6 +22,7 @@
     "@tabler/icons-react": "^3.30.0",
     "ai": "^4.1.41",
     "dayjs": "^1.11.13",
+    "mammoth": "^1.9.0",
     "next": "14.2.18",
     "react": "^18",
     "react-dom": "^18",
