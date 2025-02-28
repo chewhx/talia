@@ -21,6 +21,7 @@
     "@opendocsg/pdf2md": "^0.2.1",
     "@tabler/icons-react": "^3.30.0",
     "@tiptap/extension-character-count": "^2.11.5",
+    "@tiptap/extension-hard-break": "^2.11.5",
     "@tiptap/extension-placeholder": "^2.11.5",
     "@tiptap/extension-text-align": "^2.11.5",
     "@tiptap/extension-underline": "^2.11.5",

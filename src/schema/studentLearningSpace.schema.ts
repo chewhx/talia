@@ -15,7 +15,9 @@ export const StudentLearningSpacePrefillSchema = z.object({
   }),
   message: z.object({
     id: z.string(),
-    value: z.string(),
+    value: z
+      .string()
+      .describe("The content of announcement in tiny vue format"),
   }),
   startDate: z.object({
     id: z.string(),
@@ -62,30 +64,32 @@ export function mapFieldsToSchema(fields: any, content: any) {
 
   const requestData: any = [];
 
-  fields.forEach((field) => {
-    const { category, id } = field;
+  if (fields) {
+    fields.forEach((field: any) => {
+      const { category, id } = field;
 
-    switch (category) {
-      case "title":
-        requestData.push({ id, value: content["title"].value || "" });
-        break;
-      case "message":
-        requestData.push({ id, value: content["message"].value || "" });
-        break;
-      case "startTime":
-        requestData.push({
-          id,
-          value: content["startTime"].value || "",
-        });
-        break;
-      case "startDate":
-        requestData.push({
-          id,
-          value: content["startDate"].value || "",
-        });
-        break;
-    }
-  });
+      switch (category) {
+        case "title":
+          requestData.push({ id, value: content["title"].value || "" });
+          break;
+        case "message":
+          requestData.push({ id, value: content["message"].value || "" });
+          break;
+        case "startTime":
+          requestData.push({
+            id,
+            value: content["startTime"].value || "",
+          });
+          break;
+        case "startDate":
+          requestData.push({
+            id,
+            value: content["startDate"].value || "",
+          });
+          break;
+      }
+    });
+  }
 
   console.log(requestData);
 

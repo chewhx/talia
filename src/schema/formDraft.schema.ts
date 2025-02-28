@@ -47,80 +47,90 @@ export const FormDraftSchema = z.object({
   status: z.string().default("DRAFT").describe("The status of the post"),
   content: z.string().describe("The content of the consent form"),
   venue: z.string().optional().describe("The location of the consent form"),
+  consentByDate: z.string().describe("Due date to respond by"),
   eventStartDate: z
     .object({
       date: z.string(),
       time: z.string(),
     })
     .optional()
-    .describe("Event starting date time. This is optional"),
+    .describe(
+      "Event starting date time.This must before the eventStartDatetime. This is optional"
+    ),
   eventEndDate: z
     .object({
       date: z.string(),
       time: z.string(),
     })
     .optional()
-    .describe("Event ending date time. This is optional"),
-  reminderDate: z.string().optional().describe("The reminder trigger date"),
+    .describe(
+      "Event ending date time. This must after the eventStartDatetime. This is optional"
+    ),
+  // reminderDate: z.string().optional().describe("The reminder trigger date"),
   addReminderType: z
     .enum(["ONE_TIME", "DAILY", "NONE"])
-    .describe("Reminder trigger type"),
+    .describe("Reminder trigger type. Default use `NONE`")
+    .default("NONE"),
   enquiryEmailAddress: z
     .string()
-    .describe("The preferred email address to receive enquiries from parents"),
+    .describe(
+      "The preferred email address to receive enquiries from parents. Must be in a valid format and end with '@gmail.com' or '@moe.edu.sg' or 'schools.gov.sg' only."
+    ),
   responseType: z
     .enum(["YES_NO", "ACKNOWLEDGEMENT"])
     .describe("The type of the form"),
-  staffGroups: z
-    .array(
-      z.object({
-        type: z.enum(["individual", "school", "level"]),
-        label: z.string(),
-        value: z.number(),
-      })
-    )
-    .optional()
-    .describe(
-      "The staff who will be able to view and edit form response and delete form"
-    ),
-  studentGroups: z
-    .array(
-      z.object({
-        type: z.enum([
-          "all",
-          "class",
-          "level",
-          "cca",
-          "school",
-          "group",
-          "student",
-        ]),
-        label: z.string(),
-        value: z.number(),
-      })
-    )
-    .optional()
-    .describe(
-      "The student groups, individual students or both that will receive the form"
-    ),
-  images: z
-    .array(z.object({}))
-    .optional()
-    .describe("The image gallery for form"),
-  attachments: z
-    .array(z.object({}))
-    .optional()
-    .describe("The attachment for form"),
   urls: z
     .array(z.object({ webLink: z.string(), linkDescription: z.string() }))
     .max(3)
     .optional()
-    .describe("The website link for the form event"),
+    .describe("The website link for the form event. This is optional"),
   shortcuts: z
     .array(z.string())
     .optional()
-    .describe("The url for pressing and redirect to other website/app"),
-  questions: QuestionArraySchema,
+    .describe(
+      "The url for pressing and redirect to other website/app. This is optional"
+    ),
+  // staffGroups: z
+  //   .array(
+  //     z.object({
+  //       type: z.enum(["individual", "school", "level"]),
+  //       label: z.string(),
+  //       value: z.number(),
+  //     })
+  //   )
+  //   .optional()
+  //   .describe(
+  //     "The staff who will be able to view and edit form response and delete form"
+  //   ),
+  // studentGroups: z
+  //   .array(
+  //     z.object({
+  //       type: z.enum([
+  //         "all",
+  //         "class",
+  //         "level",
+  //         "cca",
+  //         "school",
+  //         "group",
+  //         "student",
+  //       ]),
+  //       label: z.string(),
+  //       value: z.number(),
+  //     })
+  //   )
+  //   .optional()
+  //   .describe(
+  //     "The student groups, individual students or both that will receive the form"
+  //   ),
+  // images: z
+  //   .array(z.object({}))
+  //   .optional()
+  //   .describe("The image gallery for form"),
+  // attachments: z
+  //   .array(z.object({}))
+  //   .optional()
+  //   .describe("The attachment for form"),
+  // questions: QuestionArraySchema,
 });
 
 export const mockForm = {

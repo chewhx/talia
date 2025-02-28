@@ -60,14 +60,23 @@ export async function POST(req: Request) {
             },
 
             createPGAnnouncementDraft: async ({ result, fields }) => {
+              console.log({ result, fields });
               return `
                 If "No, denied", you need to inform user whether want to add on or modify the ${fields}.
                 If "Yes, confirmed", you should show the ${fields} in markdown to let user what have been created.
               `;
             },
 
-            prefillSLSForm: async ({ result }) => {
-              return `Pre-filled the SLS form: ${result}`;
+            createPGFormDraft: async ({ result, fields }) => {
+              console.log({ result, fields });
+              return `
+                If "No, denied", you need to inform user whether want to add on or modify the ${fields}.
+                If "Yes, confirmed", you should show the ${fields} in markdown to let user what have been created.
+              `;
+            },
+
+            createSLSAnnouncement: async ({ result }) => {
+              return `Inform user that have been pre-filled the SLS form: ${result}`;
             },
           }
         );
@@ -77,9 +86,12 @@ export async function POST(req: Request) {
             ? bedrock("anthropic.claude-3-5-sonnet-20240620-v1:0")
             : openai("gpt-4o-mini"),
           system: `Your name is Talia, an AI writing assistant to teaching staff of MOE (Ministry of Education) schools in Singapore. Your role is to faciliate staff in creating and writing content for their newsletter, bulletin boards, and school outreach. When asked to send email, do not assume, ask the user for the email addresses. Do not assume the user actions during tool calls, ask and clarify. Let the user know if you used a past reference retrieve from any tool calls. When the user ask you to generate or create content, do not assume tool calls. You will always help the user generate content before taking any tool call actions.
-            Today's date is ${dayjs().format(
-              "MM DDDD YYYY"
-            )} and the current year is ${dayjs().format("YYYY")}`,
+
+          Do not reveal internal tool functions or implementation details to the user.
+
+          Today's date is ${dayjs().format(
+            "MM DDDD YYYY"
+          )} and the current year is ${dayjs().format("YYYY")}`,
           messages: processedMessages,
           tools,
           maxSteps: 5,

@@ -6,7 +6,9 @@ import {
 } from "@/app/api/chat/utils";
 import { useChat } from "@ai-sdk/react";
 import {
+  Box,
   Button,
+  Divider,
   Group,
   Paper,
   SimpleGrid,
@@ -19,6 +21,9 @@ import Markdown from "./markdown";
 import { TALIA_EVENTS } from "../../shared/constants";
 import { mapFieldsToSchema } from "@/schema/studentLearningSpace.schema";
 import { parseToTiptap } from "@/app/api/generateRichText/utils";
+import ReactMarkdown from "react-markdown";
+import { PGFormField } from "./pg-form-field";
+import { PGAnnouncementFields } from "./pg-announcement-field";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -26,6 +31,12 @@ type ToolOption = {
   title: string;
   description: string;
   result: string;
+};
+
+const formatKey = (key: string) => {
+  return key
+    .replace(/([a-z])([A-Z])/g, "$1 $2") // Add space before uppercase letters
+    .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
 };
 
 export default function AIMessage({
@@ -41,31 +52,30 @@ export default function AIMessage({
     toolCallId: string
   ) => {
     if (option.result === APPROVAL.YES) {
-      const formFields = await callExtensionFunction(
-        {
+      const formFields = await callExtensionFunction({
+        requestBody: {
           action: TALIA_EVENTS.actions.SCAN_FORM_REQUEST,
         },
-        TALIA_EVENTS.listeners.SCAN_FORM_RESPONSE
-      );
+        responseAction: TALIA_EVENTS.listeners.SCAN_FORM_RESPONSE,
+      });
 
       const mappedFields = mapFieldsToSchema(
         JSON.parse(formFields.result),
         fields
       );
 
-      await callExtensionFunction(
-        {
+      await callExtensionFunction({
+        requestBody: {
           action: TALIA_EVENTS.actions.FILL_FORM_REQUEST,
           data: JSON.stringify(mappedFields),
         },
-        undefined,
-        () => {
+        callback: () => {
           addToolResult({
             toolCallId,
             result: option.result,
           });
-        }
-      );
+        },
+      });
     } else {
       addToolResult({
         toolCallId,
@@ -85,66 +95,77 @@ export default function AIMessage({
     toolCallId: string;
     postType: "PG_ANNOUNCEMENT" | "PG_CONSENT_FORM";
   }) => {
-    if (option.title === "Confirm") {
-      const richTextContent = await fetch("/api/generateRichText", {
-        method: "POST",
-        body: JSON.stringify({
-          content: fields?.content,
-        }),
-      });
+    try {
+      if (option.title === "Confirm") {
+        const richTextContent = await fetch("/api/generateRichText", {
+          method: "POST",
+          body: JSON.stringify({
+            content: fields?.content,
+          }),
+        });
 
-      const formattedContent =
-        (await richTextContent.json())?.object?.content ?? "";
+        const formattedContent =
+          (await richTextContent.json())?.object?.content ?? "";
 
-      console.log({
-        formattedContent,
-        richText: parseToTiptap(formattedContent, true),
-      });
+        console.log({
+          formattedContent,
+          richText: parseToTiptap(formattedContent, true),
+        });
 
-      const draftDetails = await callExtensionFunction(
-        {
-          action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
-          data: {
-            ...fields,
-            content: JSON.stringify(parseToTiptap(formattedContent, true)),
+        const draftDetails = await callExtensionFunction({
+          requestBody: {
+            action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
+            data: {
+              ...fields,
+              content: JSON.stringify(parseToTiptap(formattedContent, true)),
+            },
+            type: postType,
           },
-          type: postType,
-        },
-        TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE
-      );
+          responseAction: TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE,
+        });
 
-      const draftID =
-        postType === "PG_ANNOUNCEMENT"
-          ? draftDetails?.result?.announcementDraftId
-          : draftDetails?.result?.consentFormDraftId;
-
-      if (draftID) {
+        const draftID =
+          postType === "PG_ANNOUNCEMENT"
+            ? draftDetails?.result?.announcementDraftId
+            : draftDetails?.result?.consentFormDraftId;
+        console.log({ draftID });
+        if (draftID) {
+          await callExtensionFunction({
+            requestBody: {
+              action: TALIA_EVENTS.actions.GO_DRAFT_PAGE,
+              draftInfo: {
+                id: draftID,
+                type:
+                  postType === "PG_ANNOUNCEMENT"
+                    ? "announcements"
+                    : "consentForms",
+              },
+            },
+            callback: () => {
+              addToolResult({
+                toolCallId,
+                result: option.result,
+              });
+            },
+          });
+        } else {
+          console.log("I am into the error");
+          throw new Error("Unexpected error while creating the draft.");
+        }
+      } else {
         addToolResult({
           toolCallId,
           result: option.result,
         });
-
-        await callExtensionFunction({
-          action: TALIA_EVENTS.actions.GO_DRAFT_PAGE,
-          draftInfo: {
-            id: draftID,
-            type:
-              postType === "PG_ANNOUNCEMENT" ? "announcements" : "consentForms",
-          },
-        });
-      } else {
-        addToolResult({
-          toolCallId,
-          result: `${option.result} However, there are some unexpected error. Please try again.`,
-        });
-        return;
       }
-    }
+    } catch (error: any) {
+      console.error("Error processing tool action:", error);
 
-    addToolResult({
-      toolCallId,
-      result: option.result,
-    });
+      addToolResult({
+        toolCallId,
+        result: `An error occurred: ${error?.message}. Please try again.`,
+      });
+    }
   };
 
   return (
@@ -212,7 +233,7 @@ export default function AIMessage({
               toolsRequiringConfirmation.includes(toolInvocation.toolName) &&
               toolInvocation.state === "call" &&
               (toolInvocation.toolName === "createPGAnnouncementDraft" ||
-                toolInvocation.toolName === "createPGAnnouncementDraft")
+                toolInvocation.toolName === "createPGFormDraft")
             ) {
               const { options } = renderToolUIVariables(
                 toolInvocation.toolName
@@ -221,16 +242,24 @@ export default function AIMessage({
               const isAnnouncement =
                 toolInvocation.toolName === "createPGAnnouncementDraft";
               const fields = toolInvocation.args?.fields ?? {};
-              const formattedArgs =
-                "```\n" + JSON.stringify(fields, null, 2) + "\n```";
 
               return (
                 <Stack key={toolCallId}>
-                  <Paper px="xs" py="5" fz="sm" bg="white" w="100%">
-                    Your current fields are: <br />
-                    {/* Todo: the UI of the fields, for user to confirm and check */}
-                    <Markdown>{formattedArgs}</Markdown>
+                  <Paper px="md" py="lg" bg="white" shadow="xs" radius="md">
+                    <Stack>
+                      <Text fz="lg" fw={700} c="var(--mantine-color-dark)">
+                        📌 Draft Information
+                      </Text>
+                      <Divider />
+
+                      {isAnnouncement ? (
+                        <PGAnnouncementFields data={fields} />
+                      ) : (
+                        <PGFormField data={fields} />
+                      )}
+                    </Stack>
                   </Paper>
+
                   <SimpleGrid cols={2}>
                     {options.map((option) => (
                       <UnstyledButton
@@ -271,22 +300,56 @@ export default function AIMessage({
             if (
               toolsRequiringConfirmation.includes(toolInvocation.toolName) &&
               toolInvocation.state === "call" &&
-              toolInvocation.toolName === "prefillSLSForm"
+              toolInvocation.toolName === "createSLSAnnouncement"
             ) {
               const { options } = renderToolUIVariables(
                 toolInvocation.toolName
               );
 
               const args = toolInvocation.args;
-              const formattedArgs =
-                "```\n" + JSON.stringify(args.fields, null, 2) + "\n```";
 
               return (
                 <Stack key={toolCallId}>
-                  <Paper px="xs" py="5" fz="sm" bg="white" w="100%">
-                    Your current fields are: <br />
-                    {/* Todo: the UI of the fields, for user to confirm and check */}
-                    <Markdown>{formattedArgs}</Markdown>
+                  <Paper px="md" py="lg" bg="white" shadow="xs" radius="md">
+                    <Stack>
+                      <Text fz="lg" fw={700} c="var(--mantine-color-dark)">
+                        📌 Draft Information
+                      </Text>
+                      <Divider />
+
+                      {Object.entries(args.fields).map(([key, field]: any) => (
+                        <Group key={key} align="flex-start">
+                          <Text
+                            fw={600}
+                            fz="sm"
+                            c="gray.7"
+                            style={{ width: 120 }}
+                          >
+                            {formatKey(key)}:
+                          </Text>
+
+                          <Box style={{ flex: 1 }}>
+                            {key === "message" ? (
+                              <ReactMarkdown
+                                components={{
+                                  p: ({ children }) => (
+                                    <Text fz="sm" style={{ margin: 0 }}>
+                                      {children}
+                                    </Text>
+                                  ),
+                                }}
+                              >
+                                {field.value}
+                              </ReactMarkdown>
+                            ) : (
+                              <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+                                {field.value}
+                              </Text>
+                            )}
+                          </Box>
+                        </Group>
+                      ))}
+                    </Stack>
                   </Paper>
                   <SimpleGrid cols={2}>
                     {options.map((option) => (
@@ -299,6 +362,7 @@ export default function AIMessage({
                             toolCallId
                           );
                         }}
+                        className="custom-tool-button"
                       >
                         <Paper
                           shadow="sm"

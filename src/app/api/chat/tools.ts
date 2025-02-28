@@ -93,8 +93,9 @@ const retrieveResource = tool({
 });
 
 const createPGFormDraft = tool({
-  description: "Create a PG consent form draft",
+  description: "Create a PG consent form draft based on the content",
   parameters: z.object({
+    result: z.string().describe("The consent form original content"),
     fields: FormDraftSchema.describe(
       "The schema to create a form draft. Return empty for optional field if the content does not match."
     ),
@@ -112,8 +113,8 @@ const createPGAnnouncementDraft = tool({
   }),
 });
 
-const prefillSLSForm = tool({
-  description: "Pre fill the available form inputs",
+const createSLSAnnouncement = tool({
+  description: "Create or prefill a SLS announcement based on the content.",
   parameters: z.object({
     result: z.string().describe("The announcement original content"),
     fields: StudentLearningSpacePrefillSchema.describe(
@@ -128,7 +129,7 @@ export const tools = {
   getDayOfTheWeek,
   createPGFormDraft,
   createPGAnnouncementDraft,
-  prefillSLSForm,
+  createSLSAnnouncement,
 };
 
 export const renderToolUIVariables = (
@@ -164,7 +165,7 @@ export const renderToolUIVariables = (
           },
           {
             title: "Cancel",
-            description: "Cancel to create a announcement draft",
+            description: "Cancel to create a consent form draft",
             result: APPROVAL.NO,
           },
         ],
@@ -185,7 +186,7 @@ export const renderToolUIVariables = (
           },
         ],
       };
-    case "prefillSLSForm":
+    case "createSLSAnnouncement":
       return {
         description: "",
         options: [

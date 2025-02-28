@@ -15,6 +15,7 @@ import {
 } from "@mantine/core";
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
+import { ExtensionActionButton } from "@/components/extension-action-buttons";
 
 export default function MainPage() {
   const {
@@ -27,7 +28,7 @@ export default function MainPage() {
     addToolResult,
     error,
   } = useChat({
-    maxSteps: 5,
+    maxSteps: 10,
   });
 
   const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
@@ -44,6 +45,8 @@ export default function MainPage() {
 
   return (
     <Container size="sm">
+      <ExtensionActionButton />
+
       <TypographyStylesProvider>
         {!messages.length ? (
           <Stack gap={0}>

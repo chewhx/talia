@@ -13,6 +13,7 @@ import CharacterCount from "@tiptap/extension-character-count";
 import History from "@tiptap/extension-history";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
+import HardBreak from "@tiptap/extension-hard-break";
 
 const CustomTextAlign = TextAlign.extend({
   addGlobalAttributes() {
@@ -90,15 +91,20 @@ export function parseToTiptap(
       // Parse HTML directly
       return generateJSON(content, extensions);
     } else {
-      // Convert plain text to HTML first
-      const paragraphs = content.split("\n\n");
+      // Improved plain text to HTML conversion with proper line break handling
+
+      // First, split the text into paragraphs (double line breaks)
+      const paragraphs = content.split(/\n\n+/);
+
+      // Convert each paragraph, properly handling single line breaks
       const htmlContent = paragraphs
-        .map((para) => {
-          // Replace single newlines with <br> tags
-          const withLineBreaks = para.replace(/\n/g, "<br>");
+        .map((paragraph) => {
+          // Replace single line breaks with <br> tags
+          // This ensures line breaks within paragraphs are preserved
+          const withLineBreaks = paragraph.replace(/\n/g, "<br>\n");
           return `<p>${withLineBreaks}</p>`;
         })
-        .join("");
+        .join("\n");
 
       // Parse the HTML to JSON
       return generateJSON(htmlContent, extensions);
@@ -108,6 +114,52 @@ export function parseToTiptap(
     // Return a valid empty document if parsing fails
     return { type: "doc", content: [{ type: "paragraph" }] };
   }
+}
+
+export function manuallyParseTextToTiptap(content: string): any {
+  if (!content) {
+    return { type: "doc", content: [{ type: "paragraph" }] };
+  }
+
+  // Split into paragraphs
+  const paragraphs = content.split(/\n\n+/);
+
+  // Create the document structure
+  const doc = {
+    type: "doc",
+    content: paragraphs.map((paragraph) => {
+      // Split paragraph by line breaks
+      const lines = paragraph.split("\n");
+
+      // Create paragraph node
+      const paragraphNode: any = {
+        type: "paragraph",
+        content: [],
+      };
+
+      // Process each line
+      lines.forEach((line, index) => {
+        // Add text node
+        if (line.length > 0) {
+          paragraphNode.content.push({
+            type: "text",
+            text: line,
+          });
+        }
+
+        // Add hard break node if not the last line
+        if (index < lines.length - 1) {
+          paragraphNode.content.push({
+            type: "hardBreak",
+          });
+        }
+      });
+
+      return paragraphNode;
+    }),
+  };
+
+  return doc;
 }
 
 /**

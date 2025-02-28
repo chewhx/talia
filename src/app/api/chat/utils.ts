@@ -147,11 +147,15 @@ export function getToolsRequiringConfirmation<T extends ToolSet>(
   }) as string[];
 }
 
-export function callExtensionFunction(
-  requestBody?: any, // Request body to the Extension
-  responseAction?: string, // Target action to listen in HeyTalia
-  callback?: any
-): Promise<any> {
+export function callExtensionFunction({
+  callback,
+  requestBody,
+  responseAction,
+}: {
+  requestBody: any; // Request body to the Extension
+  responseAction?: string; // Target action to listen in HeyTalia
+  callback?: any;
+}): Promise<any> {
   return new Promise((resolve, reject) => {
     const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
     window.parent.postMessage(requestBody, `${chromeExtensionID}`);

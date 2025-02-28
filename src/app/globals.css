@@ -11,14 +11,16 @@ body {
   background-color: var(--talia-gray);
 }
 
-.markdown-container {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+.custom-tool-button {
+  display: block;
+  width: 100%;
+  transition: background-color 150ms ease, transform 150ms ease;
 }
 
-.markdown-container p,
-.markdown-container li,
-.markdown-container pre {
-  white-space: pre-wrap; /* Preserves whitespace and line breaks */
-  word-break: break-word; /* Allows words to break if necessary */
+.custom-tool-button:hover {
+  background-color: #ffdac5; /* Hover effect */
+}
+
+.custom-tool-button:active {
+  transform: scale(0.98); /* Active effect */
 }
