@@ -48,28 +48,48 @@ chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
 });
 
 // Send to content.js to communicate with web app
-function sendMessageToContentJSWithoutResponse(data) {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const activeTab = tabs[0];
-    const url = new URL(tabs[0].url);
-
+async function sendMessageToContentJSWithoutResponse(data) {
+  try {
+    const activeTab = await getActiveTab();
+    const url = new URL(activeTab.url);
     data.currentWebsite = identifyTargetWebsite(url.origin);
-    chrome.tabs.sendMessage(activeTab.id, data);
-  });
+
+    return new Promise((resolve, reject) => {
+      chrome.tabs.sendMessage(activeTab.id, data, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve();
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Error sending message to content.js:", error);
+  }
 }
 
 // Send to content.js to communicate with web app and return response to HeyTalia
-function sendMessageToContentJSWithResponse(data) {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const activeTab = tabs[0];
+async function sendMessageToContentJSWithResponse(data) {
+  try {
+    const activeTab = await getActiveTab();
     data.currentWebsite = identifyTargetWebsite(activeTab.url);
-    chrome.tabs.sendMessage(activeTab.id, data, (response) => {
-      if (response) {
-        response.currentWebsite = data.currentWebsite;
-        sendMessageToIframe(response);
-      }
+
+    return new Promise((resolve, reject) => {
+      chrome.tabs.sendMessage(activeTab.id, data, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else if (response) {
+          response.currentWebsite = data.currentWebsite;
+          sendMessageToIframe(response);
+          resolve(response);
+        } else {
+          reject(new Error("No response received from content.js"));
+        }
+      });
     });
-  });
+  } catch (error) {
+    console.error("Error sending message to content.js:", error);
+  }
 }
 
 // Return response to HeyTalia
@@ -97,4 +117,18 @@ function identifyTargetWebsite(url) {
     return "PG";
 
   return "";
+}
+
+function getActiveTab() {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else if (tabs.length === 0) {
+        reject(new Error("No active tab found"));
+      } else {
+        resolve(tabs[0]);
+      }
+    });
+  });
 }
