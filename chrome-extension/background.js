@@ -1,28 +1,45 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("🟢 Background", { message, sender });
+
   if (message.action === "GO_DRAFT_PAGE") {
     const draftID = message?.draftInfo?.id;
     const type = message?.draftInfo?.type;
-    console.log("Processing");
 
     if (draftID && type) {
       console.log("Navigate to draft page: ", draftID, type);
-      // chrome.tabs.update({
-      //   url: `http://localhost:8082/${type}/drafts/${draftID}`,
-      // });
 
+      // Get the current active tab
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const url = `http://localhost:8082/${type}/drafts/${draftID}`;
-
         if (tabs.length > 0) {
-          chrome.tabs.update(tabs[0].id, { url });
+          const activeTab = tabs[0];
+          const url = new URL(activeTab.url);
+          const targetUrl = `${url.origin}/${type}/drafts/${draftID}`;
+
+          // Update the URL of the active tab
+          chrome.tabs.update(activeTab.id, { url: targetUrl }, (updatedTab) => {
+            if (chrome.runtime.lastError) {
+              console.error("Error updating tab:", chrome.runtime.lastError);
+            } else {
+              console.log("Tab updated successfully:", updatedTab);
+            }
+          });
         } else {
-          chrome.tabs.create({ url });
+          console.error("No active tab found");
         }
       });
     }
   } else if (message.action === "PG_DRAFT_RESPONSE") {
     chrome.runtime.sendMessage(message);
+  } else if (message.action === "GET_ORIGIN") {
+    // Get the current active tab's origin
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs.length > 0) {
+        const url = new URL(tabs[0].url);
+        sendResponse({ origin: url.origin });
+      } else {
+        sendResponse({ origin: null });
+      }
+    });
   }
 });
 

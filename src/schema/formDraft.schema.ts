@@ -1,42 +1,83 @@
 import { z } from "zod";
 
-const BaseQuestionSchema = z.object({
-  type: z.enum(["single_selection", "multi_selection", "text"]),
-  title: z.string().describe("The question title"),
-  description: z
-    .string()
-    .describe("Additional details or instructions for the question"),
-  id: z.string().uuid().describe("Unique identifier for the question"),
-});
+const SingleSelectionQuestionSchema = z
+  .object({
+    type: z.literal("single_selection"),
+    title: z.string().describe("The question title"),
+    description: z
+      .string()
+      .describe("Additional details or instructions for the question"),
+    id: z.string().describe("Unique identifier for the question"),
+    choices: z
+      .array(
+        z.object({
+          label: z.string().describe("The text displayed for this choice"),
+        })
+      )
+      .max(2)
+      .describe("Available options for the question"),
+    properties: z.object({
+      choices: z
+        .array(
+          z.object({
+            label: z.string().describe("The text displayed for this choice"),
+          })
+        )
+        .max(2),
+    }),
+  })
+  .describe("A question where only one option can be selected");
 
-const ChoiceSchema = z.object({
-  label: z.string().describe("The text displayed for this choice"),
-});
+const MultiSelectionQuestionSchema = z
+  .object({
+    type: z.literal("multi_selection"),
+    title: z.string().describe("The question title"),
+    description: z
+      .string()
+      .describe("Additional details or instructions for the question"),
+    id: z.string().describe("Unique identifier for the question"),
+    choices: z
+      .array(
+        z.object({
+          label: z.string().describe("The text displayed for this choice"),
+        })
+      )
+      .max(7)
+      .describe("Available options for the question"),
+    properties: z.object({
+      choices: z
+        .array(
+          z.object({
+            label: z.string().describe("The text displayed for this choice"),
+          })
+        )
+        .max(7),
+    }),
+  })
+  .describe("A question where multiple options can be selected");
 
-const SelectionQuestionSchema = BaseQuestionSchema.extend({
-  choices: z.array(ChoiceSchema).describe("Available options for the question"),
-  properties: z.object({
-    choices: z.array(ChoiceSchema),
-  }),
-});
-
-const SingleSelectionQuestionSchema = SelectionQuestionSchema.extend({
-  type: z.literal("single_selection"),
-}).describe("A question where only one option can be selected");
-
-const MultiSelectionQuestionSchema = SelectionQuestionSchema.extend({
-  type: z.literal("multi_selection"),
-}).describe("A question where multiple options can be selected");
-
-const TextQuestionSchema = BaseQuestionSchema.extend({
-  type: z.literal("text"),
-}).describe("A question that requires a free-text response");
+const TextQuestionSchema = z
+  .object({
+    type: z.literal("text"),
+    title: z.string().describe("The question title"),
+    description: z
+      .string()
+      .describe("Additional details or instructions for the question"),
+    id: z.string().describe("Unique identifier for the question"),
+  })
+  .describe("A question that requires a text response");
 
 const QuestionSchema = z.discriminatedUnion("type", [
   SingleSelectionQuestionSchema,
   MultiSelectionQuestionSchema,
   TextQuestionSchema,
 ]);
+
+export const FormQuestionsSchema = z
+  .array(QuestionSchema)
+  .max(5)
+  .optional()
+  .describe(`Custom questions for YES_NO type forms.`);
 
 export const FormDraftSchema = z.object({
   title: z.string().min(1).max(120).describe("The title of the consent form"),
@@ -102,10 +143,7 @@ export const FormDraftSchema = z.object({
     .array(z.string())
     .optional()
     .describe("Shortcut URLs for quick access to other websites/apps"),
-  questions: z
-    .array(QuestionSchema)
-    .optional()
-    .describe("Custom questions for YES_NO type forms"),
+  questions: FormQuestionsSchema,
 
   // staffGroups: z
   //   .array(

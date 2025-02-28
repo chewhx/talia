@@ -1,5 +1,8 @@
 import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
-import { FormDraftSchema } from "@/schema/formDraft.schema";
+import {
+  FormDraftSchema,
+  FormQuestionsSchema,
+} from "@/schema/formDraft.schema";
 import { StudentLearningSpacePrefillSchema } from "@/schema/studentLearningSpace.schema";
 import {
   BedrockAgentRuntimeClient,
@@ -43,7 +46,8 @@ const getDayOfTheWeek = tool({
 });
 
 const sendEmail = tool({
-  description: "Send an email to a specified recipient.",
+  description:
+    "Send an email to specified recipients. Use this tool whenever there's a request to send an email to someone, regardless of the content. Any valid email address is acceptable.",
   parameters: z.object({
     emailContent: z.string().describe("Markdown content of the email"),
     emailSubject: z
@@ -51,7 +55,9 @@ const sendEmail = tool({
       .describe("Email subject that defines the email content"),
     emailAddresses: z
       .array(z.string())
-      .describe("List of recipient email addresses"),
+      .describe(
+        "List of recipient email addresses. Can be any valid email address."
+      ),
   }),
 });
 
@@ -100,7 +106,33 @@ const retrieveResource = tool({
 });
 
 const createPGFormDraft = tool({
-  description: "Create a Parent Gateway (PG) consent form draft.",
+  description: `Create a Parent Gateway (PG) consent form draft. Email must be @gmail.com, @moe.edu.sg, or @schools.gov.sg only.
+
+  Include custom questions using FormQuestionsSchema:
+  1. Single Selection: Up to 2 choices, one selectable.
+  2. Multi Selection: Up to 7 choices, multiple selectable.
+  3. Text: Free-form response.
+
+  Max 5 custom questions. Each question needs:
+  - Title
+  - Description
+  - Unique UUID
+  - Choices array (for selection types)
+
+  Question structure:
+  {
+    type: "single_selection" | "multi_selection" | "text",
+    title: "Question title",
+    description: "Details/instructions",
+    id: "uuid",
+    choices: [{ label: "Choice 1" }, { label: "Choice 2" }], // For selection types
+    properties: {
+      choices: [{ label: "Choice 1" }, { label: "Choice 2" }] // Duplicate, required
+    }
+  }
+
+  Draft the form with standard consent language and include custom questions as specified. Ensure all required fields are present and properly formatted.
+  `,
   parameters: z.object({
     fields: FormDraftSchema.describe(
       "Form draft schema. Leave optional fields empty if not applicable."
@@ -110,17 +142,34 @@ const createPGFormDraft = tool({
 
 const createPGAnnouncementDraft = tool({
   description: `
-    Create a Parent Gateway (PG) announcement draft.`,
+
+  Create a Parent Gateway (PG) announcement draft for school communications.
+    This tool helps generate a structured draft for announcements to be sent through the Parent Gateway system.
+    It ensures all necessary information is captured and follows the required format.
+
+    Key points:
+    - The announcement includes a title, content, and contact email.
+    - Email must be @gmail.com, @moe.edu.sg, or @schools.gov.sg only.
+    - Optional fields include related website links and shortcuts.
+    - The draft status is set by default, currently only create draft.`,
   parameters: z.object({
     fields: AnnouncementDraftSchema.describe(
-      "Announcement draft schema. Leave optional fields empty if not applicable."
+      "Announcement draft schema. Provide values for all required fields. Optional fields can be left empty if not applicable."
     ),
   }),
 });
 
 const createSLSAnnouncement = tool({
-  description:
-    "Generate or pre-fill a Student Learning Space (SLS) announcement.",
+  description: `Generate or pre-fill a Student Learning Space (SLS) announcement with the following fields:
+
+  - title: A concise, engaging title (1-50 characters)
+  - message: Announcement content in TinyVue format (10-2000 characters)
+    - Content should be informative and motivating for students
+    - Can be directly input into TinyVue editor or input field
+  - startDate: Start date in 'DD MMM YYYY' format (e.g., '24 Feb 2025')
+  - startTime: Start time in 24-hour 'HH:mm' format (e.g., '10:30')
+
+  Ensure all fields adhere to the specified format and length requirements.`,
   parameters: z.object({
     fields: StudentLearningSpacePrefillSchema.describe(
       "SLS announcement pre-fill schema"
@@ -129,13 +178,26 @@ const createSLSAnnouncement = tool({
 });
 
 const createClassroomAnnouncement = tool({
-  description:
-    "Create a Google Classroom announcement using plain text with markdown-like formatting.",
+  description: `Create a Google Classroom announcement using plain text.
+  The content should be structured as follows:
+
+  - Use plain text for all content, including text that should be emphasized
+  - Create bullet points with hyphens (-) at the start of lines
+  - Separate paragraphs with blank lines
+  - Emojis can be included directly
+  - Maximum length: 20,000 characters
+
+  The returned content should be ready for direct input into Google Classroom's editor without any need for manual formatting.`,
   parameters: z.object({
     content: z
       .string()
       .describe(
-        "Announcement content using bold (**text**), numbered lists, and line breaks (\\n). No HTML tags."
+        "Announcement content using plain text:\n" +
+          "- Regular text for all content\n" +
+          "- Bullet points: - Item 1\n  - Item 2\n" +
+          "- Paragraphs: Separated by blank lines\n" +
+          "- Emojis: 👋 🎉\n" +
+          "Avoid using any special formatting symbols or HTML tags."
       ),
   }),
 });
@@ -179,92 +241,4 @@ export const renderToolUIVariables = (
     description: toolDescriptions[toolName] || "",
     options: toolName in toolDescriptions ? defaultOptions : [],
   };
-
-  // switch (toolName) {
-  //   case "sendEmail":
-  //     return {
-  //       description: "",
-  //       options: [
-  //         {
-  //           title: "Send",
-  //           description: "",
-  //           result: APPROVAL.YES,
-  //         },
-  //         {
-  //           title: "Cancel",
-  //           description: "",
-  //           result: APPROVAL.NO,
-  //         },
-  //       ],
-  //     };
-  //   case "createPGFormDraft":
-  //     return {
-  //       description: "",
-  //       options: [
-  //         {
-  //           title: "Confirm",
-  //           description: "Proceed to create a consent form draft",
-  //           result: APPROVAL.YES,
-  //         },
-  //         {
-  //           title: "Cancel",
-  //           description: "Cancel to create a consent form draft",
-  //           result: APPROVAL.NO,
-  //         },
-  //       ],
-  //     };
-  //   case "createPGAnnouncementDraft":
-  //     return {
-  //       description: "",
-  //       options: [
-  //         {
-  //           title: "Confirm",
-  //           description: "Proceed to create a announcement draft",
-  //           result: APPROVAL.YES,
-  //         },
-  //         {
-  //           title: "Cancel",
-  //           description: "Cancel to create a announcement draft",
-  //           result: APPROVAL.NO,
-  //         },
-  //       ],
-  //     };
-  //   case "createSLSAnnouncement":
-  //     return {
-  //       description: "",
-  //       options: [
-  //         {
-  //           title: "Confirm",
-  //           description: "Proceed to pre-fill a announcement",
-  //           result: APPROVAL.YES,
-  //         },
-  //         {
-  //           title: "Cancel",
-  //           description: "Cancel to pre-fill a announcement",
-  //           result: APPROVAL.NO,
-  //         },
-  //       ],
-  //     };
-  //   case "createClassroomAnnouncement":
-  //     return {
-  //       description: "",
-  //       options: [
-  //         {
-  //           title: "Confirm",
-  //           description: "Proceed to pre-fill a announcement",
-  //           result: APPROVAL.YES,
-  //         },
-  //         {
-  //           title: "Cancel",
-  //           description: "Cancel to pre-fill a announcement",
-  //           result: APPROVAL.NO,
-  //         },
-  //       ],
-  //     };
-  //   default:
-  //     return {
-  //       description: "",
-  //       options: [],
-  //     };
-  // }
 };

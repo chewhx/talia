@@ -26,7 +26,12 @@ export const StudentLearningSpacePrefillSchema = z.object({
       .min(10)
       .max(2000)
       .describe(
-        "The content of the announcement in TinyVue format. Include HTML tags for formatting. Content should be informative and motivating for students."
+        `
+        Announcement content in TinyVue format (10-2000 characters)
+    - Use HTML tags for formatting (e.g., <p>, <strong>, <em>, <ul>, <ol>, <li>)
+    - Content should be informative and motivating for students
+    - Can be directly input into TinyVue editor or input field
+        `
       ),
   }),
   startDate: z.object({

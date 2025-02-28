@@ -1,3 +1,4 @@
+"use client";
 import { ToolOption, renderToolUIVariables, tools } from "@/app/api/chat/tools";
 import {
   APPROVAL,
@@ -24,6 +25,7 @@ import { TALIA_EVENTS } from "../../../shared/constants";
 import Markdown from "../markdown";
 import { PGAnnouncementFields } from "../pg-field-display/pg-announcement-field";
 import { PGFormField } from "../pg-field-display/pg-form-field";
+import { useState } from "react";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -33,8 +35,9 @@ type AIMessageProps = {
 };
 
 export default function AIMessage({ message, addToolResult }: AIMessageProps) {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { createDraft, preFillClassroomFormHandling, preFillSLSFormHandling } =
-    useToolActions(addToolResult);
+    useToolActions(addToolResult, setIsLoading);
 
   const renderToolInvocation = (toolInvocation: ToolInvocation) => {
     const { toolName, toolCallId, args } = toolInvocation;
@@ -72,6 +75,7 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
       case "createPGFormDraft":
         const isAnnouncement = toolName === "createPGAnnouncementDraft";
         const fields = args?.fields ?? {};
+        console.log({ fields });
 
         return (
           <Stack key={toolCallId}>
@@ -88,34 +92,42 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
                 )}
               </Stack>
             </Paper>
-            <SimpleGrid cols={2}>
-              {options.map((option: ToolOption) => (
-                <UnstyledButton
-                  key={`toolCall-${toolCallId}-option-${option.title}`}
-                  onClick={() =>
-                    createDraft({
-                      fields,
-                      toolCallId,
-                      postType: isAnnouncement
-                        ? "PG_ANNOUNCEMENT"
-                        : "PG_CONSENT_FORM",
-                      option,
-                    })
-                  }
-                >
-                  <Paper shadow="sm" radius={0} bg="var(--talia-orange)" p="sm">
-                    <Stack gap={0}>
-                      <Text fw={500} m={0} fz="sm">
-                        {option.title}
-                      </Text>
-                      <Text fz="xs" c="gray">
-                        {option.description}
-                      </Text>
-                    </Stack>
-                  </Paper>
-                </UnstyledButton>
-              ))}
-            </SimpleGrid>
+            {!isLoading && (
+              <SimpleGrid cols={2}>
+                {options.map((option: ToolOption) => (
+                  <UnstyledButton
+                    key={`toolCall-${toolCallId}-option-${option.title}`}
+                    onClick={() =>
+                      createDraft({
+                        fields,
+                        toolCallId,
+                        postType: isAnnouncement
+                          ? "PG_ANNOUNCEMENT"
+                          : "PG_CONSENT_FORM",
+                        option,
+                      })
+                    }
+                    className="custom-tool-button"
+                  >
+                    <Paper
+                      shadow="sm"
+                      radius={0}
+                      bg="var(--talia-orange)"
+                      p="sm"
+                    >
+                      <Stack gap={0}>
+                        <Text fw={500} m={0} fz="sm">
+                          {option.title}
+                        </Text>
+                        <Text fz="xs" c="gray">
+                          {option.description}
+                        </Text>
+                      </Stack>
+                    </Paper>
+                  </UnstyledButton>
+                ))}
+              </SimpleGrid>
+            )}
           </Stack>
         );
 
@@ -264,7 +276,10 @@ const formatKey = (key: string) => {
     .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
 };
 
-const useToolActions = (addToolResult: AIMessageProps["addToolResult"]) => {
+const useToolActions = (
+  addToolResult: AIMessageProps["addToolResult"],
+  setIsLoading?: (isLoading: boolean) => void
+) => {
   const preFillSLSFormHandling = async (
     option: ToolOption,
     fields: any,
@@ -314,6 +329,7 @@ const useToolActions = (addToolResult: AIMessageProps["addToolResult"]) => {
   }) => {
     try {
       if (option.title === "Confirm") {
+        setIsLoading?.(true);
         const richTextContent = await fetch("/api/generateRichText", {
           method: "POST",
           body: JSON.stringify({ content: fields?.content }),
@@ -333,6 +349,12 @@ const useToolActions = (addToolResult: AIMessageProps["addToolResult"]) => {
           },
           responseAction: TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE,
         });
+
+        if (draftDetails?.result?.error) {
+          throw new Error(
+            `Unexpected error while creating the draft. ${draftDetails?.result?.error}`
+          );
+        }
 
         const draftID =
           postType === "PG_ANNOUNCEMENT"
@@ -361,11 +383,13 @@ const useToolActions = (addToolResult: AIMessageProps["addToolResult"]) => {
         addToolResult({ toolCallId, result: option.result });
       }
     } catch (error: any) {
-      console.error("Error processing tool action:", error);
+      console.error(error);
       addToolResult({
         toolCallId,
         result: `An error occurred: ${error?.message}. Please try again.`,
       });
+    } finally {
+      setIsLoading?.(false);
     }
   };
 

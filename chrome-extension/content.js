@@ -55,25 +55,26 @@
   window.addEventListener("message", (event) => {
     const { origin, data } = event;
 
-    if (origin !== "http://localhost:8082") {
+    if (
+      origin !== "http://localhost:8082" &&
+      origin !== "https://dev-pg.moe.edu.sg"
+    ) {
       return;
     }
 
     // // Handle message from active tab website
     // // Only for PG
-    if (origin === "http://localhost:8082") {
-      switch (data.action) {
-        case "PG_DRAFT_RESPONSE": {
-          console.log("🟢 Content: PG_DRAFT_RESPONSE", { origin, data });
-          sendToBackgroundJS(data);
-          break;
-        }
+    switch (data.action) {
+      case "PG_DRAFT_RESPONSE": {
+        console.log("🟢 Content: PG_DRAFT_RESPONSE", { origin, data });
+        sendToBackgroundJS(data);
+        break;
+      }
 
-        case "PG_UNAUTHORIZED": {
-          console.log("🟢 Content: PG_UNAUTHORIZED", { origin, data });
-          window.postMessage(data, "http://localhost:3000/");
-          break;
-        }
+      case "PG_UNAUTHORIZED": {
+        console.log("🟢 Content: PG_UNAUTHORIZED", { origin, data });
+        window.postMessage(data, "http://localhost:3000/");
+        break;
       }
     }
   });
@@ -85,8 +86,18 @@ function sendToBackgroundJS(data) {
 }
 
 // Send to website (PG,etc)
-function sendToWebsite(data, targetOrigin) {
-  window.postMessage(data, targetOrigin ?? "http://localhost:8082/");
+function sendToWebsite(data) {
+  chrome.runtime.sendMessage({ action: "GET_ORIGIN" }, (response) => {
+    console.log("Detected target origin:", response);
+    if (response && response.origin) {
+      const targetOrigin = response.origin;
+
+      // Use the detected origin
+      window.postMessage(data, targetOrigin);
+    } else {
+      console.warn("Could not detect the target origin.");
+    }
+  });
 }
 
 // ==================================================

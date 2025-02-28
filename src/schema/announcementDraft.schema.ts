@@ -15,7 +15,7 @@ export const AnnouncementDraftSchema = z.object({
     .min(1)
     .max(2000)
     .describe(
-      "Detailed announcement content (50-2000 characters). Include key information, dates, and any necessary instructions."
+      "Detailed announcement content (50-2000 characters). Include key information, important dates, and any necessary instructions. Use clear and concise language suitable for parents and guardians."
     ),
   enquiryEmailAddress: z
     .string()
@@ -28,7 +28,7 @@ export const AnnouncementDraftSchema = z.object({
       "Email must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg"
     )
     .describe(
-      "Contact email for inquiries (must be @gmail.com, @moe.edu.sg, or @schools.gov.sg)"
+      "Official contact email for inquiries. Must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg. This email will be visible to parents for any questions regarding the announcement."
     ),
   // staffGroups: z
   //   .array(
@@ -73,17 +73,30 @@ export const AnnouncementDraftSchema = z.object({
   urls: z
     .array(
       z.object({
-        webLink: z.string().url().describe("Valid URL of the related website"),
-        linkDescription: z.string().describe("Description of the website link"),
+        webLink: z
+          .string()
+          .url()
+          .describe(
+            "Valid URL of a related website. Ensure the link is correct and relevant to the announcement."
+          ),
+        linkDescription: z
+          .string()
+          .describe(
+            "Brief, clear and short description of the website link to help parents understand its relevance."
+          ),
       })
     )
     .max(3)
     .optional()
-    .describe("Related website links (max 3)"),
+    .describe(
+      "Related website links (maximum 3). Use these to provide additional resources or information pertinent to the announcement."
+    ),
   shortcuts: z
     .array(z.string())
     .optional()
-    .describe("Shortcut URLs for quick access to other websites/apps"),
+    .describe(
+      "Shortcut URLs for quick access to other websites or apps within the Parent Gateway system. These should be predefined system shortcuts."
+    ),
 });
 
 export const mockAnnouncement = {

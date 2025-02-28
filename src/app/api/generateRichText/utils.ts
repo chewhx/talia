@@ -88,25 +88,18 @@ export function parseToTiptap(
     const extensions = getSupportedExtensions(placeholder);
 
     if (isHTML) {
-      // Parse HTML directly
-      return generateJSON(content, extensions);
+      const preservedContent = content.replace(/\n/g, "<br>");
+      return generateJSON(preservedContent, extensions);
     } else {
-      // Improved plain text to HTML conversion with proper line break handling
-
-      // First, split the text into paragraphs (double line breaks)
+      // Improved plain text to HTML conversion
       const paragraphs = content.split(/\n\n+/);
-
-      // Convert each paragraph, properly handling single line breaks
       const htmlContent = paragraphs
         .map((paragraph) => {
-          // Replace single line breaks with <br> tags
-          // This ensures line breaks within paragraphs are preserved
-          const withLineBreaks = paragraph.replace(/\n/g, "<br>\n");
+          const withLineBreaks = paragraph.replace(/\n/g, "<br>");
           return `<p>${withLineBreaks}</p>`;
         })
         .join("\n");
 
-      // Parse the HTML to JSON
       return generateJSON(htmlContent, extensions);
     }
   } catch (error) {

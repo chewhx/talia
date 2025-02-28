@@ -1,5 +1,6 @@
-import { Paper, Stack, Text } from "@mantine/core";
+import { Anchor, Box, Group, Paper, Stack, Text } from "@mantine/core";
 import React from "react";
+import ReactMarkdown from "react-markdown";
 
 interface AnnouncementFieldsProps {
   data: AnnouncementData;
@@ -27,56 +28,110 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
   return (
     <Stack>
       <Paper shadow="xs" p="md" bg="white">
-        {/* Title */}
-        <Text fw={600} fz="lg" mb="xs">
-          {title}
-        </Text>
-
         {/* Status */}
-        <Text fz="sm" c="gray">
-          Status: {status}
-        </Text>
-
-        {/* Content */}
-        <Text fz="sm" mt="xs" style={{ whiteSpace: "pre-wrap" }}>
-          {content}
-        </Text>
+        <Group align="flex-start" mb="md">
+          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            Status:
+          </Text>
+          <Box style={{ flex: 1 }}>
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+              {status}
+            </Text>
+          </Box>
+        </Group>
 
         {/* Enquiry Email */}
-        <Text fz="sm" mt="xs">
-          <strong>Enquiry Email:</strong> {enquiryEmailAddress}
-        </Text>
-
-        {/* URLs */}
-        {urls && urls.length > 0 && (
-          <>
-            <Text fz="sm" mt="xs">
-              <strong>Links:</strong>
+        <Group align="flex-start" mb="md">
+          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            Enquiry Email:
+          </Text>
+          <Box style={{ flex: 1 }}>
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+              {enquiryEmailAddress}
             </Text>
-            {urls.map((url, index) => (
-              <Text key={index} fz="sm" mt="xs">
-                <a href={url.webLink} target="_blank" rel="noopener noreferrer">
-                  {url.linkDescription || url.webLink}
-                </a>
-              </Text>
-            ))}
-          </>
-        )}
+          </Box>
+        </Group>
+
+        {/* Title */}
+        <Group align="flex-start" mb="md">
+          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            Title:
+          </Text>
+          <Box style={{ flex: 1 }}>
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+              {title}
+            </Text>
+          </Box>
+        </Group>
+
+        {/* Content */}
+        <Group align="flex-start" mb="md">
+          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            Content:
+          </Text>
+          <Box style={{ flex: 1 }}>
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => (
+                  <Text fz="sm" style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                    {children}
+                  </Text>
+                ),
+              }}
+            >
+              {content}
+            </ReactMarkdown>
+          </Box>
+        </Group>
 
         {/* Shortcuts */}
         {shortcuts && shortcuts.length > 0 && (
-          <>
-            <Text fz="sm" mt="xs">
-              <strong>Shortcuts:</strong>
+          <Group align="flex-start">
+            <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+              Shortcuts:
             </Text>
-            {shortcuts.map((shortcut, index) => (
-              <Text key={index} fz="sm" mt="xs">
-                <a href={shortcut} target="_blank" rel="noopener noreferrer">
-                  {shortcut}
-                </a>
-              </Text>
-            ))}
-          </>
+            <Box style={{ flex: 1 }}>
+              {shortcuts.map((url, index) => (
+                <Text
+                  key={index}
+                  fz="sm"
+                  style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
+                >
+                  {index + 1}.{" "}
+                  <Anchor href={url} target="_blank" rel="noopener noreferrer">
+                    {url}
+                  </Anchor>
+                </Text>
+              ))}
+            </Box>
+          </Group>
+        )}
+
+        {/* URLs */}
+        {urls && urls.length > 0 && (
+          <Group align="flex-start" mb="md">
+            <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+              Website link:
+            </Text>
+            <Box style={{ flex: 1 }}>
+              {urls.map((url, index) => (
+                <Text
+                  key={index}
+                  fz="sm"
+                  style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
+                >
+                  {index + 1}.{" "}
+                  <Anchor
+                    href={url.webLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {url.linkDescription} ({url.webLink})
+                  </Anchor>
+                </Text>
+              ))}
+            </Box>
+          </Group>
         )}
       </Paper>
     </Stack>

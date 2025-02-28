@@ -44,6 +44,11 @@ export async function POST(req: Request) {
               emailSubject,
             }) => {
               if (emailAddresses.length) {
+                console.log({
+                  emailAddresses,
+                  emailContent,
+                  emailSubject,
+                });
                 const resend = new Resend(env.RESEND_API_KEY);
 
                 await resend.emails.send({
@@ -87,7 +92,7 @@ export async function POST(req: Request) {
 
             createClassroomAnnouncement: async ({ content }) => {
               return `Google Classroom announcement draft created with the following content: "${content}"
-              Would you like to review it before posting?`;
+              Is there anything you'd like to add or modify before submission?`;
             },
           }
         );
@@ -117,10 +122,8 @@ export async function POST(req: Request) {
         result.mergeIntoDataStream(dataStream);
       },
       onError(error: any) {
-        return `I apologize, but an error occurred: ${
-          error?.message || "Unknown error"
-        }.
-        Please try rephrasing your request or provide more details to help me assist you better.`;
+        console.error(error);
+        return `I apologize, but an error occurred. Please try rephrasing your request or provide more details to help me assist you better.`;
       },
     });
   } catch (err) {

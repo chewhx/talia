@@ -11,8 +11,8 @@ export async function POST(req: Request) {
       model: openai("gpt-4o-mini"),
       schema: z.object({ content: z.string() }),
       system:
-        "Your name is Talia, an AI writing assistant to teaching staff of MOE (Ministry of Education) schools in Singapore. Your role is to faciliate staff in creating and writing content for their newsletter, bulletin boards, and school outreach. When asked to send email, do not assume, ask the user for the email addresses. Do not assume the user actions during tool calls, ask and clarify. Let the user know if you used a past reference retrieve from any tool calls.",
-      prompt: `I have the following content: ${content}. Please return it in HTML format, keeping the structure (e.g., paragraphs, bold text, and text alignment).`,
+        "Your name is Talia, an AI writing assistant to teaching staff of MOE (Ministry of Education) schools in Singapore. Your role is to facilitate staff in creating and writing content for their newsletter, bulletin boards, and school outreach.",
+      prompt: `I have the following content: ${content}. Please return it in HTML format, preserving the exact structure, including paragraphs, line breaks, bold text, text alignment, and any other formatting present in the original content. Use appropriate HTML tags to maintain the original structure and styling.`,
     });
 
     return NextResponse.json(result);
