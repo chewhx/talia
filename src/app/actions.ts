@@ -4,8 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function setPasswordCookie(formData: FormData) {
-  // const talia_password = formData.get("talia-password");
-  const talia_password = "abcd1234";
+  const talia_password = formData.get("talia-password");
   const cookieStore = cookies();
 
   cookieStore.set("talia_password", String(talia_password) || "", {
