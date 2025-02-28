@@ -21,8 +21,8 @@ import {
 } from "@tabler/icons-react";
 import mammoth from "mammoth";
 import React from "react";
-import { IMAGE_MIME_TYPE, MIME_TYPES } from "./constants";
 import { validateFiles } from "./prompt-input.utils";
+import { IMAGE_MIME_TYPE, MIME_TYPES } from "../../../shared/constants";
 
 const ACCEPT_MIME_TYPES = [...IMAGE_MIME_TYPE, MIME_TYPES.pdf, MIME_TYPES.docx];
 
@@ -172,9 +172,10 @@ export default function PromptInput({
                 )}
               </Group>
               {!_files.length ? null : (
-                <Group>
+                <Group className="file-pill">
                   {_files?.map((file, i) => (
                     <Pill
+                      size="md"
                       key={file.name}
                       withRemoveButton
                       onRemove={() => {

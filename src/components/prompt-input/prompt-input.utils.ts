@@ -1,4 +1,4 @@
-import { IMAGE_MIME_TYPE, MIME_TYPES } from "./constants";
+import { IMAGE_MIME_TYPE, MIME_TYPES } from "../../../shared/constants";
 
 type ValidationResult = {
   success: boolean;

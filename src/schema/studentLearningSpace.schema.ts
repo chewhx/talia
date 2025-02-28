@@ -11,21 +11,37 @@ import { z } from "zod";
 export const StudentLearningSpacePrefillSchema = z.object({
   title: z.object({
     id: z.string(),
-    value: z.string(),
+    value: z
+      .string()
+      .min(1)
+      .max(50)
+      .describe(
+        "A concise, engaging title for the learning space announcement, between 1 and 50 characters"
+      ),
   }),
   message: z.object({
     id: z.string(),
     value: z
       .string()
-      .describe("The content of announcement in tiny vue format"),
+      .min(10)
+      .max(2000)
+      .describe(
+        "The content of the announcement in TinyVue format. Include HTML tags for formatting. Content should be informative and motivating for students."
+      ),
   }),
   startDate: z.object({
     id: z.string(),
-    value: z.string(),
+    value: z
+      .string()
+      .regex(/^\d{2} [A-Z][a-z]{2} \d{4}$/)
+      .describe("Start date in the format 'DD MMM YYYY' (e.g., '24 Feb 2025')"),
   }),
   startTime: z.object({
     id: z.string(),
-    value: z.string().describe("Time in 24 hours format, format is HH:mm"),
+    value: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+      .describe("Start time in 24-hour format 'HH:mm' (e.g., '10:30')"),
   }),
 });
 

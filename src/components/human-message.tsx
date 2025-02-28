@@ -14,7 +14,7 @@ import Markdown from "./markdown";
 export default function HumanMessage({ message }: { message: UIMessage }) {
   return (
     <Stack align="end">
-      <Paper px="xs" py="5" fz="sm" bg="var(--talia-orange)" maw="80%">
+      <Paper px="10" py="10" fz="sm" bg="var(--talia-orange)" maw="80%">
         <Markdown>{message.content}</Markdown>
       </Paper>
       {message?.experimental_attachments?.map((attachment, index) => (

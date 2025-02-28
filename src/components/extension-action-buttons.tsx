@@ -50,6 +50,7 @@ export const ExtensionActionButton = () => {
           setMockData(JSON.stringify(mockData));
         } else if (data?.currentWebsite === "GoogleClassroom") {
           // Pending
+          setMockData("google-classroom");
         }
 
         break;
@@ -137,7 +138,8 @@ export const ExtensionActionButton = () => {
 
   const sendMessageToExtension = (data: any) => {
     console.log(`🟢 HeyTalia: ${data?.action}`);
-    window.parent.postMessage(data, `${chromeExtensionID}`);
+    // window.parent.postMessage(data, `${chromeExtensionID}`);
+    window.parent.postMessage(data, `*`); // // Temporary open to all listener
   };
 
   return (

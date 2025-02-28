@@ -157,8 +157,9 @@ export function callExtensionFunction({
   callback?: any;
 }): Promise<any> {
   return new Promise((resolve, reject) => {
-    const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
-    window.parent.postMessage(requestBody, `${chromeExtensionID}`);
+    // const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
+    // window.parent.postMessage(requestBody, `${chromeExtensionID}`); // Temporary open to all listener
+    window.parent.postMessage(requestBody, `*`);
 
     const handleMessage = (event: MessageEvent) => {
       if (event.data.action === responseAction) {

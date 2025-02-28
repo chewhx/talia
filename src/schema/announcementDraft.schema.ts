@@ -1,19 +1,34 @@
 import { z } from "zod";
 
 export const AnnouncementDraftSchema = z.object({
-  title: z.string().describe("The title of the announcement"),
+  title: z
+    .string()
+    .min(1)
+    .max(120)
+    .describe("Concise, engaging title for the school announcement"),
   status: z
     .string()
     .default("DRAFT")
-    .describe("The default status of the post"),
+    .describe("Current status of the announcement"),
   content: z
     .string()
-    .describe("Announcement content. It has max 2000 characters")
-    .max(2000),
+    .min(1)
+    .max(2000)
+    .describe(
+      "Detailed announcement content (50-2000 characters). Include key information, dates, and any necessary instructions."
+    ),
   enquiryEmailAddress: z
     .string()
+    .email()
+    .refine(
+      (email) =>
+        email.endsWith("@gmail.com") ||
+        email.endsWith("@moe.edu.sg") ||
+        email.endsWith("@schools.gov.sg"),
+      "Email must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg"
+    )
     .describe(
-      "The preferred email address to receive enquiries from parents. Must be in a valid format and end with '@gmail.com' or '@moe.edu.sg' or 'schools.gov.sg' only."
+      "Contact email for inquiries (must be @gmail.com, @moe.edu.sg, or @schools.gov.sg)"
     ),
   // staffGroups: z
   //   .array(
@@ -56,13 +71,19 @@ export const AnnouncementDraftSchema = z.object({
   //   .optional()
   //   .describe("The attachment for announcement"),
   urls: z
-    .array(z.object({ webLink: z.string(), linkDescription: z.string() }))
+    .array(
+      z.object({
+        webLink: z.string().url().describe("Valid URL of the related website"),
+        linkDescription: z.string().describe("Description of the website link"),
+      })
+    )
+    .max(3)
     .optional()
-    .describe("The website link for the event. It must be a safe link"),
+    .describe("Related website links (max 3)"),
   shortcuts: z
     .array(z.string())
     .optional()
-    .describe("The url for pressing and redirect to other website/app"),
+    .describe("Shortcut URLs for quick access to other websites/apps"),
 });
 
 export const mockAnnouncement = {

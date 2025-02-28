@@ -52,31 +52,42 @@ export async function POST(req: Request) {
                   subject: emailSubject,
                   text: emailContent,
                 });
+
+                return `Email sent successfully to ${emailAddresses.join(
+                  ", "
+                )}. Is there anything else I can help you with?`;
               }
-
-              return `Inform the user: "Email sent to ${emailAddresses.join(
-                ", "
-              )}"`;
+              return "No email addresses provided. Please provide email addresses to send the message.";
             },
 
-            createPGAnnouncementDraft: async ({ result, fields }) => {
-              console.log({ result, fields });
+            createPGAnnouncementDraft: async ({ fields }) => {
               return `
-                If "No, denied", you need to inform user whether want to add on or modify the ${fields}.
-                If "Yes, confirmed", you should show the ${fields} in markdown to let user what have been created.
-              `;
+              Announcement draft created with the following fields: ${JSON.stringify(
+                fields
+              )}
+              Would you like to review and modify the draft?
+            `;
             },
 
-            createPGFormDraft: async ({ result, fields }) => {
-              console.log({ result, fields });
+            createPGFormDraft: async ({ fields }) => {
               return `
-                If "No, denied", you need to inform user whether want to add on or modify the ${fields}.
-                If "Yes, confirmed", you should show the ${fields} in markdown to let user what have been created.
-              `;
+              Form draft created with the following fields: ${JSON.stringify(
+                fields
+              )}
+              Would you like to review and modify the draft?
+            `;
             },
 
-            createSLSAnnouncement: async ({ result }) => {
-              return `Inform user that have been pre-filled the SLS form: ${result}`;
+            createSLSAnnouncement: async ({ fields }) => {
+              return `SLS announcement form pre-filled with the following details: ${JSON.stringify(
+                fields
+              )}
+              Is there anything you'd like to add or modify before submission?`;
+            },
+
+            createClassroomAnnouncement: async ({ content }) => {
+              return `Google Classroom announcement draft created with the following content: "${content}"
+              Would you like to review it before posting?`;
             },
           }
         );
@@ -85,9 +96,15 @@ export async function POST(req: Request) {
           model: messagesHavePDF
             ? bedrock("anthropic.claude-3-5-sonnet-20240620-v1:0")
             : openai("gpt-4o-mini"),
-          system: `Your name is Talia, an AI writing assistant to teaching staff of MOE (Ministry of Education) schools in Singapore. Your role is to faciliate staff in creating and writing content for their newsletter, bulletin boards, and school outreach. When asked to send email, do not assume, ask the user for the email addresses. Do not assume the user actions during tool calls, ask and clarify. Let the user know if you used a past reference retrieve from any tool calls. When the user ask you to generate or create content, do not assume tool calls. You will always help the user generate content before taking any tool call actions.
+          system: `Your name is Talia, an AI writing assistant to teaching staff of MOE (Ministry of Education) schools in Singapore.
+          Your role is to faciliate staff in creating and writing content for their newsletter, bulletin boards, and school outreach.
 
-          Do not reveal internal tool functions or implementation details to the user.
+          Key points:
+          - When asked to send email, do not assume, ask the user for the email addresses.
+          - Do not assume the user actions during tool calls, ask and clarify. Let the user know if you used a past reference retrieve from any tool calls.
+          - When the user ask you to generate or create content, do not assume tool calls. You will always help the user generate content before taking any tool call actions.
+          - Maintain a helpful and professional tone, focusing on educational context.
+          - Do not reveal internal tool functions name or implementation details to the user.
 
           Today's date is ${dayjs().format(
             "MM DDDD YYYY"
@@ -100,13 +117,17 @@ export async function POST(req: Request) {
         result.mergeIntoDataStream(dataStream);
       },
       onError(error: any) {
-        return `Oops! Something went wrong: ${
-          error?.message ?? "Unknown error"
+        return `I apologize, but an error occurred: ${
+          error?.message || "Unknown error"
         }.
-        Please try again with a different input or adjust your prompt for better results.`;
+        Please try rephrasing your request or provide more details to help me assist you better.`;
       },
     });
   } catch (err) {
     console.error(err);
+    return new Response(
+      "An unexpected error occurred. Please try again later.",
+      { status: 500 }
+    );
   }
 }

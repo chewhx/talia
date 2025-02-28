@@ -1,8 +1,8 @@
 "use client";
 
-import AIMessage from "@/components/ai-message";
+import AIMessage from "@/components/ai-message/ai-message";
 import HumanMessage from "@/components/human-message";
-import PromptInput from "@/components/prompt-input";
+import PromptInput from "@/components/prompt-input/prompt-input";
 import { Message, useChat } from "@ai-sdk/react";
 import {
   Container,
@@ -45,7 +45,7 @@ export default function MainPage() {
 
   return (
     <Container size="sm">
-      <ExtensionActionButton />
+      {/* <ExtensionActionButton /> */}
 
       <TypographyStylesProvider>
         {!messages.length ? (

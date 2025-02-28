@@ -11,6 +11,12 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { z } from "zod";
 import { APPROVAL } from "./utils";
 
+export type ToolOption = {
+  title: string;
+  description: string;
+  result: string;
+};
+
 dayjs.extend(customParseFormat);
 
 const DAYS_OF_WEEK = {
@@ -43,9 +49,10 @@ const sendEmail = tool({
     emailSubject: z
       .string()
       .describe("Email subject that defines the email content"),
-    emailAddresses: z.array(z.string()).describe("List of email addresses"),
+    emailAddresses: z
+      .array(z.string())
+      .describe("List of recipient email addresses"),
   }),
-  // no execute function, we want human in the loop
 });
 
 const retrieveResource = tool({
@@ -93,33 +100,43 @@ const retrieveResource = tool({
 });
 
 const createPGFormDraft = tool({
-  description: "Create a PG consent form draft based on the content",
+  description: "Create a Parent Gateway (PG) consent form draft.",
   parameters: z.object({
-    result: z.string().describe("The consent form original content"),
     fields: FormDraftSchema.describe(
-      "The schema to create a form draft. Return empty for optional field if the content does not match."
+      "Form draft schema. Leave optional fields empty if not applicable."
     ),
   }),
 });
 
 const createPGAnnouncementDraft = tool({
   description: `
-    Create a PG announcement draft based on the content.`,
+    Create a Parent Gateway (PG) announcement draft.`,
   parameters: z.object({
-    result: z.string().describe("The announcement original content"),
     fields: AnnouncementDraftSchema.describe(
-      "The schema to create a announcement draft. Return empty for optional field if the content does not match."
+      "Announcement draft schema. Leave optional fields empty if not applicable."
     ),
   }),
 });
 
 const createSLSAnnouncement = tool({
-  description: "Create or prefill a SLS announcement based on the content.",
+  description:
+    "Generate or pre-fill a Student Learning Space (SLS) announcement.",
   parameters: z.object({
-    result: z.string().describe("The announcement original content"),
     fields: StudentLearningSpacePrefillSchema.describe(
-      "The schema to pre fill student learning space announcement"
+      "SLS announcement pre-fill schema"
     ),
+  }),
+});
+
+const createClassroomAnnouncement = tool({
+  description:
+    "Create a Google Classroom announcement using plain text with markdown-like formatting.",
+  parameters: z.object({
+    content: z
+      .string()
+      .describe(
+        "Announcement content using bold (**text**), numbered lists, and line breaks (\\n). No HTML tags."
+      ),
   }),
 });
 
@@ -130,82 +147,124 @@ export const tools = {
   createPGFormDraft,
   createPGAnnouncementDraft,
   createSLSAnnouncement,
+  createClassroomAnnouncement,
 };
 
 export const renderToolUIVariables = (
   toolName: keyof typeof tools | (string & {})
 ): {
   description: string;
-  options: Array<{
-    title: string;
-    description: string;
-    result: string;
-  }>;
+  options: Array<ToolOption>;
 } => {
-  switch (toolName) {
-    case "sendEmail":
-      return {
-        description: "",
-        options: [
-          {
-            title: "Send",
-            description: "",
-            result: APPROVAL.YES,
-          },
-        ],
-      };
-    case "createPGFormDraft":
-      return {
-        description: "",
-        options: [
-          {
-            title: "Confirm",
-            description: "Proceed to create a consent form draft",
-            result: APPROVAL.YES,
-          },
-          {
-            title: "Cancel",
-            description: "Cancel to create a consent form draft",
-            result: APPROVAL.NO,
-          },
-        ],
-      };
-    case "createPGAnnouncementDraft":
-      return {
-        description: "",
-        options: [
-          {
-            title: "Confirm",
-            description: "Proceed to create a announcement draft",
-            result: APPROVAL.YES,
-          },
-          {
-            title: "Cancel",
-            description: "Cancel to create a announcement draft",
-            result: APPROVAL.NO,
-          },
-        ],
-      };
-    case "createSLSAnnouncement":
-      return {
-        description: "",
-        options: [
-          {
-            title: "Confirm",
-            description: "Proceed to pre-fill a announcement",
-            result: APPROVAL.YES,
-          },
-          {
-            title: "Cancel",
-            description: "Cancel to pre-fill a announcement",
-            result: APPROVAL.NO,
-          },
-        ],
-      };
-    default:
-      return {
-        description: "",
-        options: [],
-      };
-  }
+  const defaultOptions: Array<ToolOption> = [
+    {
+      title: "Confirm",
+      description: "Proceed with the action",
+      result: APPROVAL.YES,
+    },
+    { title: "Cancel", description: "Cancel the action", result: APPROVAL.NO },
+  ];
+
+  const toolDescriptions: Record<string, string> = {
+    sendEmail: "Confirm to send the email or cancel the action.",
+    createPGFormDraft: "Create a Parent Gateway (PG) consent form draft.",
+    createPGAnnouncementDraft:
+      "Create a Parent Gateway (PG) announcement draft.",
+    createSLSAnnouncement:
+      "Pre-fill a Student Learning Space (SLS) announcement",
+    createClassroomAnnouncement: "Pre-fill a Google Classroom announcement.",
+  };
+
+  return {
+    description: toolDescriptions[toolName] || "",
+    options: toolName in toolDescriptions ? defaultOptions : [],
+  };
+
+  // switch (toolName) {
+  //   case "sendEmail":
+  //     return {
+  //       description: "",
+  //       options: [
+  //         {
+  //           title: "Send",
+  //           description: "",
+  //           result: APPROVAL.YES,
+  //         },
+  //         {
+  //           title: "Cancel",
+  //           description: "",
+  //           result: APPROVAL.NO,
+  //         },
+  //       ],
+  //     };
+  //   case "createPGFormDraft":
+  //     return {
+  //       description: "",
+  //       options: [
+  //         {
+  //           title: "Confirm",
+  //           description: "Proceed to create a consent form draft",
+  //           result: APPROVAL.YES,
+  //         },
+  //         {
+  //           title: "Cancel",
+  //           description: "Cancel to create a consent form draft",
+  //           result: APPROVAL.NO,
+  //         },
+  //       ],
+  //     };
+  //   case "createPGAnnouncementDraft":
+  //     return {
+  //       description: "",
+  //       options: [
+  //         {
+  //           title: "Confirm",
+  //           description: "Proceed to create a announcement draft",
+  //           result: APPROVAL.YES,
+  //         },
+  //         {
+  //           title: "Cancel",
+  //           description: "Cancel to create a announcement draft",
+  //           result: APPROVAL.NO,
+  //         },
+  //       ],
+  //     };
+  //   case "createSLSAnnouncement":
+  //     return {
+  //       description: "",
+  //       options: [
+  //         {
+  //           title: "Confirm",
+  //           description: "Proceed to pre-fill a announcement",
+  //           result: APPROVAL.YES,
+  //         },
+  //         {
+  //           title: "Cancel",
+  //           description: "Cancel to pre-fill a announcement",
+  //           result: APPROVAL.NO,
+  //         },
+  //       ],
+  //     };
+  //   case "createClassroomAnnouncement":
+  //     return {
+  //       description: "",
+  //       options: [
+  //         {
+  //           title: "Confirm",
+  //           description: "Proceed to pre-fill a announcement",
+  //           result: APPROVAL.YES,
+  //         },
+  //         {
+  //           title: "Cancel",
+  //           description: "Cancel to pre-fill a announcement",
+  //           result: APPROVAL.NO,
+  //         },
+  //       ],
+  //     };
+  //   default:
+  //     return {
+  //       description: "",
+  //       options: [],
+  //     };
+  // }
 };
