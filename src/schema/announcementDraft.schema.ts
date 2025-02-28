@@ -1,59 +1,102 @@
 import { z } from "zod";
 
 export const AnnouncementDraftSchema = z.object({
-  title: z.string().describe("The title of the announcement"),
-  status: z.string().default("DRAFT").describe("The status of the post"),
-  content: z.string().describe("The content of the announcement"),
+  title: z
+    .string()
+    .min(1)
+    .max(120)
+    .describe("Concise, engaging title for the school announcement"),
+  status: z
+    .string()
+    .default("DRAFT")
+    .describe("Current status of the announcement"),
+  content: z
+    .string()
+    .min(1)
+    .max(2000)
+    .describe(
+      "Detailed announcement content (50-2000 characters). Include key information, important dates, and any necessary instructions. Use clear and concise language suitable for parents and guardians."
+    ),
   enquiryEmailAddress: z
     .string()
-    .describe("The preferred email address to receive enquiries from parents"),
-  staffGroups: z
-    .array(
-      z.object({
-        type: z.enum(["individual", "school", "level"]),
-        label: z.string(),
-        value: z.number(),
-      })
-    )
-    .optional()
-    .describe(
-      "The staff who will be able to view and edit form response and delete form"
-    ),
-  studentGroups: z
-    .array(
-      z.object({
-        type: z.enum([
-          "all",
-          "class",
-          "level",
-          "cca",
-          "school",
-          "group",
-          "student",
-        ]),
-        label: z.string(),
-        value: z.number(),
-      })
+    .email()
+    .refine(
+      (email) =>
+        email.endsWith("@gmail.com") ||
+        email.endsWith("@moe.edu.sg") ||
+        email.endsWith("@schools.gov.sg"),
+      "Email must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg"
     )
     .describe(
-      "The student groups, individual students or both that will receive the announcement"
+      "Official contact email for inquiries. Must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg. This email will be visible to parents for any questions regarding the announcement."
     ),
-  images: z
-    .array(z.object({}))
-    .optional()
-    .describe("The image gallery for announcement"),
-  attachments: z
-    .array(z.object({}))
-    .optional()
-    .describe("The attachment for announcement"),
+  // staffGroups: z
+  //   .array(
+  //     z.object({
+  //       type: z.enum(["individual", "school", "level"]),
+  //       label: z.string(),
+  //       value: z.number(),
+  //     })
+  //   )
+  //   .optional()
+  //   .describe(
+  //     "The staff who will be able to view and edit form response and delete form"
+  //   ),
+  // studentGroups: z
+  //   .array(
+  //     z.object({
+  //       type: z.enum([
+  //         "all",
+  //         "class",
+  //         "level",
+  //         "cca",
+  //         "school",
+  //         "group",
+  //         "student",
+  //       ]),
+  //       label: z.string(),
+  //       value: z.number(),
+  //     })
+  //   )
+  //   .optional()
+  //   .describe(
+  //     "The student groups, individual students or both that will receive the announcement"
+  //   ),
+  // images: z
+  //   .array(z.object({}))
+  //   .optional()
+  //   .describe("The image gallery for announcement"),
+  // attachments: z
+  //   .array(z.object({}))
+  //   .optional()
+  //   .describe("The attachment for announcement"),
   urls: z
-    .array(z.object({ webLink: z.string(), linkDescription: z.string() }))
+    .array(
+      z.object({
+        webLink: z
+          .string()
+          .url()
+          .describe(
+            "Valid URL of a related website. Ensure the link is correct and relevant to the announcement."
+          ),
+        linkDescription: z
+          .string()
+          .describe(
+            "Brief, clear and short description of the website link to help parents understand its relevance."
+          ),
+      })
+    )
+    .max(3)
     .optional()
-    .describe("The website link for the event"),
+    .describe(
+      "Related website links (maximum 3). Use these to provide additional resources or information pertinent to the announcement."
+    ),
   shortcuts: z
     .array(z.string())
     .optional()
-    .describe("The url for pressing and redirect to other website/app"),
+    .describe(
+      "Shortcut URLs for quick access to other websites or apps within the Parent Gateway system. These should be predefined system shortcuts."
+    ),
 });
 
 export const mockAnnouncement = {

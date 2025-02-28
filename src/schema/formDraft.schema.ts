@@ -1,35 +1,71 @@
 import { z } from "zod";
 
-const BaseQuestionSchema = z.object({
-  type: z.string(),
-  title: z.string(),
-  description: z.string(),
-  id: z.string().uuid(),
-});
+const SingleSelectionQuestionSchema = z
+  .object({
+    type: z.literal("single_selection"),
+    title: z.string().describe("The question title"),
+    description: z
+      .string()
+      .describe("Additional details or instructions for the question"),
+    id: z.string().describe("Unique identifier for the question"),
+    choices: z
+      .array(
+        z.object({
+          label: z.string().describe("The text displayed for this choice"),
+        })
+      )
+      .max(2)
+      .describe("Available options for the question"),
+    properties: z.object({
+      choices: z
+        .array(
+          z.object({
+            label: z.string().describe("The text displayed for this choice"),
+          })
+        )
+        .max(2),
+    }),
+  })
+  .describe("A question where only one option can be selected");
 
-const ChoiceSchema = z.object({
-  label: z.string(),
-});
+const MultiSelectionQuestionSchema = z
+  .object({
+    type: z.literal("multi_selection"),
+    title: z.string().describe("The question title"),
+    description: z
+      .string()
+      .describe("Additional details or instructions for the question"),
+    id: z.string().describe("Unique identifier for the question"),
+    choices: z
+      .array(
+        z.object({
+          label: z.string().describe("The text displayed for this choice"),
+        })
+      )
+      .max(7)
+      .describe("Available options for the question"),
+    properties: z.object({
+      choices: z
+        .array(
+          z.object({
+            label: z.string().describe("The text displayed for this choice"),
+          })
+        )
+        .max(7),
+    }),
+  })
+  .describe("A question where multiple options can be selected");
 
-const SingleSelectionQuestionSchema = BaseQuestionSchema.extend({
-  type: z.literal("single_selection"),
-  choices: z.array(ChoiceSchema),
-  properties: z.object({
-    choices: z.array(ChoiceSchema),
-  }),
-});
-
-const MultiSelectionQuestionSchema = BaseQuestionSchema.extend({
-  type: z.literal("multi_selection"),
-  choices: z.array(ChoiceSchema),
-  properties: z.object({
-    choices: z.array(ChoiceSchema),
-  }),
-});
-
-const TextQuestionSchema = BaseQuestionSchema.extend({
-  type: z.literal("text"),
-});
+const TextQuestionSchema = z
+  .object({
+    type: z.literal("text"),
+    title: z.string().describe("The question title"),
+    description: z
+      .string()
+      .describe("Additional details or instructions for the question"),
+    id: z.string().describe("Unique identifier for the question"),
+  })
+  .describe("A question that requires a text response");
 
 const QuestionSchema = z.discriminatedUnion("type", [
   SingleSelectionQuestionSchema,
@@ -37,88 +73,118 @@ const QuestionSchema = z.discriminatedUnion("type", [
   TextQuestionSchema,
 ]);
 
-const QuestionArraySchema = z
+export const FormQuestionsSchema = z
   .array(QuestionSchema)
+  .max(5)
   .optional()
-  .describe("The custom questions for YES_NO type form only");
+  .describe(`Custom questions for YES_NO type forms.`);
 
 export const FormDraftSchema = z.object({
-  title: z.string().describe("The title of the consent form"),
-  status: z.string().default("DRAFT").describe("The status of the post"),
-  content: z.string().describe("The content of the consent form"),
-  venue: z.string().optional().describe("The location of the consent form"),
-  eventStartDate: z
-    .object({
-      date: z.string(),
-      time: z.string(),
-    })
-    .optional()
-    .describe("Event starting date time"),
-  eventEndDate: z
-    .object({
-      date: z.string(),
-      time: z.string(),
-    })
-    .describe("Event ending date time"),
-  reminderDate: z.string().optional().describe("The reminder trigger date"),
+  title: z.string().min(1).max(120).describe("The title of the consent form"),
+  status: z.string().default("DRAFT").describe("The status of the form"),
+  content: z
+    .string()
+    .min(1)
+    .max(2000)
+    .describe("The content of the consent form in HTML format"),
+  consentByDate: z
+    .string()
+    .describe("The deadline for responding to the form (YYYY-MM-DD)"),
   addReminderType: z
     .enum(["ONE_TIME", "DAILY", "NONE"])
-    .describe("Reminder trigger type"),
+    .default("NONE")
+    .describe("Type of reminder to be sent"),
   enquiryEmailAddress: z
     .string()
-    .describe("The preferred email address to receive enquiries from parents"),
+    .email()
+    .refine(
+      (email) =>
+        ["@gmail.com", "@moe.edu.sg", "@schools.gov.sg"].some((domain) =>
+          email.endsWith(domain)
+        ),
+      "Email must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg"
+    )
+    .describe(
+      "Contact email for inquiries (must be @gmail.com, @moe.edu.sg, or @schools.gov.sg)"
+    ),
   responseType: z
     .enum(["YES_NO", "ACKNOWLEDGEMENT"])
-    .describe("The type of the form"),
-  staffGroups: z
-    .array(
-      z.object({
-        type: z.enum(["individual", "school", "level"]),
-        label: z.string(),
-        value: z.number(),
-      })
-    )
+    .describe("The type of response required for the form"),
+  venue: z
+    .string()
     .optional()
-    .describe(
-      "The staff who will be able to view and edit form response and delete form"
-    ),
-  studentGroups: z
-    .array(
-      z.object({
-        type: z.enum([
-          "all",
-          "class",
-          "level",
-          "cca",
-          "school",
-          "group",
-          "student",
-        ]),
-        label: z.string(),
-        value: z.number(),
-      })
-    )
-    .describe(
-      "The student groups, individual students or both that will receive the form"
-    ),
-  images: z
-    .array(z.object({}))
+    .describe("The location where the event will take place"),
+  eventStartDate: z
+    .object({
+      date: z.string().describe("The start date of the event (YYYY-MM-DD)"),
+      time: z.string().describe("The start time of the event (HH:MM)"),
+    })
     .optional()
-    .describe("The image gallery for form"),
-  attachments: z
-    .array(z.object({}))
+    .describe("Event starting date and time"),
+  eventEndDate: z
+    .object({
+      date: z.string().describe("The end date of the event (YYYY-MM-DD)"),
+      time: z.string().describe("The end time of the event (HH:MM)"),
+    })
     .optional()
-    .describe("The attachment for form"),
+    .describe("Event ending date and time"),
+  // reminderDate: z.string().optional().describe("The reminder trigger date"),
   urls: z
-    .array(z.object({ webLink: z.string(), linkDescription: z.string() }))
+    .array(
+      z.object({
+        webLink: z.string().url().describe("Valid URL of the related website"),
+        linkDescription: z.string().describe("Description of the website link"),
+      })
+    )
     .max(3)
     .optional()
-    .describe("The website link for the form event"),
+    .describe("Related website links (max 3)"),
   shortcuts: z
     .array(z.string())
     .optional()
-    .describe("The url for pressing and redirect to other website/app"),
-  questions: QuestionArraySchema,
+    .describe("Shortcut URLs for quick access to other websites/apps"),
+  questions: FormQuestionsSchema,
+
+  // staffGroups: z
+  //   .array(
+  //     z.object({
+  //       type: z.enum(["individual", "school", "level"]),
+  //       label: z.string(),
+  //       value: z.number(),
+  //     })
+  //   )
+  //   .optional()
+  //   .describe(
+  //     "The staff who will be able to view and edit form response and delete form"
+  //   ),
+  // studentGroups: z
+  //   .array(
+  //     z.object({
+  //       type: z.enum([
+  //         "all",
+  //         "class",
+  //         "level",
+  //         "cca",
+  //         "school",
+  //         "group",
+  //         "student",
+  //       ]),
+  //       label: z.string(),
+  //       value: z.number(),
+  //     })
+  //   )
+  //   .optional()
+  //   .describe(
+  //     "The student groups, individual students or both that will receive the form"
+  //   ),
+  // images: z
+  //   .array(z.object({}))
+  //   .optional()
+  //   .describe("The image gallery for form"),
+  // attachments: z
+  //   .array(z.object({}))
+  //   .optional()
+  //   .describe("The attachment for form"),
 });
 
 export const mockForm = {
@@ -258,3 +324,104 @@ export const mockForm = {
   ],
   shortcuts: ["DECLARE_TRAVELS", "EDIT_CONTACT_DETAILS"],
 };
+
+// {
+//   "title": "Title",
+//   "status": "DRAFT",
+//   "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"attrs\":{\"textAlign\":\"left\"},\"content\":[{\"type\":\"text\",\"text\":\"Description \"}]}]}",
+//   "venue": "",
+//   "eventStartDate": null,
+//   "eventEndDate": null,
+//   "reminderDate": "",
+//   "addReminderType": "NONE",
+//   "enquiryEmailAddress": "parentsgateway.otp@gmail.com",
+//   "consentByDate": "2025-03-31",
+//   "responseType": "YES_NO",
+//   "questions": [
+//       {
+//           "type": "multi_selection",
+//           "title": "1 2 3 ",
+//           "description": "Multiple description",
+//           "choices": [
+//               {
+//                   "label": "1"
+//               },
+//               {
+//                   "label": "2"
+//               },
+//               {
+//                   "label": "3"
+//               },
+//               {
+//                   "label": "4"
+//               }
+//           ],
+//           "properties": {
+//               "choices": [
+//                   {
+//                       "label": "1"
+//                   },
+//                   {
+//                       "label": "2"
+//                   },
+//                   {
+//                       "label": "3"
+//                   },
+//                   {
+//                       "label": "4"
+//                   }
+//               ]
+//           },
+//           "id": "8d46a0ff-21d7-4446-a69f-29e32fc634cb"
+//       },
+//       {
+//           "type": "single_selection",
+//           "title": "Yes or NO",
+//           "description": "",
+//           "choices": [
+//               {
+//                   "label": "Yes "
+//               },
+//               {
+//                   "label": "No"
+//               }
+//           ],
+//           "properties": {
+//               "choices": [
+//                   {
+//                       "label": "Yes "
+//                   },
+//                   {
+//                       "label": "No"
+//                   }
+//               ]
+//           },
+//           "id": "c12d3c9a-87bd-47ee-b808-257053b593bf"
+//       },
+//       {
+//           "type": "text",
+//           "title": "YES",
+//           "description": "Yes Yes",
+//           "id": "65a2662b-6176-4646-9265-63cb95e05cea"
+//       }
+//   ],
+//   "staffGroups": [],
+//   "studentGroups": [
+//       {
+//           "type": "class",
+//           "label": "H6-05 (2025)",
+//           "value": 1001
+//       }
+//   ],
+//   "images": [],
+//   "attachments": [],
+//   "urls": [
+//       {
+//           "webLink": "www.google.com",
+//           "linkDescription": "Google"
+//       }
+//   ],
+//   "shortcuts": [
+//       "DECLARE_TRAVELS"
+//   ]
+// }

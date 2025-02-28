@@ -40,7 +40,11 @@
     "default_title": "HeyTalia"
   },
   "externally_connectable": {
-    "matches": ["http://localhost:3000/*", "http://localhost:8082/*"]
+    "matches": [
+      "http://localhost:3000/*",
+      "http://localhost:8082/*",
+      "https://dev-pg.moe.edu.sg/*"
+    ]
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none';"

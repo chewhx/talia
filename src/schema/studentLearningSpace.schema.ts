@@ -1,11 +1,54 @@
 import { z } from "zod";
 
-export const StudentLearningSpaceFormSchema = z.array(
-  z.object({
+// Pass to extension to fill in
+// export const StudentLearningSpacePrefillSchema = z.array(
+//   z.object({
+//     id: z.string(),
+//     value: z.string(),
+//   })
+// );
+
+export const StudentLearningSpacePrefillSchema = z.object({
+  title: z.object({
     id: z.string(),
-    value: z.string(),
-  })
-);
+    value: z
+      .string()
+      .min(1)
+      .max(50)
+      .describe(
+        "A concise, engaging title for the learning space announcement, between 1 and 50 characters"
+      ),
+  }),
+  message: z.object({
+    id: z.string(),
+    value: z
+      .string()
+      .min(10)
+      .max(2000)
+      .describe(
+        `
+        Announcement content in TinyVue format (10-2000 characters)
+    - Use HTML tags for formatting (e.g., <p>, <strong>, <em>, <ul>, <ol>, <li>)
+    - Content should be informative and motivating for students
+    - Can be directly input into TinyVue editor or input field
+        `
+      ),
+  }),
+  startDate: z.object({
+    id: z.string(),
+    value: z
+      .string()
+      .regex(/^\d{2} [A-Z][a-z]{2} \d{4}$/)
+      .describe("Start date in the format 'DD MMM YYYY' (e.g., '24 Feb 2025')"),
+  }),
+  startTime: z.object({
+    id: z.string(),
+    value: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+      .describe("Start time in 24-hour format 'HH:mm' (e.g., '10:30')"),
+  }),
+});
 
 /*
 
@@ -17,3 +60,59 @@ formData Format:
   { id: "uid-c34972da-6053-46d7-a4d4-24e8d2b838ee-input-1", value:'24 Feb 2025'}
 ]
 */
+
+// Scanned fields from extension
+const attributesSchema = z.object({
+  id: z.string(),
+  class: z.string(),
+  type: z.string().optional(),
+  name: z.string(),
+  placeholder: z.string().optional(),
+  role: z.string().optional(),
+});
+
+const elementSchema = z.object({
+  category: z.string(),
+  element: z.string(),
+  attributes: attributesSchema,
+  id: z.string(),
+});
+
+export const StudentLearningSpaceFieldSchema = z.array(elementSchema);
+
+export function mapFieldsToSchema(fields: any, content: any) {
+  console.log("mapFieldsToSchema: ", { content, fields });
+
+  const requestData: any = [];
+
+  if (fields) {
+    fields.forEach((field: any) => {
+      const { category, id } = field;
+
+      switch (category) {
+        case "title":
+          requestData.push({ id, value: content["title"].value || "" });
+          break;
+        case "message":
+          requestData.push({ id, value: content["message"].value || "" });
+          break;
+        case "startTime":
+          requestData.push({
+            id,
+            value: content["startTime"].value || "",
+          });
+          break;
+        case "startDate":
+          requestData.push({
+            id,
+            value: content["startDate"].value || "",
+          });
+          break;
+      }
+    });
+  }
+
+  console.log(requestData);
+
+  return requestData;
+}

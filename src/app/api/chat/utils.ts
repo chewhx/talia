@@ -68,7 +68,9 @@ export async function processToolCalls<
   const processedParts = await Promise.all(
     parts.map(async (part) => {
       // Only process tool invocations parts
+      console.log({ part });
       if (part.type !== "tool-invocation") return part;
+      console.log("It is tool invocation: ", part);
 
       const { toolInvocation } = part;
       const toolName = toolInvocation.toolName;
@@ -78,7 +80,6 @@ export async function processToolCalls<
         return part;
 
       let result;
-
       if (
         toolInvocation.result === APPROVAL.YES ||
         toolInvocation.result === PG_POSTS_TYPE.ANNOUNCEMENT ||
@@ -144,4 +145,40 @@ export function getToolsRequiringConfirmation<T extends ToolSet>(
     const maybeTool = tools[key];
     return typeof maybeTool.execute !== "function";
   }) as string[];
+}
+
+export function callExtensionFunction({
+  callback,
+  requestBody,
+  responseAction,
+}: {
+  requestBody: any; // Request body to the Extension
+  responseAction?: string; // Target action to listen in HeyTalia
+  callback?: any;
+}): Promise<any> {
+  return new Promise((resolve, reject) => {
+    // const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
+    // window.parent.postMessage(requestBody, `${chromeExtensionID}`); // Temporary open to all listener
+    window.parent.postMessage(requestBody, `*`);
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.action === responseAction) {
+        window.removeEventListener("message", handleMessage); // Cleanup listener
+        resolve(event.data); // Resolve with scanned form data
+      }
+    };
+
+    if (responseAction) {
+      // Listen for messages
+      window.addEventListener("message", handleMessage);
+
+      // Timeout in case no response is received
+      setTimeout(() => {
+        window.removeEventListener("message", handleMessage);
+        resolve({ result: false });
+      }, 5000); // Adjust timeout if needed
+    }
+
+    callback?.();
+  });
 }

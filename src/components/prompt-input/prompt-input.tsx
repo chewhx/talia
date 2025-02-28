@@ -21,8 +21,8 @@ import {
 } from "@tabler/icons-react";
 import mammoth from "mammoth";
 import React from "react";
-import { IMAGE_MIME_TYPE, MIME_TYPES } from "./constants";
 import { validateFiles } from "./prompt-input.utils";
+import { IMAGE_MIME_TYPE, MIME_TYPES } from "../../../shared/constants";
 
 const ACCEPT_MIME_TYPES = [...IMAGE_MIME_TYPE, MIME_TYPES.pdf, MIME_TYPES.docx];
 
@@ -33,11 +33,12 @@ export default function PromptInput({
   handleInputChange,
   handleSubmit,
   stop,
+  error,
 }: {
   disabled?: boolean;
 } & Pick<
   ReturnType<typeof useChat>,
-  "input" | "handleInputChange" | "status" | "handleSubmit" | "stop"
+  "input" | "handleInputChange" | "status" | "handleSubmit" | "stop" | "error"
 >) {
   const [_files, filesHandler] = useListState<File>([]);
   const [_pdfs, pdfsHandler] = useListState<{ id: string; content: string }>(
@@ -50,6 +51,7 @@ export default function PromptInput({
   return (
     <Affix bottom={0} left={0} bg="var(--talia-gray)" py="md">
       <Container size="sm">
+        {error && <p style={{ color: "red" }}>{error.message}</p>}
         <Paper bg={disabled ? "gray.1" : "white"} py="xs" px="sm" w="100%">
           <form
             onSubmit={(ev) => {
@@ -170,9 +172,10 @@ export default function PromptInput({
                 )}
               </Group>
               {!_files.length ? null : (
-                <Group>
+                <Group className="file-pill">
                   {_files?.map((file, i) => (
                     <Pill
+                      size="md"
                       key={file.name}
                       withRemoveButton
                       onRemove={() => {

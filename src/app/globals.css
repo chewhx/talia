@@ -3,10 +3,24 @@
 @tailwind utilities;
 
 :root {
-  --talia-gray:#F5F7FA;
-  --talia-orange:#FFF0E8;
+  --talia-gray: #f5f7fa;
+  --talia-orange: #fff0e8;
 }
 
-body{
+body {
   background-color: var(--talia-gray);
+}
+
+.custom-tool-button {
+  transition: all 0.3s ease;
+}
+
+.custom-tool-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.custom-tool-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

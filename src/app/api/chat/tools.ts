@@ -1,13 +1,24 @@
+import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
+import {
+  FormDraftSchema,
+  FormQuestionsSchema,
+} from "@/schema/formDraft.schema";
+import { StudentLearningSpacePrefillSchema } from "@/schema/studentLearningSpace.schema";
 import {
   BedrockAgentRuntimeClient,
   RetrieveCommand,
 } from "@aws-sdk/client-bedrock-agent-runtime";
 import { tool } from "ai";
-import { z } from "zod";
-import { APPROVAL, PG_POSTS_TYPE } from "./utils";
-import { FormDraftSchema } from "@/schema/formDraft.schema";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { z } from "zod";
+import { APPROVAL } from "./utils";
+
+export type ToolOption = {
+  title: string;
+  description: string;
+  result: string;
+};
 
 dayjs.extend(customParseFormat);
 
@@ -34,26 +45,20 @@ const getDayOfTheWeek = tool({
   },
 });
 
-const postToParentsGateway = tool({
-  description:
-    "Post the final message to Parents Gateway (alias PG) upon request by the user.",
-  parameters: z.object({
-    result: z.string(),
-    postType: z.enum([PG_POSTS_TYPE.ANNOUNCEMENT, PG_POSTS_TYPE.CONSENT_FORM]),
-  }),
-  // no execute function, we want human in the loop
-});
-
 const sendEmail = tool({
-  description: "Send an email to a specified recipient.",
+  description:
+    "Send an email to specified recipients. Use this tool whenever there's a request to send an email to someone, regardless of the content. Any valid email address is acceptable.",
   parameters: z.object({
     emailContent: z.string().describe("Markdown content of the email"),
     emailSubject: z
       .string()
       .describe("Email subject that defines the email content"),
-    emailAddresses: z.array(z.string()).describe("List of email addresses"),
+    emailAddresses: z
+      .array(z.string())
+      .describe(
+        "List of recipient email addresses. Can be any valid email address."
+      ),
   }),
-  // no execute function, we want human in the loop
 });
 
 const retrieveResource = tool({
@@ -100,86 +105,140 @@ const retrieveResource = tool({
   },
 });
 
-const draftFormToParentsGateway = tool({
-  description: "Trigger PG API to create a consent form draft",
+const createPGFormDraft = tool({
+  description: `Create a Parent Gateway (PG) consent form draft. Email must be @gmail.com, @moe.edu.sg, or @schools.gov.sg only.
+
+  Include custom questions using FormQuestionsSchema:
+  1. Single Selection: Up to 2 choices, one selectable.
+  2. Multi Selection: Up to 7 choices, multiple selectable.
+  3. Text: Free-form response.
+
+  Max 5 custom questions. Each question needs:
+  - Title
+  - Description
+  - Unique UUID
+  - Choices array (for selection types)
+
+  Question structure:
+  {
+    type: "single_selection" | "multi_selection" | "text",
+    title: "Question title",
+    description: "Details/instructions",
+    id: "uuid",
+    choices: [{ label: "Choice 1" }, { label: "Choice 2" }], // For selection types
+    properties: {
+      choices: [{ label: "Choice 1" }, { label: "Choice 2" }] // Duplicate, required
+    }
+  }
+
+  Draft the form with standard consent language and include custom questions as specified. Ensure all required fields are present and properly formatted.
+  `,
   parameters: z.object({
-    result: z
+    fields: FormDraftSchema.describe(
+      "Form draft schema. Leave optional fields empty if not applicable."
+    ),
+  }),
+});
+
+const createPGAnnouncementDraft = tool({
+  description: `
+
+  Create a Parent Gateway (PG) announcement draft for school communications.
+    This tool helps generate a structured draft for announcements to be sent through the Parent Gateway system.
+    It ensures all necessary information is captured and follows the required format.
+
+    Key points:
+    - The announcement includes a title, content, and contact email.
+    - Email must be @gmail.com, @moe.edu.sg, or @schools.gov.sg only.
+    - Optional fields include related website links and shortcuts.
+    - The draft status is set by default, currently only create draft.`,
+  parameters: z.object({
+    fields: AnnouncementDraftSchema.describe(
+      "Announcement draft schema. Provide values for all required fields. Optional fields can be left empty if not applicable."
+    ),
+  }),
+});
+
+const createSLSAnnouncement = tool({
+  description: `Generate or pre-fill a Student Learning Space (SLS) announcement with the following fields:
+
+  - title: A concise, engaging title (1-50 characters)
+  - message: Announcement content in TinyVue format (10-2000 characters)
+    - Content should be informative and motivating for students
+    - Can be directly input into TinyVue editor or input field
+  - startDate: Start date in 'DD MMM YYYY' format (e.g., '24 Feb 2025')
+  - startTime: Start time in 24-hour 'HH:mm' format (e.g., '10:30')
+
+  Ensure all fields adhere to the specified format and length requirements.`,
+  parameters: z.object({
+    fields: StudentLearningSpacePrefillSchema.describe(
+      "SLS announcement pre-fill schema"
+    ),
+  }),
+});
+
+const createClassroomAnnouncement = tool({
+  description: `Create a Google Classroom announcement using plain text.
+  The content should be structured as follows:
+
+  - Use plain text for all content, including text that should be emphasized
+  - Create bullet points with hyphens (-) at the start of lines
+  - Separate paragraphs with blank lines
+  - Emojis can be included directly
+  - Maximum length: 20,000 characters
+
+  The returned content should be ready for direct input into Google Classroom's editor without any need for manual formatting.`,
+  parameters: z.object({
+    content: z
       .string()
       .describe(
-        "The content or file from user or instructed by user to generate content by LLM"
+        "Announcement content using plain text:\n" +
+          "- Regular text for all content\n" +
+          "- Bullet points: - Item 1\n  - Item 2\n" +
+          "- Paragraphs: Separated by blank lines\n" +
+          "- Emojis: 👋 🎉\n" +
+          "Avoid using any special formatting symbols or HTML tags."
       ),
-    fields: FormDraftSchema.describe("The schema to create a form draft"),
   }),
-
-  // no execute function, we want human in the loop
 });
 
 export const tools = {
-  postToParentsGateway,
   sendEmail,
   retrieveResource,
-  draftFormToParentsGateway,
   getDayOfTheWeek,
+  createPGFormDraft,
+  createPGAnnouncementDraft,
+  createSLSAnnouncement,
+  createClassroomAnnouncement,
 };
 
 export const renderToolUIVariables = (
   toolName: keyof typeof tools | (string & {})
 ): {
   description: string;
-  options: Array<{
-    title: string;
-    description: string;
-    result: string;
-  }>;
+  options: Array<ToolOption>;
 } => {
-  switch (toolName) {
-    case "postToParentsGateway":
-      return {
-        description: "What post would you like to create? (Select one)",
-        options: [
-          {
-            title: "Announcement",
-            description: "Provides information only.",
-            result: PG_POSTS_TYPE.ANNOUNCEMENT,
-          },
-          {
-            title: "Consent Form",
-            description: "Requires parents to acknowledge or provide consent.",
-            result: PG_POSTS_TYPE.CONSENT_FORM,
-          },
-        ],
-      };
-    case "sendEmail":
-      return {
-        description: "",
-        options: [
-          {
-            title: "Send",
-            description: "",
-            result: APPROVAL.YES,
-          },
-        ],
-      };
-    case "draftFormToParentsGateway":
-      return {
-        description: "",
-        options: [
-          {
-            title: "Confirm",
-            description: "Create a consent form draft",
-            result: APPROVAL.YES,
-          },
-          {
-            title: "No",
-            description: "Cancel to create consent form draft",
-            result: APPROVAL.NO,
-          },
-        ],
-      };
-    default:
-      return {
-        description: "",
-        options: [],
-      };
-  }
+  const defaultOptions: Array<ToolOption> = [
+    {
+      title: "Confirm",
+      description: "Proceed with the action",
+      result: APPROVAL.YES,
+    },
+    { title: "Cancel", description: "Cancel the action", result: APPROVAL.NO },
+  ];
+
+  const toolDescriptions: Record<string, string> = {
+    sendEmail: "Confirm to send the email or cancel the action.",
+    createPGFormDraft: "Create a Parent Gateway (PG) consent form draft.",
+    createPGAnnouncementDraft:
+      "Create a Parent Gateway (PG) announcement draft.",
+    createSLSAnnouncement:
+      "Pre-fill a Student Learning Space (SLS) announcement",
+    createClassroomAnnouncement: "Pre-fill a Google Classroom announcement.",
+  };
+
+  return {
+    description: toolDescriptions[toolName] || "",
+    options: toolName in toolDescriptions ? defaultOptions : [],
+  };
 };
