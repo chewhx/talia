@@ -45,7 +45,7 @@ export default function MainPage() {
 
   return (
     <Container size="sm">
-      {/* <ExtensionActionButton /> */}
+      <ExtensionActionButton />
 
       <TypographyStylesProvider>
         {!messages.length ? (

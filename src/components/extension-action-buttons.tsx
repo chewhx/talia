@@ -3,7 +3,7 @@
 import { useWindowEvent } from "@mantine/hooks";
 import { useState } from "react";
 import { TALIA_EVENTS } from "../../shared/constants";
-import { Button, Container, Flex, Text } from "@mantine/core";
+import { Button, Container, Flex } from "@mantine/core";
 import { mockAnnouncement } from "@/schema/announcementDraft.schema";
 import { mockForm } from "@/schema/formDraft.schema";
 
@@ -13,12 +13,12 @@ export const ExtensionActionButton = () => {
   const chromeExtensionID = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID;
 
   useWindowEvent("message", ({ data, origin }: MessageEvent) => {
-    const allowedDomain = [chromeExtensionID];
+    // const allowedDomain = [chromeExtensionID];
 
     // Only get response through chrome extension (panel.js or background.js)
-    if (!allowedDomain.includes(origin)) {
-      return;
-    }
+    // if (!allowedDomain.includes(origin)) {
+    //   return;
+    // }
 
     switch (data.action) {
       // For SLS/Classroom
