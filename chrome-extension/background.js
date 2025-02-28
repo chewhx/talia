@@ -27,6 +27,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           console.error("No active tab found");
         }
       });
+      return true;
     }
   } else if (message.action === "PG_DRAFT_RESPONSE") {
     chrome.runtime.sendMessage(message);
@@ -40,6 +41,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ origin: null });
       }
     });
+    return true;
   }
 });
 

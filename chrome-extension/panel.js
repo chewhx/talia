@@ -51,9 +51,9 @@ chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
 function sendMessageToContentJSWithoutResponse(data) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const activeTab = tabs[0];
+    const url = new URL(tabs[0].url);
 
-    data.currentWebsite = identifyTargetWebsite(activeTab.url);
-
+    data.currentWebsite = identifyTargetWebsite(url.origin);
     chrome.tabs.sendMessage(activeTab.id, data);
   });
 }

@@ -87,17 +87,21 @@ function sendToBackgroundJS(data) {
 
 // Send to website (PG,etc)
 function sendToWebsite(data) {
-  chrome.runtime.sendMessage({ action: "GET_ORIGIN" }, (response) => {
-    console.log("Detected target origin:", response);
-    if (response && response.origin) {
-      const targetOrigin = response.origin;
+  const targetOrigin = window.location.origin;
+  console.log("Using current tab's origin:", targetOrigin);
+  window.postMessage(data, targetOrigin);
 
-      // Use the detected origin
-      window.postMessage(data, targetOrigin);
-    } else {
-      console.warn("Could not detect the target origin.");
-    }
-  });
+  // chrome.runtime.sendMessage({ action: "GET_ORIGIN" }, (response) => {
+  //   console.log("Detected target origin:", response);
+  //   if (response && response.origin) {
+  //     const targetOrigin = response.origin;
+
+  //     // Use the detected origin
+  //     window.postMessage(data, targetOrigin);
+  //   } else {
+  //     console.warn("Could not detect the target origin.");
+  //   }
+  // });
 }
 
 // ==================================================
