@@ -1,11 +1,19 @@
 import { env } from "@/env";
 import { bedrock } from "@ai-sdk/amazon-bedrock";
 import { openai } from "@ai-sdk/openai";
-import { createDataStreamResponse, streamText, UIMessage } from "ai";
+import {
+  createDataStreamResponse,
+  InvalidToolArgumentsError,
+  NoSuchToolError,
+  streamText,
+  ToolExecutionError,
+  UIMessage,
+} from "ai";
 import dayjs from "dayjs";
 import { Resend } from "resend";
 import { tools } from "./tools";
 import { processToolCalls } from "./utils";
+import { ZodError } from "zod";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -44,11 +52,6 @@ export async function POST(req: Request) {
               emailSubject,
             }) => {
               if (emailAddresses.length) {
-                console.log({
-                  emailAddresses,
-                  emailContent,
-                  emailSubject,
-                });
                 const resend = new Resend(env.RESEND_API_KEY);
 
                 await resend.emails.send({
@@ -110,6 +113,7 @@ export async function POST(req: Request) {
           - When the user ask you to generate or create content, do not assume tool calls. You will always help the user generate content before taking any tool call actions.
           - Maintain a helpful and professional tone, focusing on educational context.
           - Do not reveal internal tool functions name or implementation details to the user.
+          - Must return the error in a readable format.
 
           Today's date is ${dayjs().format(
             "MM DDDD YYYY"
@@ -122,7 +126,34 @@ export async function POST(req: Request) {
         result.mergeIntoDataStream(dataStream);
       },
       onError(error: any) {
-        console.error(error);
+        // if (NoSuchToolError.isInstance(error)) {
+        //   return "The model tried to call a unknown tool.";
+        // } else if (InvalidToolArgumentsError.isInstance(error)) {
+        //   try {
+        //     const zodError = error?.cause || error?.details || error;
+        //     console.log({ zodError });
+
+        //     if (zodError.format) {
+        //       const formattedErrors = formatZodErrors(zodError);
+        //       return `I need some additional or corrected information to complete this action:\n\n${formattedErrors}\n\nCould you provide these details?`;
+        //     }
+
+        //     // If we have issues array from Zod
+        //     if (zodError.issues && Array.isArray(zodError.issues)) {
+        //       const formattedIssues = formatZodIssues(zodError.issues);
+        //       return `I need some additional or corrected information to complete this action:\n\n${formattedIssues}\n\nCould you provide these details?`;
+        //     }
+
+        //     const toolName = error.toolName || "the requested action";
+        //     return `Some information is missing or incorrect for ${toolName}. Could you provide more details?`;
+        //   } catch (e) {
+        //     console.error("Error parsing Zod validation details:", e);
+        //     return "I couldn't process some of the information you provided. Could you try again with more complete details?";
+        //   }
+        // } else if (ToolExecutionError.isInstance(error)) {
+        //   return "An error occurred during tool execution.";
+        // }
+
         return `I apologize, but an error occurred. Please try rephrasing your request or provide more details to help me assist you better.`;
       },
     });
@@ -133,4 +164,90 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+}
+
+// Recursively extract path and message from nested Zod errors
+function extractErrors(obj, path = []) {
+  if (!obj) return;
+
+  // Handle leaf nodes (actual error messages)
+  if (obj._errors && Array.isArray(obj._errors)) {
+    const fullPath = path.join(".");
+    obj._errors.forEach((message) => {
+      errorDetails.push({
+        path: fullPath || "value",
+        message: message,
+      });
+    });
+  }
+
+  // Recurse into nested objects
+  for (const [key, value] of Object.entries(obj)) {
+    if (key !== "_errors" && typeof value === "object") {
+      extractErrors(value, [...path, key]);
+    }
+  }
+}
+
+// Helper function to format Zod errors into readable text
+function formatZodErrors(zodError) {
+  try {
+    // Try to get formatted errors if available
+    const errorDetails = [];
+
+    // Start extraction from the formatted error
+    const formatted = zodError.format();
+    extractErrors(formatted);
+
+    // Format the extracted errors
+    return errorDetails
+      .map((detail) => {
+        const readablePath = formatFieldName(detail.path);
+        return `- ${readablePath}: ${detail.message}`;
+      })
+      .join("\n");
+  } catch (e) {
+    console.error("Error in formatZodErrors:", e);
+    return "There were some validation errors with the information provided.";
+  }
+}
+
+// Helper function specifically for Zod issues array
+function formatZodIssues(issues) {
+  try {
+    const groupedIssues = {};
+
+    // Group issues by path to avoid repetition
+    issues.forEach((issue) => {
+      const path = issue.path.join(".") || "value";
+      if (!groupedIssues[path]) {
+        groupedIssues[path] = [];
+      }
+      groupedIssues[path].push(issue.message);
+    });
+
+    // Format grouped issues
+    return Object.entries(groupedIssues)
+      .map(([path, messages]) => {
+        const readablePath = formatFieldName(path);
+        return `- ${readablePath}: ${messages.join(", ")}`;
+      })
+      .join("\n");
+  } catch (e) {
+    console.error("Error in formatZodIssues:", e);
+    return "There were some validation errors with the information provided.";
+  }
+}
+
+// Helper function to format field names for better readability
+function formatFieldName(field) {
+  if (typeof field !== "string") return "unknown field";
+
+  return field
+    .replace(/([A-Z])/g, " $1") // Insert space before capital letters
+    .replace(/\./g, " → ") // Replace dots with arrows for nested paths
+    .replace(/_/g, " ") // Replace underscores with spaces
+    .trim() // Remove extra spaces
+    .toLowerCase()
+    .replace(/^\w/, (c) => c.toUpperCase()); // Capitalize first letter
 }

@@ -1,8 +1,5 @@
 import { AnnouncementDraftSchema } from "@/schema/announcementDraft.schema";
-import {
-  FormDraftSchema,
-  FormQuestionsSchema,
-} from "@/schema/formDraft.schema";
+import { FormDraftSchema } from "@/schema/formDraft.schema";
 import { StudentLearningSpacePrefillSchema } from "@/schema/studentLearningSpace.schema";
 import {
   BedrockAgentRuntimeClient,
@@ -142,11 +139,9 @@ const createPGFormDraft = tool({
 
 const createPGAnnouncementDraft = tool({
   description: `
-
   Create a Parent Gateway (PG) announcement draft for school communications.
-    This tool helps generate a structured draft for announcements to be sent through the Parent Gateway system.
-    It ensures all necessary information is captured and follows the required format.
-
+  This tool helps generate a structured draft for announcements to be sent through the Parent Gateway system.
+  It ensures all necessary information is captured and follows the required format.
     Key points:
     - The announcement includes a title, content, and contact email.
     - Email must be @gmail.com, @moe.edu.sg, or @schools.gov.sg only.
@@ -161,15 +156,15 @@ const createPGAnnouncementDraft = tool({
 
 const createSLSAnnouncement = tool({
   description: `Generate or pre-fill a Student Learning Space (SLS) announcement with the following fields:
+  - title: Engaging, 1-50 chars
+  - message: Concise, informative, 10-2000 chars. Use **bold** for emphasis, \n for line breaks. No HTML tags.
+    Example:
+    "Dear Students,\n\n**Event Announcement**\n- Date: [Date]\n- Time: [Time]\n\n[Details...]\n\nWe look forward to your participation!"
+  - startDate: 'DD MMM YYYY' (e.g., '24 Feb 2025')
+  - startTime: 'HH:mm' 24-hour format
 
-  - title: A concise, engaging title (1-50 characters)
-  - message: Announcement content in TinyVue format (10-2000 characters)
-    - Content should be informative and motivating for students
-    - Can be directly input into TinyVue editor or input field
-  - startDate: Start date in 'DD MMM YYYY' format (e.g., '24 Feb 2025')
-  - startTime: Start time in 24-hour 'HH:mm' format (e.g., '10:30')
-
-  Ensure all fields adhere to the specified format and length requirements.`,
+  Adhere to formats and length requirements.
+`,
   parameters: z.object({
     fields: StudentLearningSpacePrefillSchema.describe(
       "SLS announcement pre-fill schema"
@@ -229,12 +224,14 @@ export const renderToolUIVariables = (
 
   const toolDescriptions: Record<string, string> = {
     sendEmail: "Confirm to send the email or cancel the action.",
-    createPGFormDraft: "Create a Parent Gateway (PG) consent form draft.",
+    createPGFormDraft:
+      "Create a draft Parent Gateway (PG) consent form. Do not submit; only prefill the consent form. It is only explicitly instructed to do action for PG.",
     createPGAnnouncementDraft:
-      "Create a Parent Gateway (PG) announcement draft.",
+      "Create a draft Parent Gateway (PG) announcement. Do not submit; only prefill the announcement. It is only explicitly instructed to do action for PG.",
     createSLSAnnouncement:
-      "Pre-fill a Student Learning Space (SLS) announcement",
-    createClassroomAnnouncement: "Pre-fill a Google Classroom announcement.",
+      "Prefill a Student Learning Space (SLS) announcement draft. Do not post or submit. It is only explicitly instructed to do action for SLS.",
+    createClassroomAnnouncement:
+      "Prefill a Google Classroom announcement draft. Do not post or submit. It is only explicitly instructed to do action for Google Classroom.",
   };
 
   return {

@@ -8,6 +8,7 @@ import {
   Container,
   Group,
   Loader,
+  ScrollArea,
   Space,
   Stack,
   Text,
@@ -16,6 +17,7 @@ import {
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
 import { ExtensionActionButton } from "@/components/extension-action-buttons";
+import { useEffect, useRef } from "react";
 
 export default function MainPage() {
   const {
@@ -30,6 +32,7 @@ export default function MainPage() {
   } = useChat({
     maxSteps: 10,
   });
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -43,61 +46,72 @@ export default function MainPage() {
     )
   );
 
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [messages]);
+
   return (
-    <Container size="sm">
-      {/* <ExtensionActionButton /> */}
+    <ScrollArea style={{ height: "100vh" }} viewportRef={scrollAreaRef}>
+      <Container size="sm">
+        {/* <ExtensionActionButton /> */}
 
-      <TypographyStylesProvider>
-        {!messages.length ? (
-          <Stack gap={0}>
-            <Space h={100} />
-            <Text c="orange" fw={600} fz="xl" m={0}>
-              Hey there!
-            </Text>
-            <Text fz="xl" fw={600}>
-              How may I help you today?
-            </Text>
-          </Stack>
-        ) : (
-          <Stack>
-            {messages.map((message) => {
-              switch (message.role) {
-                case "user":
-                  return <HumanMessage message={message} key={message.id} />;
-                case "assistant":
-                  return (
-                    <AIMessage
-                      message={message}
-                      addToolResult={addToolResult}
-                      key={message.id}
-                    />
-                  );
-                default:
-                  return null;
-              }
-            })}
-          </Stack>
-        )}
-      </TypographyStylesProvider>
+        <TypographyStylesProvider>
+          {!messages.length ? (
+            <Stack gap={0}>
+              <Space h={100} />
+              <Text c="orange" fw={600} fz="xl" m={0}>
+                Hey there!
+              </Text>
+              <Text fz="xl" fw={600}>
+                How may I help you today?
+              </Text>
+            </Stack>
+          ) : (
+            <Stack>
+              {messages.map((message) => {
+                switch (message.role) {
+                  case "user":
+                    return <HumanMessage message={message} key={message.id} />;
+                  case "assistant":
+                    return (
+                      <AIMessage
+                        message={message}
+                        addToolResult={addToolResult}
+                        key={message.id}
+                      />
+                    );
+                  default:
+                    return null;
+                }
+              })}
+            </Stack>
+          )}
+        </TypographyStylesProvider>
 
-      {pendingToolCallConfirmation ||
-      status === "streaming" ||
-      status === "submitted" ? (
-        <Group justify="center" py="md">
-          <Loader type="dots" />
-        </Group>
-      ) : null}
-      <Space h={300} />
+        {pendingToolCallConfirmation ||
+        status === "streaming" ||
+        status === "submitted" ? (
+          <Group justify="center" py="md">
+            <Loader type="dots" />
+          </Group>
+        ) : null}
+        <Space h={300} />
 
-      <PromptInput
-        error={error}
-        disabled={pendingToolCallConfirmation}
-        stop={stop}
-        status={status}
-        input={input}
-        handleInputChange={handleInputChange}
-        handleSubmit={handleSubmit}
-      />
-    </Container>
+        <PromptInput
+          error={error}
+          disabled={pendingToolCallConfirmation}
+          stop={stop}
+          status={status}
+          input={input}
+          handleInputChange={handleInputChange}
+          handleSubmit={handleSubmit}
+        />
+      </Container>{" "}
+    </ScrollArea>
   );
 }
