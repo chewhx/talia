@@ -145,7 +145,9 @@ const createPGAnnouncementDraft = tool({
     - The announcement includes a title, content, and contact email (use default parentsgateway.otp@gmail.com).
     - If user want to change default email, the input email must be @gmail.com, @moe.edu.sg, or @schools.gov.sg only.
     - Optional fields include related website links and shortcuts.
-    - The draft status is set by default, currently only create draft.`,
+    - The draft status is set by default, currently only create draft.
+    - Make sure all the fields are follow the schema/limitation setting before execute the tool call!
+    `,
   parameters: z.object({
     fields: AnnouncementDraftSchema.describe(
       "Announcement draft schema. Provide values for all required fields. Optional fields can be left empty if not applicable."

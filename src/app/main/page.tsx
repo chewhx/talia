@@ -28,6 +28,8 @@ export default function MainPage() {
     stop,
     addToolResult,
     error,
+    reload,
+    append,
   } = useChat({
     maxSteps: 10,
   });
@@ -52,7 +54,7 @@ export default function MainPage() {
   const scrollToBottom = useCallback((smooth = true) => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({
-        behavior: smooth ? "smooth" : "auto",
+        behavior: "auto",
       });
     }
   }, []);
@@ -69,13 +71,19 @@ export default function MainPage() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Scroll while streaming
   useEffect(() => {
     if (status === "streaming") {
-      const scrollInterval = setInterval(scrollToBottom, 400);
+      const scrollInterval = setInterval(scrollToBottom, 3000);
       return () => clearInterval(scrollInterval);
     }
   }, [status, scrollToBottom]);
+
+  if (error) {
+    append({
+      content: error?.message,
+      role: "system",
+    });
+  }
 
   return (
     <Box style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
@@ -97,8 +105,6 @@ export default function MainPage() {
             width: "100%",
           }}
         >
-          {/* <ExtensionActionButton /> */}
-
           <TypographyStylesProvider>
             {!messages.length ? (
               <Stack gap={0}>
@@ -148,6 +154,7 @@ export default function MainPage() {
         input={input}
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
+        reload={reload}
       />
     </Box>
   );

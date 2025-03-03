@@ -13,7 +13,6 @@ import dayjs from "dayjs";
 import { Resend } from "resend";
 import { tools } from "./tools";
 import { processToolCalls } from "./utils";
-import { ZodError } from "zod";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -99,7 +98,6 @@ export async function POST(req: Request) {
             },
           }
         );
-
         const result = streamText({
           model: messagesHavePDF
             ? bedrock("anthropic.claude-3-5-sonnet-20240620-v1:0")
@@ -129,36 +127,31 @@ export async function POST(req: Request) {
         result.mergeIntoDataStream(dataStream);
       },
       onError(error: any) {
-        console.log({ error });
+        console.error("Route: ", { error });
+
+        let errorMessage =
+          "I apologize, but an error occurred. Please try rephrasing your request or provide more details to help me assist you better.";
+
         if (NoSuchToolError.isInstance(error)) {
-          return "The model tried to call a unknown tool.";
+          console.error("The model tried to call a unknown tool.");
         } else if (InvalidToolArgumentsError.isInstance(error)) {
-          try {
-            const zodError = extractAndFormatError(error);
-            console.log({ zodError });
+          console.error("Invalid argument (zod error, etc)");
 
-            // if (zodError.format) {
-            //   const formattedErrors = formatZodErrors(zodError);
-            //   return `I need some additional or corrected information to complete this action:\n\n${formattedErrors}\n\nCould you provide these details?`;
-            // }
+          const errors = extractZodErrors(error.message);
 
-            // // If we have issues array from Zod
-            // if (zodError.issues && Array.isArray(zodError.issues)) {
-            //   const formattedIssues = formatZodIssues(zodError.issues);
-            //   return `I need some additional or corrected information to complete this action:\n\n${formattedIssues}\n\nCould you provide these details?`;
-            // }
+          const validationErrors = errors.map((err: any) => {
+            const fieldPath = err.field[1];
+            return `**${fieldPath}**: ${err.message}`;
+          });
 
-            // const toolName = error.toolName || "the requested action";
-            return `Some required information is either missing or in an incorrect format.`;
-          } catch (e) {
-            console.error("Error parsing Zod validation details:", e);
-            return "I couldn't process some of the information you provided. Could you try again with more complete details?";
-          }
+          errorMessage = `Some information is missing or incorrect format:\n- ${validationErrors.join(
+            "\n- "
+          )}`;
         } else if (ToolExecutionError.isInstance(error)) {
-          return "An error occurred during tool execution.";
+          console.error("An error occurred during tool execution");
         }
 
-        return `I apologize, but an error occurred. Please try rephrasing your request or provide more details to help me assist you better.`;
+        return errorMessage;
       },
     });
   } catch (err) {
@@ -170,40 +163,19 @@ export async function POST(req: Request) {
   }
 }
 
-export function extractAndFormatError(error: any): string {
-  // Check if the error is a ZodError
-  if (error instanceof ZodError) {
-    return formatZodErrors(error);
+function extractZodErrors(errorString: string) {
+  // Extract the JSON error message part
+  const jsonMatch = errorString.match(/Error message: (\[.*\])/s);
+  if (!jsonMatch) return "No errors found.";
+
+  try {
+    const errorArray = JSON.parse(jsonMatch[1]);
+
+    return errorArray.map((err: any) => ({
+      field: err.path,
+      message: err.message,
+    }));
+  } catch (e) {
+    return "Error parsing the error message.";
   }
-
-  // Handle AI SDK tool call error (wrapped error)
-  if (error?.cause instanceof ZodError) {
-    return formatZodErrors(error.cause);
-  }
-
-  // Check if error follows an unknown format but contains Zod-like error array
-  if (Array.isArray(error?.errors)) {
-    return formatGenericErrorArray(error.errors);
-  }
-
-  // Return a generic error message if not recognized
-  return "An unknown validation error occurred. Please try again.";
-}
-
-// Helper: Format ZodErrors into readable text
-function formatZodErrors(zodError: ZodError): string {
-  return zodError.errors
-    .map((err) => `❌ ${err.path.join(" > ")}: ${err.message}`)
-    .join("\n");
-}
-
-// Helper: Handle AI SDK errors that store errors in an array format
-function formatGenericErrorArray(errors: any[]): string {
-  return errors
-    .map((err) => {
-      const fieldPath = err.path?.join(" > ") || "Unknown Field";
-      const message = err.message || "Invalid input";
-      return `❌ ${fieldPath}: ${message}`;
-    })
-    .join("\n");
 }
