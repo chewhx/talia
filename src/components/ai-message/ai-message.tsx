@@ -75,7 +75,6 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
       case "createPGFormDraft":
         const isAnnouncement = toolName === "createPGAnnouncementDraft";
         const fields = args?.fields ?? {};
-        console.log({ fields });
 
         return (
           <Stack key={toolCallId}>
@@ -198,32 +197,42 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
               </Stack>
             </Paper>
             <SimpleGrid cols={2}>
-              {options.map((option: ToolOption) => (
-                <UnstyledButton
-                  key={`toolCall-${toolCallId}-option-${option.title}`}
-                  onClick={() =>
-                    toolName === "createSLSAnnouncement"
-                      ? preFillSLSFormHandling(option, args.fields, toolCallId)
-                      : preFillClassroomFormHandling(
-                          option,
-                          args.content,
-                          toolCallId
-                        )
-                  }
-                  className="custom-tool-button"
-                >
-                  <Paper shadow="sm" radius={0} bg="var(--talia-orange)" p="sm">
-                    <Stack gap={0}>
-                      <Text fw={500} m={0} fz="sm">
-                        {option.title}
-                      </Text>
-                      <Text fz="xs" c="gray">
-                        {option.description}
-                      </Text>
-                    </Stack>
-                  </Paper>
-                </UnstyledButton>
-              ))}
+              {!isLoading &&
+                options.map((option: ToolOption) => (
+                  <UnstyledButton
+                    key={`toolCall-${toolCallId}-option-${option.title}`}
+                    onClick={() =>
+                      toolName === "createSLSAnnouncement"
+                        ? preFillSLSFormHandling(
+                            option,
+                            args.fields,
+                            toolCallId
+                          )
+                        : preFillClassroomFormHandling(
+                            option,
+                            args.content,
+                            toolCallId
+                          )
+                    }
+                    className="custom-tool-button"
+                  >
+                    <Paper
+                      shadow="sm"
+                      radius={0}
+                      bg="var(--talia-orange)"
+                      p="sm"
+                    >
+                      <Stack gap={0}>
+                        <Text fw={500} m={0} fz="sm">
+                          {option.title}
+                        </Text>
+                        <Text fz="xs" c="gray">
+                          {option.description}
+                        </Text>
+                      </Stack>
+                    </Paper>
+                  </UnstyledButton>
+                ))}
             </SimpleGrid>
           </Stack>
         );
@@ -287,6 +296,19 @@ const useToolActions = (
   ) => {
     if (option.result === APPROVAL.YES) {
       try {
+        setIsLoading?.(true);
+        const tinyVueFormatMessage = await fetch("/api/generateHTMLText", {
+          method: "POST",
+          body: JSON.stringify({ message: fields?.message?.value }),
+        });
+
+        const formattedMessage = (await tinyVueFormatMessage.json())?.object
+          ?.message;
+
+        if (formattedMessage) {
+          fields.message.value = formattedMessage;
+        }
+
         const formFields = await callExtensionFunction({
           requestBody: { action: TALIA_EVENTS.actions.SCAN_FORM_REQUEST },
           responseAction: TALIA_EVENTS.listeners.SCAN_FORM_RESPONSE,
@@ -310,9 +332,14 @@ const useToolActions = (
           toolCallId,
           result: "Error occurred while processing the form.",
         });
+      } finally {
+        setIsLoading?.(false);
       }
     } else {
-      addToolResult({ toolCallId, result: option.result });
+      addToolResult({
+        toolCallId,
+        result: "Cancel the action. I want to modify the content.",
+      });
     }
   };
 
@@ -337,14 +364,18 @@ const useToolActions = (
 
         const formattedContent =
           (await richTextContent.json())?.object?.content ?? "";
-        const parsedContent = JSON.stringify(
-          parseToTiptap(formattedContent, true)
-        );
+        if (formattedContent) {
+          const parsedContent = JSON.stringify(
+            parseToTiptap(formattedContent, true)
+          );
+
+          fields.content = parsedContent ?? fields.content;
+        }
 
         const draftDetails = await callExtensionFunction({
           requestBody: {
             action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
-            data: { ...fields, content: parsedContent },
+            data: fields,
             type: postType,
           },
           responseAction: TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE,
@@ -380,7 +411,10 @@ const useToolActions = (
           throw new Error("Unexpected error while creating the draft.");
         }
       } else {
-        addToolResult({ toolCallId, result: option.result });
+        addToolResult({
+          toolCallId,
+          result: "Cancel the action. I want to modify the content.",
+        });
       }
     } catch (error: any) {
       console.error(error);
@@ -400,6 +434,12 @@ const useToolActions = (
   ) => {
     if (option.result === APPROVAL.YES) {
       try {
+        // setIsLoading?.(true);
+        // const tinyVueFormatMessage = await fetch("/api/generateHTMLText", {
+        //   method: "POST",
+        //   body: JSON.stringify({ message: fields?.message?.value }),
+        // });
+
         await callExtensionFunction({
           requestBody: {
             action: TALIA_EVENTS.actions.FILL_FORM_REQUEST,
@@ -413,9 +453,14 @@ const useToolActions = (
           toolCallId,
           result: "Error occurred while processing the form.",
         });
+      } finally {
+        // setIsLoading?.(false);
       }
     } else {
-      addToolResult({ toolCallId, result: option.result });
+      addToolResult({
+        toolCallId,
+        result: "Cancel the action. I want to modify the content.",
+      });
     }
   };
 
