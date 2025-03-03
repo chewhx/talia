@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import {
   ActionIcon,
-  Affix,
+  Box,
   Container,
   FileButton,
   Group,
@@ -20,9 +20,9 @@ import {
   IconPlayerStopFilled,
 } from "@tabler/icons-react";
 import mammoth from "mammoth";
-import React from "react";
-import { validateFiles } from "./prompt-input.utils";
+import React, { useEffect, useRef } from "react";
 import { IMAGE_MIME_TYPE, MIME_TYPES } from "../../../shared/constants";
+import { validateFiles } from "./prompt-input.utils";
 
 const ACCEPT_MIME_TYPES = [...IMAGE_MIME_TYPE, MIME_TYPES.pdf, MIME_TYPES.docx];
 
@@ -47,9 +47,28 @@ export default function PromptInput({
   const [doRetrieval, setDoRetrieval] = React.useState<boolean>(false);
 
   const btnRef = React.useRef<HTMLButtonElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = `${Math.min(scrollHeight, 150)}px`;
+    }
+  }, [input]);
 
   return (
-    <Affix bottom={0} left={0} bg="var(--talia-gray)" py="md">
+    <Box
+      style={{
+        position: "sticky",
+        bottom: 0,
+        left: 0,
+        width: "100%",
+        background: "var(--talia-gray)",
+        zIndex: 100,
+        padding: "12px 0",
+      }}
+    >
       <Container size="sm">
         {error && <p style={{ color: "red" }}>{error.message}</p>}
         <Paper bg={disabled ? "gray.1" : "white"} py="xs" px="sm" w="100%">
@@ -72,27 +91,37 @@ export default function PromptInput({
             }}
           >
             <Stack>
-              <Textarea
-                disabled={disabled}
-                name="prompt"
-                value={input}
-                onChange={handleInputChange}
-                rows={2}
-                variant="unstyled"
-                placeholder="How may I help you?"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    // Check if Alt or Shift key is pressed
-                    if (e.altKey || e.shiftKey) {
-                      // Do not submit form, allow default behavior (new line)
-                      return;
-                    }
-                    // Enter key alone is pressed
-                    e.preventDefault(); // Prevent default behavior (new line)
-                    btnRef?.current?.click();
-                  }
+              <div
+                style={{
+                  position: "relative",
+                  maxHeight: "150px",
+                  overflow: "auto",
                 }}
-              />
+              >
+                <Textarea
+                  disabled={disabled}
+                  name="prompt"
+                  value={input}
+                  onChange={handleInputChange}
+                  rows={2}
+                  variant="unstyled"
+                  placeholder="How may I help you?"
+                  ref={textareaRef}
+                  style={{
+                    resize: "none",
+                    overflow: "hidden",
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (e.altKey || e.shiftKey) {
+                        return;
+                      }
+                      e.preventDefault();
+                      btnRef?.current?.click();
+                    }
+                  }}
+                />
+              </div>
               <Group justify="space-between">
                 <Group>
                   <FileButton
@@ -194,6 +223,6 @@ export default function PromptInput({
           </form>
         </Paper>
       </Container>
-    </Affix>
+    </Box>
   );
 }

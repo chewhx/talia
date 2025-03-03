@@ -5,19 +5,18 @@ import HumanMessage from "@/components/human-message";
 import PromptInput from "@/components/prompt-input/prompt-input";
 import { Message, useChat } from "@ai-sdk/react";
 import {
+  Box,
   Container,
   Group,
   Loader,
-  ScrollArea,
   Space,
   Stack,
   Text,
   TypographyStylesProvider,
 } from "@mantine/core";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
-import { ExtensionActionButton } from "@/components/extension-action-buttons";
-import { useEffect, useRef } from "react";
 
 export default function MainPage() {
   const {
@@ -32,7 +31,6 @@ export default function MainPage() {
   } = useChat({
     maxSteps: 10,
   });
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -46,72 +44,111 @@ export default function MainPage() {
     )
   );
 
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
-        behavior: "smooth",
+  // Scrolling state and refs
+  const contentRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isFirstRender = useRef(true);
+
+  const scrollToBottom = useCallback((smooth = true) => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: smooth ? "smooth" : "auto",
       });
     }
-  }, [messages]);
+  }, []);
+
+  // Scroll on first render and when new messages are added
+  useLayoutEffect(() => {
+    if (isFirstRender.current) {
+      scrollToBottom();
+      isFirstRender.current = false;
+    }
+  }, [scrollToBottom]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  // Scroll while streaming
+  useEffect(() => {
+    if (status === "streaming") {
+      const scrollInterval = setInterval(scrollToBottom, 400);
+      return () => clearInterval(scrollInterval);
+    }
+  }, [status, scrollToBottom]);
 
   return (
-    <ScrollArea style={{ height: "100vh" }} viewportRef={scrollAreaRef}>
-      <Container size="sm">
-        {/* <ExtensionActionButton /> */}
+    <Box style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      <Container
+        size="sm"
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+        }}
+      >
+        <Box
+          ref={contentRef}
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            paddingBottom: "20px",
+            width: "100%",
+          }}
+        >
+          {/* <ExtensionActionButton /> */}
 
-        <TypographyStylesProvider>
-          {!messages.length ? (
-            <Stack gap={0}>
-              <Space h={100} />
-              <Text c="orange" fw={600} fz="xl" m={0}>
-                Hey there!
-              </Text>
-              <Text fz="xl" fw={600}>
-                How may I help you today?
-              </Text>
-            </Stack>
-          ) : (
-            <Stack>
-              {messages.map((message) => {
-                switch (message.role) {
-                  case "user":
-                    return <HumanMessage message={message} key={message.id} />;
-                  case "assistant":
-                    return (
-                      <AIMessage
-                        message={message}
-                        addToolResult={addToolResult}
-                        key={message.id}
-                      />
-                    );
-                  default:
-                    return null;
-                }
-              })}
-            </Stack>
-          )}
-        </TypographyStylesProvider>
+          <TypographyStylesProvider>
+            {!messages.length ? (
+              <Stack gap={0}>
+                <Space h={100} />
+                <Text c="orange" fw={600} fz="xl" m={0}>
+                  Hey there!
+                </Text>
+                <Text fz="xl" fw={600}>
+                  How may I help you today?
+                </Text>
+              </Stack>
+            ) : (
+              <Stack>
+                {messages.map((message) => {
+                  const MessageComponent =
+                    message.role === "user" ? HumanMessage : AIMessage;
 
-        {pendingToolCallConfirmation ||
-        status === "streaming" ||
-        status === "submitted" ? (
-          <Group justify="center" py="md">
-            <Loader type="dots" />
-          </Group>
-        ) : null}
-        <Space h={300} />
+                  return (
+                    <MessageComponent
+                      key={message.id}
+                      message={message}
+                      addToolResult={addToolResult}
+                    />
+                  );
+                })}
 
-        <PromptInput
-          error={error}
-          disabled={pendingToolCallConfirmation}
-          stop={stop}
-          status={status}
-          input={input}
-          handleInputChange={handleInputChange}
-          handleSubmit={handleSubmit}
-        />
-      </Container>{" "}
-    </ScrollArea>
+                {pendingToolCallConfirmation ||
+                  status === "streaming" ||
+                  (status === "submitted" && (
+                    <Group justify="center" py="md">
+                      <Loader type="dots" />
+                    </Group>
+                  ))}
+
+                <div ref={messagesEndRef} style={{ height: "1px" }} />
+              </Stack>
+            )}
+          </TypographyStylesProvider>
+        </Box>
+      </Container>
+
+      <PromptInput
+        error={error}
+        disabled={pendingToolCallConfirmation}
+        stop={stop}
+        status={status}
+        input={input}
+        handleInputChange={handleInputChange}
+        handleSubmit={handleSubmit}
+      />
+    </Box>
   );
 }

@@ -97,6 +97,7 @@ export const FormDraftSchema = z.object({
   enquiryEmailAddress: z
     .string()
     .email()
+    .default("parentsgateway.otp@gmail.com")
     .refine(
       (email) =>
         ["@gmail.com", "@moe.edu.sg", "@schools.gov.sg"].some((domain) =>
@@ -105,11 +106,13 @@ export const FormDraftSchema = z.object({
       "Email must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg"
     )
     .describe(
-      "Contact email for inquiries (must be @gmail.com, @moe.edu.sg, or @schools.gov.sg)"
+      "The default value is the user's pre-filled email. Only request changes when the user asks. The official contact email must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg. This email will be visible to parents for inquiries about the consent form."
     ),
   responseType: z
     .enum(["YES_NO", "ACKNOWLEDGEMENT"])
-    .describe("The type of response required for the form"),
+    .describe(
+      "The type of response required for the form. Rephrase it to 'Yes or No' and 'Acknowledgement' when display for user."
+    ),
   venue: z
     .string()
     .optional()

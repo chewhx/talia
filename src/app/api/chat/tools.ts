@@ -103,8 +103,7 @@ const retrieveResource = tool({
 });
 
 const createPGFormDraft = tool({
-  description: `Create a Parent Gateway (PG) consent form draft. Email must be @gmail.com, @moe.edu.sg, or @schools.gov.sg only.
-
+  description: `Create a Parent Gateway (PG) consent form draft. Default email: parentsgateway.otp@gmail.com. Custom email allowed only from @gmail.com, @moe.edu.sg, @schools.gov.sg.
   Include custom questions using FormQuestionsSchema:
   1. Single Selection: Up to 2 choices, one selectable.
   2. Multi Selection: Up to 7 choices, multiple selectable.
@@ -143,8 +142,8 @@ const createPGAnnouncementDraft = tool({
   This tool helps generate a structured draft for announcements to be sent through the Parent Gateway system.
   It ensures all necessary information is captured and follows the required format.
     Key points:
-    - The announcement includes a title, content, and contact email.
-    - Email must be @gmail.com, @moe.edu.sg, or @schools.gov.sg only.
+    - The announcement includes a title, content, and contact email (use default parentsgateway.otp@gmail.com).
+    - If user want to change default email, the input email must be @gmail.com, @moe.edu.sg, or @schools.gov.sg only.
     - Optional fields include related website links and shortcuts.
     - The draft status is set by default, currently only create draft.`,
   parameters: z.object({
