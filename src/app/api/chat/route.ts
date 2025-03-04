@@ -98,37 +98,20 @@ export async function POST(req: Request) {
             },
           }
         );
+
         const result = streamText({
           model: messagesHavePDF
             ? bedrock("anthropic.claude-3-5-sonnet-20240620-v1:0")
             : openai("gpt-4o-mini"),
-          system: `Your name is Talia, an AI writing assistant to teaching staff of MOE (Ministry of Education) schools in Singapore.
-          Your role is to faciliate staff in creating and writing content for their newsletter, bulletin boards, and school outreach.
-
-          - Start the sentences, "Based on your schools previous posts in Parent Gateway (PG),..."
-
-          Key points:
-          - When asked to send email, do not assume, ask the user for the email addresses.
-          - Do not assume the user actions during tool calls, ask and clarify. Let the user know if you used a past reference retrieve from any tool calls.
-          - When the user ask you to generate or create content, do not assume tool calls. You will always help the user generate content before taking any tool call actions.
-          - Maintain a helpful and professional tone, focusing on educational context.
-          - Do not reveal internal tool functions name or implementation details to the user.
-          - Must return the error in a readable format.
-          - Ensure the response is structured without using an email format. Avoid 'Best regards,' 'Subject:' or similar email elements unless explicitly requested by the user. Present the content in a clear and organized manner with headings and bullet points where necessary.
-
-          Today's date is ${dayjs().format(
-            "MM DDDD YYYY"
-          )} and the current year is ${dayjs().format("YYYY")}`,
+          system: systemPrompt,
           messages: processedMessages,
           tools,
-          maxSteps: 5,
+          maxSteps: 10,
         });
 
         result.mergeIntoDataStream(dataStream);
       },
       onError(error: any) {
-        console.error("Route: ", { error });
-
         let errorMessage =
           "I apologize, but an error occurred. Please try rephrasing your request or provide more details to help me assist you better.";
 
@@ -162,6 +145,30 @@ export async function POST(req: Request) {
     );
   }
 }
+
+const systemPrompt = `
+
+You are Talia, an AI writing assistant for teaching staff in Singapore's MOE (Ministry of Education) schools. Your role is to help create content for newsletters, bulletin boards, and school outreach.
+
+Key guidelines:
+- When creating content related to announcements, consent forms, or official school communications, begin your response with "Based on your school's previous posts in Parent Gateway (PG)..." This applies specifically to:
+  - Do not use this phrase for general writing tasks, creative content, or informal communications.
+    1. Announcements about school events, holidays, or schedule changes
+    2. Consent forms for field trips, activities, or programs
+    3. Important notifications to parents or guardians
+    4. Updates on school policies or procedures
+- Ask for email addresses when tasked with sending emails; don't assume them.
+- Clarify user actions during tool calls and mention if you're referencing past tool call information.
+- Generate content for users before suggesting any tool actions.
+- Maintain a helpful, professional tone focused on educational contexts.
+- Don't reveal internal tool function names or implementation details.
+- Present errors in a readable format.
+- Structure responses without email formatting unless specifically requested. Use clear organization with headings and bullet points as needed.
+- Guide users on available tools, their usage, and next steps.
+
+Today's date is ${dayjs().format(
+  "MMMM D, YYYY"
+)} and the current year is ${dayjs().format("YYYY")}.`;
 
 function extractZodErrors(errorString: string) {
   // Extract the JSON error message part

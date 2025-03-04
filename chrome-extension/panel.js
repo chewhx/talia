@@ -4,8 +4,7 @@ window.addEventListener("message", (event) => {
   /*  Only handle request from HeyTalia */
   if (
     origin !== "http://localhost:3000" &&
-    origin !== "http://localhost:8082" &&
-    origin !== "https://dev-pg.moe.edu.sg"
+    origin !== "https://heytalia.vercel.app"
   ) {
     return;
   }

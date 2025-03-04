@@ -14,11 +14,14 @@ import {
   Text,
   TypographyStylesProvider,
 } from "@mantine/core";
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
+import { useUser } from "@/components/header/context/userContext";
+import CenteredLoader from "@/components/centeredLoader";
 
-export default function MainPage() {
+export default function ChatPage() {
+  const { displayName, isLoading } = useUser();
+
   const {
     messages,
     input,
@@ -46,43 +49,15 @@ export default function MainPage() {
     )
   );
 
-  // Scrolling state and refs
-  const contentRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isFirstRender = useRef(true);
-
-  const scrollToBottom = useCallback((smooth = true) => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({
-        behavior: "auto",
-      });
-    }
-  }, []);
-
-  // Scroll on first render and when new messages are added
-  useLayoutEffect(() => {
-    if (isFirstRender.current) {
-      scrollToBottom();
-      isFirstRender.current = false;
-    }
-  }, [scrollToBottom]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
-
-  useEffect(() => {
-    if (status === "streaming") {
-      const scrollInterval = setInterval(scrollToBottom, 3000);
-      return () => clearInterval(scrollInterval);
-    }
-  }, [status, scrollToBottom]);
-
   if (error) {
     append({
       content: error?.message,
       role: "system",
     });
+  }
+
+  if (isLoading) {
+    return <CenteredLoader message="Preparing your chat experience..." />; // Or any other loading indicator
   }
 
   return (
@@ -97,20 +72,20 @@ export default function MainPage() {
         }}
       >
         <Box
-          ref={contentRef}
           style={{
             flex: 1,
             overflowY: "auto",
             paddingBottom: "20px",
             width: "100%",
+            position: "relative",
           }}
         >
           <TypographyStylesProvider>
             {!messages.length ? (
               <Stack gap={0}>
-                <Space h={100} />
+                <Space h={50} />
                 <Text c="orange" fw={600} fz="xl" m={0}>
-                  Hey there!
+                  Hey {displayName ?? "there"}!
                 </Text>
                 <Text fz="xl" fw={600}>
                   How may I help you today?
@@ -138,8 +113,6 @@ export default function MainPage() {
                       <Loader type="dots" />
                     </Group>
                   ))}
-
-                <div ref={messagesEndRef} style={{ height: "1px" }} />
               </Stack>
             )}
           </TypographyStylesProvider>
