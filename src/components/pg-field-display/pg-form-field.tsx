@@ -65,7 +65,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
             Status:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
               {status}
             </Text>
           </Box>
@@ -77,7 +77,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
             Enquiry Email:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
               {enquiryEmailAddress}
             </Text>
           </Box>
@@ -89,7 +89,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
             Title:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
               {title}
             </Text>
           </Box>
@@ -103,8 +103,8 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
           <Box style={{ flex: 1 }}>
             <ReactMarkdown
               components={{
-                p: ({ children }) => (
-                  <Text fz="sm" style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                div: ({ children }) => (
+                  <Text fz="md" style={{ margin: 0, whiteSpace: "pre-wrap" }}>
                     {children}
                   </Text>
                 ),
@@ -125,7 +125,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
               {shortcuts.map((url, index) => (
                 <Text
                   key={index}
-                  fz="sm"
+                  fz="md"
                   style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
                 >
                   {index + 1}.{" "}
@@ -148,7 +148,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
               {urls.map((url, index) => (
                 <Text
                   key={index}
-                  fz="sm"
+                  fz="md"
                   style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
                 >
                   {index + 1}.{" "}
@@ -171,7 +171,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
             Response Type:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
               {responseType}
             </Text>
           </Box>
@@ -187,7 +187,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
               {urls.map((url, index) => (
                 <Text
                   key={index}
-                  fz="sm"
+                  fz="md"
                   style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
                 >
                   {index + 1}.{" "}
@@ -211,7 +211,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
               Event Start:
             </Text>
             <Box style={{ flex: 1 }}>
-              <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+              <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
                 {formatDate(eventStartDate.date, eventStartDate.time)}
               </Text>
             </Box>
@@ -225,7 +225,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
               Event End:
             </Text>
             <Box style={{ flex: 1 }}>
-              <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+              <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
                 {formatDate(eventEndDate.date, eventEndDate.time)}
               </Text>
             </Box>
@@ -240,7 +240,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
               Venue:
             </Text>
             <Box style={{ flex: 1 }}>
-              <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+              <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
                 {venue}
               </Text>
             </Box>
@@ -253,7 +253,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
             Consent By:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
               {new Date(consentByDate).toLocaleDateString()}
             </Text>
           </Box>
@@ -265,7 +265,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
             Reminder Type:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
               {addReminderType}
             </Text>
           </Box>
@@ -279,16 +279,16 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
             <Box style={{ flex: 1 }}>
               {questions.map((question, index) => (
                 <Box key={question.id} mb="sm">
-                  <Text fz="sm" fw={600}>
+                  <Text fz="md" fw={600}>
                     {index + 1}. {question.title}
                   </Text>
-                  <Text fz="xs" c="gray.6" mb="xs">
+                  <Text fz="sm" c="gray.6" mb="xs">
                     {question.description}
                   </Text>
                   {question.type !== "text" && question.choices && (
                     <Box ml="md">
                       {question.choices.map((choice, choiceIndex) => (
-                        <Text key={choiceIndex} fz="sm">
+                        <Text key={choiceIndex} fz="md">
                           - {choice.label}
                         </Text>
                       ))}

@@ -34,7 +34,7 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
             Status:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
               {status}
             </Text>
           </Box>
@@ -46,7 +46,7 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
             Enquiry Email:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
               {enquiryEmailAddress}
             </Text>
           </Box>
@@ -58,7 +58,7 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
             Title:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
               {title}
             </Text>
           </Box>
@@ -72,8 +72,8 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
           <Box style={{ flex: 1 }}>
             <ReactMarkdown
               components={{
-                p: ({ children }) => (
-                  <Text fz="sm" style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                div: ({ children }) => (
+                  <Text fz="sm" style={{ margin: 0 }}>
                     {children}
                   </Text>
                 ),
@@ -94,7 +94,7 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
               {shortcuts.map((url, index) => (
                 <Text
                   key={index}
-                  fz="sm"
+                  fz="md"
                   style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
                 >
                   {index + 1}.{" "}
@@ -117,7 +117,7 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
               {urls.map((url, index) => (
                 <Text
                   key={index}
-                  fz="sm"
+                  fz="md"
                   style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
                 >
                   {index + 1}.{" "}

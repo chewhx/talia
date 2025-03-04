@@ -55,19 +55,28 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
             <Paper px="xs" py="5" fz="sm" bg="white" w="100%">
               <Markdown>{args.emailContent}</Markdown>
             </Paper>
-            <Group justify="right">
+            <SimpleGrid cols={2}>
               {options.map((option: ToolOption) => (
-                <Button
-                  size="xs"
+                <UnstyledButton
                   key={`toolCall-${toolCallId}-option-${option.title}`}
                   onClick={() =>
                     addToolResult({ toolCallId, result: option.result })
                   }
+                  className="custom-tool-button"
                 >
-                  {option.title}
-                </Button>
+                  <Paper shadow="sm" radius={0} bg="var(--talia-orange)" p="sm">
+                    <Stack gap={0}>
+                      <Text fw={500} m={0} fz="sm">
+                        {option.title}
+                      </Text>
+                      <Text fz="xs" c="gray">
+                        {option.description}
+                      </Text>
+                    </Stack>
+                  </Paper>
+                </UnstyledButton>
               ))}
-            </Group>
+            </SimpleGrid>
           </Stack>
         );
 

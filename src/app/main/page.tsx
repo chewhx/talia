@@ -52,11 +52,11 @@ export default function MainPage() {
   const isFirstRender = useRef(true);
 
   const scrollToBottom = useCallback((smooth = true) => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({
-        behavior: "auto",
-      });
-    }
+    // if (messagesEndRef.current) {
+    //   messagesEndRef.current.scrollIntoView({
+    //     behavior: "auto",
+    //   });
+    // }
   }, []);
 
   // Scroll on first render and when new messages are added
