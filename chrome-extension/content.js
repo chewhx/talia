@@ -57,7 +57,8 @@
 
     if (
       origin !== "http://localhost:8082" &&
-      origin !== "https://dev-pg.moe.edu.sg"
+      origin !== "https://dev-pg.moe.edu.sg" &&
+      origin !== "https://stable-pg.moe.edu.sg"
     ) {
       return;
     }
@@ -73,7 +74,7 @@
 
       case "PG_UNAUTHORIZED": {
         console.log("🟢 Content: PG_UNAUTHORIZED", { origin, data });
-        window.postMessage(data, "http://localhost:3000/");
+        window.postMessage(data, "*");
         break;
       }
     }

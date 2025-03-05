@@ -11,7 +11,10 @@
     "tabs",
     "activeTab"
   ],
-  "host_permissions": ["http://localhost:3000/*"],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://heytalia.vercel.app/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
@@ -43,7 +46,10 @@
     "matches": [
       "http://localhost:3000/*",
       "http://localhost:8082/*",
-      "https://dev-pg.moe.edu.sg/*"
+      "https://dev-pg.moe.edu.sg/*",
+      "https://qe-pg.moe.edu.sg/*",
+      "https://stable-pg.moe.edu.sg/*",
+      "https://heytalia.vercel.app/*"
     ]
   },
   "content_security_policy": {
