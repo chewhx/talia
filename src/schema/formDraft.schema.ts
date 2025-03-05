@@ -77,7 +77,9 @@ export const FormQuestionsSchema = z
   .array(QuestionSchema)
   .max(5)
   .optional()
-  .describe(`Custom questions for YES_NO type forms.`);
+  .describe(
+    `Custom questions for YES_NO type forms. Do no need to include this for acknowledgement form!`
+  );
 
 export const FormDraftSchema = z.object({
   title: z.string().min(1).max(120).describe("The title of the consent form"),
@@ -89,7 +91,9 @@ export const FormDraftSchema = z.object({
     .describe("The content of the consent form in HTML format"),
   consentByDate: z
     .string()
-    .describe("The deadline for responding to the form (YYYY-MM-DD)"),
+    .describe(
+      "The deadline for responding to the form (YYYY-MM-DD). It must cannot be in the past."
+    ),
   addReminderType: z
     .enum(["ONE_TIME", "DAILY", "NONE"])
     .default("NONE")
@@ -123,14 +127,14 @@ export const FormDraftSchema = z.object({
       time: z.string().describe("The start time of the event (HH:MM)"),
     })
     .optional()
-    .describe("Event starting date and time"),
+    .describe("Event starting date and time. It is a optional field"),
   eventEndDate: z
     .object({
       date: z.string().describe("The end date of the event (YYYY-MM-DD)"),
       time: z.string().describe("The end time of the event (HH:MM)"),
     })
     .optional()
-    .describe("Event ending date and time"),
+    .describe("Event ending date and time. It is a optional field"),
   // reminderDate: z.string().optional().describe("The reminder trigger date"),
   urls: z
     .array(
@@ -141,11 +145,13 @@ export const FormDraftSchema = z.object({
     )
     .max(3)
     .optional()
-    .describe("Related website links (max 3)"),
+    .describe("Related website links (max 3). It is optional."),
   shortcuts: z
     .array(z.string())
     .optional()
-    .describe("Shortcut URLs for quick access to other websites/apps"),
+    .describe(
+      "Shortcut URLs for quick access to other websites/apps. It is optional"
+    ),
   questions: FormQuestionsSchema,
 
   // staffGroups: z

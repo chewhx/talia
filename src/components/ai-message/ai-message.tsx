@@ -10,9 +10,9 @@ import { mapFieldsToSchema } from "@/schema/studentLearningSpace.schema";
 import { useChat } from "@ai-sdk/react";
 import {
   Box,
-  Button,
   Divider,
   Group,
+  List,
   Paper,
   SimpleGrid,
   Stack,
@@ -20,12 +20,12 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { Message, ToolInvocation } from "ai";
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { TALIA_EVENTS } from "../../../shared/constants";
 import Markdown from "../markdown";
 import { PGAnnouncementFields } from "../pg-field-display/pg-announcement-field";
 import { PGFormField } from "../pg-field-display/pg-form-field";
-import { useState } from "react";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -48,12 +48,37 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
         return (
           <Stack key={toolCallId}>
             <Paper px="xs" py="5" fz="sm" bg="white" ml="auto">
-              <Text fz="xs" fw={500}>
-                Send email to {args.emailAddresses.join(", ")}
-              </Text>
+              <Stack>
+                <Text fz="md" fw={500} mb={0}>
+                  Send email to:
+                </Text>
+                <List spacing="xs" withPadding>
+                  {args.emailAddresses.map((email: string) => (
+                    <List.Item key={email}>
+                      <Text fz="md">{email}</Text>
+                    </List.Item>
+                  ))}
+                </List>
+
+                {args.emailCCAddress?.length > 0 && (
+                  <>
+                    <Text fz="md" fw={500} mb={0}>
+                      CC:
+                    </Text>
+                    <List spacing="xs" withPadding>
+                      {args.emailCCAddress.map((ccEmail: string) => (
+                        <List.Item key={ccEmail}>
+                          <Text fz="md">{ccEmail}</Text>
+                        </List.Item>
+                      ))}
+                    </List>
+                  </>
+                )}
+              </Stack>
             </Paper>
-            <Paper px="xs" py="5" fz="sm" bg="white" w="100%">
-              <Markdown>{args.emailContent}</Markdown>
+            <Paper px="xs" py="5" fz="md" bg="white" w="100%">
+              <div dangerouslySetInnerHTML={{ __html: args.emailContent }} />
+              {/* <Markdown>{args.emailContent}</Markdown> */}
             </Paper>
             <SimpleGrid cols={2}>
               {options.map((option: ToolOption) => (
@@ -306,6 +331,16 @@ const useToolActions = (
     if (option.result === APPROVAL.YES) {
       try {
         setIsLoading?.(true);
+
+        if ((await isCurrentWebsiteMatchAction()) !== "SLS") {
+          addToolResult({
+            toolCallId,
+            result:
+              "Error: Please ensure you are logged in and on the correct Student Learning Space (SLS) page before attempting to pre-fill content.",
+          });
+          return;
+        }
+
         const tinyVueFormatMessage = await fetch("/api/generateHTMLText", {
           method: "POST",
           body: JSON.stringify({ message: fields?.message?.value }),
@@ -366,6 +401,16 @@ const useToolActions = (
     try {
       if (option.title === "Confirm") {
         setIsLoading?.(true);
+
+        if ((await isCurrentWebsiteMatchAction()) !== "PG") {
+          addToolResult({
+            toolCallId,
+            result:
+              "Error: Please ensure you are on the Parent Gateway (PG) website. You may need to log in if you're not already logged in, or navigate to the Parent Gateway website if you're on the wrong one.",
+          });
+          return;
+        }
+
         const richTextContent = await fetch("/api/generateRichText", {
           method: "POST",
           body: JSON.stringify({ content: fields?.content }),
@@ -429,7 +474,7 @@ const useToolActions = (
       console.error(error);
       addToolResult({
         toolCallId,
-        result: `An error occurred: ${error?.message}. Please try again.`,
+        result: `An error occurred: ${error?.message}`,
       });
     } finally {
       setIsLoading?.(false);
@@ -443,11 +488,16 @@ const useToolActions = (
   ) => {
     if (option.result === APPROVAL.YES) {
       try {
-        // setIsLoading?.(true);
-        // const tinyVueFormatMessage = await fetch("/api/generateHTMLText", {
-        //   method: "POST",
-        //   body: JSON.stringify({ message: fields?.message?.value }),
-        // });
+        setIsLoading?.(true);
+
+        if ((await isCurrentWebsiteMatchAction()) !== "GoogleClassroom") {
+          addToolResult({
+            toolCallId,
+            result:
+              "Error: Please ensure you are on the Google Classroom website and on the specific class you want to post or pre-fill content for. You may need to log in if you're not already logged in, or navigate to the correct page if you're on the wrong one.",
+          });
+          return;
+        }
 
         await callExtensionFunction({
           requestBody: {
@@ -463,7 +513,7 @@ const useToolActions = (
           result: "Error occurred while processing the form.",
         });
       } finally {
-        // setIsLoading?.(false);
+        setIsLoading?.(false);
       }
     } else {
       addToolResult({
@@ -474,4 +524,15 @@ const useToolActions = (
   };
 
   return { preFillSLSFormHandling, createDraft, preFillClassroomFormHandling };
+};
+
+const isCurrentWebsiteMatchAction = async () => {
+  const currentWebsite = await callExtensionFunction({
+    requestBody: {
+      action: TALIA_EVENTS.actions.IDENTITY_CURRENT_ACTIVE_TAB,
+    },
+    responseAction: TALIA_EVENTS.listeners.CURRENT_ACTIVE_TAB_RESPONSE,
+  });
+
+  return currentWebsite?.currentWebsite;
 };

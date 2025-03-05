@@ -17,6 +17,7 @@ import {
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
+import { ExtensionActionButton } from "@/components/extension-action-buttons";
 
 export default function MainPage() {
   const {
@@ -52,11 +53,11 @@ export default function MainPage() {
   const isFirstRender = useRef(true);
 
   const scrollToBottom = useCallback((smooth = true) => {
-    // if (messagesEndRef.current) {
-    //   messagesEndRef.current.scrollIntoView({
-    //     behavior: "auto",
-    //   });
-    // }
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: "auto",
+      });
+    }
   }, []);
 
   // Scroll on first render and when new messages are added
@@ -72,7 +73,7 @@ export default function MainPage() {
   }, [messages, scrollToBottom]);
 
   useEffect(() => {
-    if (status === "streaming") {
+    if (status === "submitted") {
       const scrollInterval = setInterval(scrollToBottom, 3000);
       return () => clearInterval(scrollInterval);
     }
@@ -96,6 +97,7 @@ export default function MainPage() {
           width: "100%",
         }}
       >
+        {/* <ExtensionActionButton /> */}
         <Box
           ref={contentRef}
           style={{
@@ -131,13 +133,13 @@ export default function MainPage() {
                   );
                 })}
 
-                {pendingToolCallConfirmation ||
+                {(pendingToolCallConfirmation ||
                   status === "streaming" ||
-                  (status === "submitted" && (
-                    <Group justify="center" py="md">
-                      <Loader type="dots" />
-                    </Group>
-                  ))}
+                  status === "submitted") && (
+                  <Group justify="center" py="md">
+                    <Loader type="dots" />
+                  </Group>
+                )}
 
                 <div ref={messagesEndRef} style={{ height: "1px" }} />
               </Stack>

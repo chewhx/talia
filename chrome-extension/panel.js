@@ -35,6 +35,10 @@ window.addEventListener("message", (event) => {
       sendMessageToContentJSWithoutResponse(data);
       break;
     }
+    case "IDENTITY_CURRENT_ACTIVE_TAB": {
+      console.log("🟢 Panel: IDENTITY_CURRENT_ACTIVE_TAB", { origin, data });
+      getCurrentActiveTabOrigin();
+    }
   }
 });
 
@@ -92,6 +96,20 @@ async function sendMessageToContentJSWithResponse(data) {
   }
 }
 
+async function getCurrentActiveTabOrigin() {
+  try {
+    const activeTab = await getActiveTab();
+    const currentWebsite = identifyTargetWebsite(activeTab.url);
+    console.log("We will send message");
+    sendMessageToIframe({
+      action: "CURRENT_ACTIVE_TAB_RESPONSE",
+      currentWebsite,
+    });
+  } catch (error) {
+    console.error("Error sending message to content.js:", error);
+  }
+}
+
 // Return response to HeyTalia
 function sendMessageToIframe(data) {
   const iframe = document.querySelector("iframe");
@@ -112,7 +130,9 @@ function identifyTargetWebsite(url) {
   if (urlLower.includes("vle.learning.moe.edu.sg")) return "SLS";
   if (
     urlLower.includes("localhost:8082") ||
-    urlLower.includes("dev-pg.moe.edu.sg")
+    urlLower.includes("dev-pg.moe.edu.sg") ||
+    urlLower.includes("qe-pg.moe.edu.sg") ||
+    urlLower.includes("u-pg.moe.edu.sg")
   )
     return "PG";
 

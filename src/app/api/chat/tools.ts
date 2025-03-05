@@ -44,9 +44,10 @@ const getDayOfTheWeek = tool({
 
 const sendEmail = tool({
   description:
-    "Send an email to specified recipients. Use this tool whenever there's a request to send an email to someone, regardless of the content. Any valid email address is acceptable.",
+    "Send an email to the specified recipients upon request, regardless of the content. Should ask any CC recipients. Accepts any valid email address, including CC recipients if provided. It must be in HTML format!",
   parameters: z.object({
-    emailContent: z.string().describe("Markdown content of the email"),
+    // emailContent: z.string().describe("Markdown content of the email"),
+    emailContent: z.string().describe("Content of the email in HTML format"),
     emailSubject: z
       .string()
       .describe("Email subject that defines the email content"),
@@ -54,6 +55,12 @@ const sendEmail = tool({
       .array(z.string())
       .describe(
         "List of recipient email addresses. Can be any valid email address."
+      ),
+    emailCCAddress: z
+      .array(z.string())
+      .optional()
+      .describe(
+        "List of carbon copy (CC) email addresses. Can be any valid email addresses."
       ),
   }),
 });
@@ -104,34 +111,31 @@ const retrieveResource = tool({
 
 const createPGFormDraft = tool({
   description: `Create a Parent Gateway (PG) consent form draft. Default email: parentsgateway.otp@gmail.com. Custom email allowed only from @gmail.com, @moe.edu.sg, @schools.gov.sg.
-  Include custom questions using FormQuestionsSchema:
+
+  Include custom questions using FormQuestionsSchema and is only for YES_NO response type:
   1. Single Selection: Up to 2 choices, one selectable.
   2. Multi Selection: Up to 7 choices, multiple selectable.
   3. Text: Free-form response.
-
   Max 5 custom questions. Each question needs:
   - Title
   - Description
   - Unique UUID
   - Choices array (for selection types)
-
   Question structure:
   {
     type: "single_selection" | "multi_selection" | "text",
     title: "Question title",
     description: "Details/instructions",
     id: "uuid",
-    choices: [{ label: "Choice 1" }, { label: "Choice 2" }], // For selection types
+    choices: [{ label: "Choice 1" }, { label: "Choice 2" }],
     properties: {
-      choices: [{ label: "Choice 1" }, { label: "Choice 2" }] // Duplicate, required
+      choices: [{ label: "Choice 1" }, { label: "Choice 2" }]
     }
   }
-
-  Draft the form with standard consent language and include custom questions as specified. Ensure all required fields are present and properly formatted.
-  `,
+  Draft the form with standard consent language and include custom questions as specified. Ensure all required fields are present and properly formatted.`,
   parameters: z.object({
     fields: FormDraftSchema.describe(
-      "Form draft schema. Leave optional fields empty if not applicable."
+      "Form draft schema. Leave optional fields empty if not applicable. The custom question only apply to YES or NO type of form. Acknowledgement form no need custom question!"
     ),
   }),
 });
@@ -224,7 +228,8 @@ export const renderToolUIVariables = (
   ];
 
   const toolDescriptions: Record<string, string> = {
-    sendEmail: "Confirm to send the email or cancel the action.",
+    sendEmail:
+      "Confirm to send the email to the following recipients. If applicable, include CC recipients. Would you like to proceed or cancel?",
     createPGFormDraft:
       "Create a draft Parent Gateway (PG) consent form. Do not submit; only prefill the consent form. It is only explicitly instructed to do action for PG.",
     createPGAnnouncementDraft:
