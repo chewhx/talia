@@ -80,39 +80,65 @@ export async function processToolCalls<
         return part;
 
       let result;
-      if (
-        toolInvocation.result === APPROVAL.YES ||
-        toolInvocation.result === PG_POSTS_TYPE.ANNOUNCEMENT ||
-        toolInvocation.result === PG_POSTS_TYPE.CONSENT_FORM
-      ) {
-        // Get the tool and check if the tool has an execute function.
-        if (
-          !isValidToolName(toolName, executeFunctions) ||
-          toolInvocation.state !== "result"
-        ) {
+
+      try {
+        if (toolInvocation.result === APPROVAL.YES) {
+          // Get the tool and check if the tool has an execute function.
+          if (
+            !isValidToolName(toolName, executeFunctions) ||
+            toolInvocation.state !== "result"
+          ) {
+            return part;
+          }
+
+          const toolInstance = executeFunctions[toolName];
+          if (toolInstance) {
+            result = await toolInstance(
+              {
+                ...toolInvocation.args,
+                postType: toolInvocation.result || "",
+              },
+              {
+                messages: convertToCoreMessages(messages),
+                toolCallId: toolInvocation.toolCallId,
+              }
+            );
+          } else {
+            result =
+              "I'm sorry, but I'm unable to perform this action at the moment. The requested feature isn't available.";
+          }
+        } else if (toolInvocation.result === APPROVAL.NO) {
+          result = "I understand. I won't proceed with this action.";
+        } else {
+          // For any unhandled responses, return the original part.
           return part;
         }
+      } catch (error) {
+        console.error(`Error executing tool ${toolName}:`, error);
 
-        const toolInstance = executeFunctions[toolName];
-        if (toolInstance) {
-          result = await toolInstance(
-            {
-              ...toolInvocation.args,
-              postType: toolInvocation.result || "",
-            },
-            {
-              messages: convertToCoreMessages(messages),
-              toolCallId: toolInvocation.toolCallId,
-            }
-          );
+        let errorMessage: string;
+
+        if (error instanceof z.ZodError) {
+          // Format Zod validation errors
+          const issues = error.issues
+            .map((issue) => `${issue.path.join(".")} - ${issue.message}`)
+            .join(". ");
+
+          errorMessage = `I couldn't complete that action because some information was missing or invalid: ${issues}`;
+        } else if (error instanceof Error) {
+          // For standard errors, use the message but don't expose technical details
+          errorMessage = `I encountered a problem: ${formatErrorMessage(
+            error.message
+          )}`;
         } else {
-          result = "Error: No execute function found on tool";
+          // For unknown error types
+          errorMessage =
+            "I encountered an unexpected issue while trying to complete that action. Please try again with different information.";
         }
-      } else if (toolInvocation.result === APPROVAL.NO) {
-        result = "Error: User denied access to tool execution";
-      } else {
-        // For any unhandled responses, return the original part.
-        return part;
+
+        result = errorMessage;
+
+        dataStream.write(formatDataStreamPart("text", errorMessage));
       }
 
       // Forward updated tool result to the client.
@@ -181,4 +207,29 @@ export function callExtensionFunction({
 
     callback?.();
   });
+}
+
+/**
+ * Formats error messages to be user-friendly and non-technical
+ */
+function formatErrorMessage(errorMessage: string): string {
+  // Remove technical details that wouldn't be meaningful to users
+  const sanitizedMessage = errorMessage
+    .replace(/Error:.+?:/g, "")
+    .replace(/\[.+?\]/g, "")
+    .replace(/\{.+?\}/g, "")
+    .replace(/at.+?\)/g, "")
+    .trim();
+
+  // If the message is empty after sanitizing, provide a generic message
+  if (!sanitizedMessage || sanitizedMessage.length < 5) {
+    return "Something went wrong with this request.";
+  }
+
+  // Capitalize first letter and ensure there's a period at the end
+  return (
+    sanitizedMessage.charAt(0).toUpperCase() +
+    sanitizedMessage.slice(1) +
+    (sanitizedMessage.endsWith(".") ? "" : ".")
+  );
 }

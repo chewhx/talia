@@ -1,20 +1,118 @@
-import { generateJSON } from "@tiptap/html";
-import { Extensions, Extension } from "@tiptap/core";
-import Document from "@tiptap/extension-document";
-import Paragraph from "@tiptap/extension-paragraph";
-import Text from "@tiptap/extension-text";
+import { Extension, Extensions } from "@tiptap/core";
 import Bold from "@tiptap/extension-bold";
-import Italic from "@tiptap/extension-italic";
-import Underline from "@tiptap/extension-underline";
-import ListItem from "@tiptap/extension-list-item";
-import OrderedList from "@tiptap/extension-ordered-list";
 import BulletList from "@tiptap/extension-bullet-list";
 import CharacterCount from "@tiptap/extension-character-count";
+import Document from "@tiptap/extension-document";
 import History from "@tiptap/extension-history";
+import Italic from "@tiptap/extension-italic";
+import ListItem from "@tiptap/extension-list-item";
+import OrderedList from "@tiptap/extension-ordered-list";
+import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
+import Text from "@tiptap/extension-text";
 import TextAlign from "@tiptap/extension-text-align";
-import HardBreak from "@tiptap/extension-hard-break";
+import Underline from "@tiptap/extension-underline";
+import { generateJSON } from "@tiptap/html";
+import { Editor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
+// // Simplified conversion function
+// export function convertTextToTipTapContent(
+//   text: string,
+//   extensions: Extensions
+// ): string {
+//   // Step 1: Preprocess the text
+//   const processedText = text
+//     // Replace double newlines with paragraph breaks
+//     .replace(/\n\n/g, "</p><p>")
+//     // Convert single newlines to <br>
+//     .replace(/\n/g, "<br>")
+//     // Convert markdown-style bold
+//     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+//     // Wrap in paragraph tags if not already wrapped
+//     .split("</p><p>")
+//     .map((para) => `<p>${para}</p>`)
+//     .join("");
+
+//   // Step 2: Wrap in a document structure
+//   const htmlContent = `<div>${processedText}</div>`;
+
+//   return htmlContent;
+// }
+
+// // Example usage function
+// export function prepareContentForTipTap(
+//   originalText: string,
+//   supportedExtensions: Extensions
+// ) {
+//   try {
+//     // Convert text to HTML
+//     const htmlContent = convertTextToTipTapContent(
+//       originalText,
+//       supportedExtensions
+//     );
+
+//     // Use TipTap's generateHTML to ensure compatibility
+//     const generatedContent = generateHTML(
+//       {
+//         type: "doc",
+//         content: [
+//           {
+//             type: "paragraph",
+//             content: [{ type: "text", text: originalText }],
+//           },
+//         ],
+//       },
+//       supportedExtensions
+//     );
+
+//     return htmlContent;
+//   } catch (error) {
+//     console.error("Error preparing content:", error);
+//     return "";
+//   }
+// }
+
+export function convertTextToTipTapContent(
+  text: string,
+  extensions: Extensions
+): string {
+  // Preprocess the text
+  const processedText = text
+    // Replace double newlines with paragraph breaks
+    .replace(/\n\n/g, "</p><p>")
+    // Convert single newlines to <br>
+    .replace(/\n/g, "<br>")
+    // Convert markdown-style bold
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    // Wrap in paragraph tags if not already wrapped
+    .split("</p><p>")
+    .map((para) => `<p>${para}</p>`)
+    .join("");
+
+  return processedText;
+}
+
+// Prepare content for TipTap editor
+export function prepareContentForTipTap(
+  originalText: string,
+  supportedExtensions: Extensions
+) {
+  try {
+    // Convert text to HTML
+    const htmlContent = convertTextToTipTapContent(
+      originalText,
+      supportedExtensions
+    );
+
+    return htmlContent;
+  } catch (error) {
+    console.error("Error preparing content:", error);
+    return "";
+  }
+}
+
+////////////////////////////////////////////////////////
 const CustomTextAlign = TextAlign.extend({
   addGlobalAttributes() {
     return [
@@ -88,8 +186,26 @@ export function parseToTiptap(
     const extensions = getSupportedExtensions(placeholder);
 
     if (isHTML) {
-      const preservedContent = content.replace(/\n/g, "<br>");
+      const preservedContent = content.replace(/\n/g, "<br/>");
+      // const preprocessHTML = (html: string) => {
+      //   // Split by double newlines to ensure paragraph separation
+      //   const paragraphs = html.split(/\n\n/).map((p) => p.trim());
+
+      //   // Wrap each part with <p> tags, even empty ones
+      //   return paragraphs.map((p) => (p ? `<p>${p}</p>` : `<p></p>`)).join("");
+      // };
       return generateJSON(preservedContent, extensions);
+
+      // const processedMessages = `<p>${content.replace(/\n\n/g, "</p><p>")}</p>`;
+
+      // const editor = new Editor({
+      //   extensions: [StarterKit],
+      //   content: content,
+      // });
+
+      // const json = editor.getJSON();
+      // console.log({ json });
+      // return json;
     } else {
       // Improved plain text to HTML conversion
       const paragraphs = content.split(/\n\n+/);
@@ -107,52 +223,6 @@ export function parseToTiptap(
     // Return a valid empty document if parsing fails
     return { type: "doc", content: [{ type: "paragraph" }] };
   }
-}
-
-export function manuallyParseTextToTiptap(content: string): any {
-  if (!content) {
-    return { type: "doc", content: [{ type: "paragraph" }] };
-  }
-
-  // Split into paragraphs
-  const paragraphs = content.split(/\n\n+/);
-
-  // Create the document structure
-  const doc = {
-    type: "doc",
-    content: paragraphs.map((paragraph) => {
-      // Split paragraph by line breaks
-      const lines = paragraph.split("\n");
-
-      // Create paragraph node
-      const paragraphNode: any = {
-        type: "paragraph",
-        content: [],
-      };
-
-      // Process each line
-      lines.forEach((line, index) => {
-        // Add text node
-        if (line.length > 0) {
-          paragraphNode.content.push({
-            type: "text",
-            text: line,
-          });
-        }
-
-        // Add hard break node if not the last line
-        if (index < lines.length - 1) {
-          paragraphNode.content.push({
-            type: "hardBreak",
-          });
-        }
-      });
-
-      return paragraphNode;
-    }),
-  };
-
-  return doc;
 }
 
 /**

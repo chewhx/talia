@@ -4,12 +4,15 @@ import { useChat } from "@ai-sdk/react";
 import {
   ActionIcon,
   Box,
+  Button,
   Container,
   FileButton,
+  Flex,
   Group,
   Paper,
   Pill,
   Stack,
+  Text,
   Textarea,
 } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
@@ -18,6 +21,7 @@ import {
   IconArrowUp,
   IconPaperclip,
   IconPlayerStopFilled,
+  IconReload,
 } from "@tabler/icons-react";
 import mammoth from "mammoth";
 import React, { useEffect, useRef } from "react";
@@ -33,12 +37,19 @@ export default function PromptInput({
   handleInputChange,
   handleSubmit,
   stop,
+  reload,
   error,
 }: {
   disabled?: boolean;
 } & Pick<
   ReturnType<typeof useChat>,
-  "input" | "handleInputChange" | "status" | "handleSubmit" | "stop" | "error"
+  | "input"
+  | "handleInputChange"
+  | "status"
+  | "handleSubmit"
+  | "stop"
+  | "error"
+  | "reload"
 >) {
   const [_files, filesHandler] = useListState<File>([]);
   const [_pdfs, pdfsHandler] = useListState<{ id: string; content: string }>(
@@ -70,7 +81,22 @@ export default function PromptInput({
       }}
     >
       <Container size="sm">
-        {error && <p style={{ color: "red" }}>{error.message}</p>}
+        {error && (
+          <Flex align="center" justify="center" my={10} gap="md">
+            <Text c="red" fw={600} size="md">
+              Oops! Something went wrong.
+            </Text>
+            <Button
+              leftSection={<IconReload size={18} />}
+              onClick={() => reload()}
+              variant="light"
+              color="red"
+              radius="md"
+            >
+              Retry
+            </Button>
+          </Flex>
+        )}
         <Paper bg={disabled ? "gray.1" : "white"} py="xs" px="sm" w="100%">
           <form
             onSubmit={(ev) => {

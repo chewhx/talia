@@ -13,9 +13,9 @@ export const AnnouncementDraftSchema = z.object({
   content: z
     .string()
     .min(1)
-    .max(100)
+    .max(2000)
     .describe(
-      "Detailed announcement content (50-100 characters). Include key information, important dates, and any necessary instructions. Use clear and concise language suitable for parents and guardians."
+      "Detailed announcement content (50-2000 characters). Include key information, important dates, and any necessary instructions. Use clear and concise language suitable for parents and guardians."
     ),
   enquiryEmailAddress: z
     .string()
@@ -27,9 +27,8 @@ export const AnnouncementDraftSchema = z.object({
         email.endsWith("@schools.gov.sg"),
       "Email must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg"
     )
-    .default("parentsgateway.otp@gmail.com")
     .describe(
-      "The default value is the user's pre-filled email. Only request changes when the user asks. The official contact email must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg. This email will be visible to parents for inquiries about the announcement."
+      "Official contact email for inquiries. Must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg. This email will be visible to parents for any questions regarding the announcement."
     ),
   // staffGroups: z
   //   .array(
