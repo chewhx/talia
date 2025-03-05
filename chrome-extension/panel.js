@@ -5,7 +5,10 @@ window.addEventListener("message", (event) => {
   if (
     origin !== "http://localhost:3000" &&
     origin !== "http://localhost:8082" &&
-    origin !== "https://dev-pg.moe.edu.sg"
+    origin !== "https://dev-pg.moe.edu.sg" &&
+    origin !== "https://stable-pg.moe.edu.sg" &&
+    origin !== "https://qe-pg.moe.edu.sg" &&
+    origin !== "https://heytalia.vercel.app"
   ) {
     return;
   }
@@ -132,7 +135,8 @@ function identifyTargetWebsite(url) {
     urlLower.includes("localhost:8082") ||
     urlLower.includes("dev-pg.moe.edu.sg") ||
     urlLower.includes("qe-pg.moe.edu.sg") ||
-    urlLower.includes("u-pg.moe.edu.sg")
+    urlLower.includes("u-pg.moe.edu.sg") ||
+    urlLower.includes("stable-pg.moe.edu.sg")
   )
     return "PG";
 
