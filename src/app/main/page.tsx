@@ -80,41 +80,6 @@ export default function MainPage() {
   // Scrolling state and refs
   const contentRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isFirstRender = useRef(true);
-
-  // const scrollToBottom = useCallback((smooth = true) => {
-  //   if (messagesEndRef.current) {
-  //     messagesEndRef.current.scrollIntoView({
-  //       behavior: "auto",
-  //     });
-  //   }
-  // }, []);
-
-  // Scroll on first render and when new messages are added
-  // useLayoutEffect(() => {
-  //   if (isFirstRender.current) {
-  //     scrollToBottom();
-  //     isFirstRender.current = false;
-  //   }
-  // }, [scrollToBottom]);
-
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [messages, scrollToBottom]);
-
-  // useEffect(() => {
-  //   if (status === "submitted") {
-  //     const scrollInterval = setInterval(scrollToBottom, 3000);
-  //     return () => clearInterval(scrollInterval);
-  //   }
-  // }, [status, scrollToBottom]);
-
-  // if (error) {
-  //   append({
-  //     content: error?.message,
-  //     role: "system",
-  //   });
-  // }
 
   const { targetRef, scrollIntoView } = useScrollIntoView<HTMLDivElement>();
   const { ref, inViewport } = useInViewport();
