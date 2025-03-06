@@ -30,6 +30,7 @@ import { ToolCallConfirmationMessage } from "./tool-call-confirmation-message";
 import { formatKey } from "@/utils/helper";
 import remarkGfm from "remark-gfm";
 import { useUserNeedToCallTool } from "./user-need-call-tool-hook";
+import markdownit from "markdown-it";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -481,10 +482,13 @@ const useToolActions = (
           return;
         }
 
+        // commonmark mode
+
+        const md = markdownit({ breaks: true });
         await callExtensionFunction({
           requestBody: {
             action: TALIA_EVENTS.actions.FILL_FORM_REQUEST,
-            data: content,
+            data: md.render(content),
           },
           callback: () => addToolResult({ toolCallId, result: option.result }),
         });

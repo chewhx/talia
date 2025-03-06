@@ -1,5 +1,6 @@
 import { env } from "@/env";
 import {
+  Anchor,
   AppShell,
   AppShellHeader,
   AppShellMain,
@@ -10,6 +11,7 @@ import {
   Text,
 } from "@mantine/core";
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
 
