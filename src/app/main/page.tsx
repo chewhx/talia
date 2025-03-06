@@ -3,6 +3,7 @@
 import AIMessage from "@/components/ai-message/ai-message";
 import HumanMessage from "@/components/human-message";
 import PromptInput from "@/components/prompt-input/prompt-input";
+import { PromptShortcuts } from "@/components/prompt-shortcuts";
 import { Message, useChat } from "@ai-sdk/react";
 import {
   Box,
@@ -14,25 +15,35 @@ import {
   Text,
   TypographyStylesProvider,
 } from "@mantine/core";
+import { ChatRequestOptions, generateId } from "ai";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
-import { ExtensionActionButton } from "@/components/extension-action-buttons";
 
 export default function MainPage() {
   const {
     messages,
     input,
+    status,
+    error,
     handleInputChange,
     handleSubmit,
-    status,
     stop,
     addToolResult,
-    error,
     reload,
+    setMessages,
     append,
   } = useChat({
-    maxSteps: 10,
+    async onError(error) {
+      setMessages((existingMessage) => [
+        ...existingMessage,
+        {
+          role: "assistant",
+          content: error.message,
+          id: generateId(),
+        },
+      ]);
+    },
   });
 
   const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
@@ -47,6 +58,21 @@ export default function MainPage() {
     )
   );
 
+  const customReload = async (_chatRequestOptions?: ChatRequestOptions) => {
+    if (error !== null && error?.message && status === "error") {
+      const errors = JSON.stringify(
+        error.message.match(/-\s\*\*(.+?)\*\*:\s(.+)/g)
+      );
+
+      return await reload({
+        allowEmptySubmit: true,
+        data: {
+          error: errors,
+        },
+      });
+    }
+  };
+
   // Scrolling state and refs
   const contentRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -55,7 +81,8 @@ export default function MainPage() {
   const scrollToBottom = useCallback((smooth = true) => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({
-        behavior: "auto",
+        behavior: "smooth",
+        block: "start",
       });
     }
   }, []);
@@ -79,13 +106,6 @@ export default function MainPage() {
     }
   }, [status, scrollToBottom]);
 
-  if (error) {
-    append({
-      content: error?.message,
-      role: "system",
-    });
-  }
-
   return (
     <Box style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <Container
@@ -97,7 +117,6 @@ export default function MainPage() {
           width: "100%",
         }}
       >
-        {/* <ExtensionActionButton /> */}
         <Box
           ref={contentRef}
           style={{
@@ -111,12 +130,14 @@ export default function MainPage() {
             {!messages.length ? (
               <Stack gap={0}>
                 <Space h={100} />
-                <Text c="orange" fw={600} fz="xl" m={0}>
-                  Hey there!
+                <Text c="var(--talia-purple-1)" fw={700} fz="xl" m={0}>
+                  Hey Jane!
                 </Text>
                 <Text fz="xl" fw={600}>
                   How may I help you today?
                 </Text>
+
+                <PromptShortcuts append={append} />
               </Stack>
             ) : (
               <Stack>
@@ -149,6 +170,7 @@ export default function MainPage() {
       </Container>
 
       <PromptInput
+        customSubmit={customReload}
         error={error}
         disabled={pendingToolCallConfirmation}
         stop={stop}
@@ -156,7 +178,7 @@ export default function MainPage() {
         input={input}
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
-        reload={reload}
+        reload={customReload}
       />
     </Box>
   );

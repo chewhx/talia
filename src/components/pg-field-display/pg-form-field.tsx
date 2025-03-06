@@ -1,5 +1,6 @@
 import { Anchor, Box, Group, Paper, Stack, Text } from "@mantine/core";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export interface EventStartEndDate {
   date: string;
@@ -58,14 +59,14 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
 
   return (
     <Stack>
-      <Paper shadow="xs" p="md" bg="white">
+      <Paper shadow="xs" p="md" bg="white" fz="sm">
         {/* Status */}
         <Group align="flex-start" mb="md">
-          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+          <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
             Status:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
               {status}
             </Text>
           </Box>
@@ -73,11 +74,11 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
 
         {/* Enquiry Email */}
         <Group align="flex-start" mb="md">
-          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+          <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
             Enquiry Email:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
               {enquiryEmailAddress}
             </Text>
           </Box>
@@ -85,11 +86,11 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
 
         {/* Title */}
         <Group align="flex-start" mb="md">
-          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+          <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
             Title:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
               {title}
             </Text>
           </Box>
@@ -97,14 +98,15 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
 
         {/* Content */}
         <Group align="flex-start" mb="md">
-          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+          <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
             Content:
           </Text>
           <Box style={{ flex: 1 }}>
             <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
               components={{
-                div: ({ children }) => (
-                  <Text fz="md" style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                p: ({ children }) => (
+                  <Text fz="sm" style={{ margin: 0, whiteSpace: "pre-wrap" }}>
                     {children}
                   </Text>
                 ),
@@ -118,14 +120,14 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
         {/* Shortcuts */}
         {shortcuts && shortcuts.length > 0 && (
           <Group align="flex-start">
-            <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
               Shortcuts:
             </Text>
             <Box style={{ flex: 1 }}>
               {shortcuts.map((url, index) => (
                 <Text
                   key={index}
-                  fz="md"
+                  fz="sm"
                   style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
                 >
                   {index + 1}.{" "}
@@ -141,14 +143,14 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
         {/* URLs */}
         {urls && urls.length > 0 && (
           <Group align="flex-start" mb="md">
-            <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
               Website link:
             </Text>
             <Box style={{ flex: 1 }}>
               {urls.map((url, index) => (
                 <Text
                   key={index}
-                  fz="md"
+                  fz="sm"
                   style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
                 >
                   {index + 1}.{" "}
@@ -167,11 +169,11 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
 
         {/* Response Type */}
         <Group align="flex-start" mb="md">
-          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+          <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
             Response Type:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
               {responseType}
             </Text>
           </Box>
@@ -180,14 +182,14 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
         {/* URLs */}
         {urls && urls.length > 0 && (
           <Group align="flex-start" mb="md">
-            <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
               Website link:
             </Text>
             <Box style={{ flex: 1 }}>
               {urls.map((url, index) => (
                 <Text
                   key={index}
-                  fz="md"
+                  fz="sm"
                   style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
                 >
                   {index + 1}.{" "}
@@ -207,11 +209,11 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
         {/* Event Start Date */}
         {eventStartDate && (
           <Group align="flex-start" mb="md">
-            <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
               Event Start:
             </Text>
             <Box style={{ flex: 1 }}>
-              <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
+              <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
                 {formatDate(eventStartDate.date, eventStartDate.time)}
               </Text>
             </Box>
@@ -221,11 +223,11 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
         {/* Event End Date */}
         {eventEndDate && (
           <Group align="flex-start" mb="md">
-            <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
               Event End:
             </Text>
             <Box style={{ flex: 1 }}>
-              <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
+              <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
                 {formatDate(eventEndDate.date, eventEndDate.time)}
               </Text>
             </Box>
@@ -236,11 +238,11 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
 
         {venue && (
           <Group align="flex-start" mb="md">
-            <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
               Venue:
             </Text>
             <Box style={{ flex: 1 }}>
-              <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
+              <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
                 {venue}
               </Text>
             </Box>
@@ -249,11 +251,11 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
 
         {/* Consent By Date */}
         <Group align="flex-start" mb="md">
-          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+          <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
             Consent By:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
               {new Date(consentByDate).toLocaleDateString()}
             </Text>
           </Box>
@@ -261,11 +263,11 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
 
         {/* Reminder Type */}
         <Group align="flex-start" mb="md">
-          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+          <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
             Reminder Type:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
               {addReminderType}
             </Text>
           </Box>
@@ -273,13 +275,13 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
 
         {questions && questions.length > 0 && (
           <Group align="flex-start" mb="md">
-            <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
               Questions:
             </Text>
             <Box style={{ flex: 1 }}>
               {questions.map((question, index) => (
                 <Box key={question.id} mb="sm">
-                  <Text fz="md" fw={600}>
+                  <Text fz="sm" fw={600}>
                     {index + 1}. {question.title}
                   </Text>
                   <Text fz="sm" c="gray.6" mb="xs">
@@ -288,7 +290,7 @@ export const PGFormField: React.FC<EventFieldsProps> = ({ data }) => {
                   {question.type !== "text" && question.choices && (
                     <Box ml="md">
                       {question.choices.map((choice, choiceIndex) => (
-                        <Text key={choiceIndex} fz="md">
+                        <Text key={choiceIndex} fz="sm">
                           - {choice.label}
                         </Text>
                       ))}

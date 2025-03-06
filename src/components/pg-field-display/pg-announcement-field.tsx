@@ -1,6 +1,7 @@
 import { Anchor, Box, Group, Paper, Stack, Text } from "@mantine/core";
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface AnnouncementFieldsProps {
   data: AnnouncementData;
@@ -27,26 +28,26 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
 
   return (
     <Stack>
-      <Paper shadow="xs" p="md" bg="white">
+      <Paper shadow="xs" p="md" bg="white" fz="sm">
         {/* Status */}
         <Group align="flex-start" mb="md">
-          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+          <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
             Status:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
-              {status}
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
+              {status.at(0)?.toUpperCase() + status.slice(1)}
             </Text>
           </Box>
         </Group>
 
         {/* Enquiry Email */}
         <Group align="flex-start" mb="md">
-          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+          <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
             Enquiry Email:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
               {enquiryEmailAddress}
             </Text>
           </Box>
@@ -54,11 +55,11 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
 
         {/* Title */}
         <Group align="flex-start" mb="md">
-          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+          <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
             Title:
           </Text>
           <Box style={{ flex: 1 }}>
-            <Text fz="md" style={{ whiteSpace: "pre-wrap" }}>
+            <Text fz="sm" style={{ whiteSpace: "pre-wrap" }}>
               {title}
             </Text>
           </Box>
@@ -66,14 +67,15 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
 
         {/* Content */}
         <Group align="flex-start" mb="md">
-          <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+          <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
             Content:
           </Text>
           <Box style={{ flex: 1 }}>
             <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
               components={{
-                div: ({ children }) => (
-                  <Text fz="sm" style={{ margin: 0 }}>
+                p: ({ children }) => (
+                  <Text fz="sm" style={{ margin: 0, whiteSpace: "pre-wrap" }}>
                     {children}
                   </Text>
                 ),
@@ -87,14 +89,14 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
         {/* Shortcuts */}
         {shortcuts && shortcuts.length > 0 && (
           <Group align="flex-start">
-            <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
               Shortcuts:
             </Text>
             <Box style={{ flex: 1 }}>
               {shortcuts.map((url, index) => (
                 <Text
                   key={index}
-                  fz="md"
+                  fz="sm"
                   style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
                 >
                   {index + 1}.{" "}
@@ -110,14 +112,14 @@ export const PGAnnouncementFields: React.FC<AnnouncementFieldsProps> = ({
         {/* URLs */}
         {urls && urls.length > 0 && (
           <Group align="flex-start" mb="md">
-            <Text fw={600} fz="md" c="gray.7" style={{ width: 130 }}>
+            <Text fw={600} fz="sm" c="gray.7" style={{ width: 130 }}>
               Website link:
             </Text>
             <Box style={{ flex: 1 }}>
               {urls.map((url, index) => (
                 <Text
                   key={index}
-                  fz="md"
+                  fz="sm"
                   style={{ whiteSpace: "pre-wrap", marginBottom: 4 }}
                 >
                   {index + 1}.{" "}

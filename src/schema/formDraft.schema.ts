@@ -101,7 +101,7 @@ export const FormDraftSchema = z.object({
   enquiryEmailAddress: z
     .string()
     .email()
-    .default("parentsgateway.otp@gmail.com")
+    .default("jane@gmail.com")
     .refine(
       (email) =>
         ["@gmail.com", "@moe.edu.sg", "@schools.gov.sg"].some((domain) =>
@@ -115,12 +115,14 @@ export const FormDraftSchema = z.object({
   responseType: z
     .enum(["YES_NO", "ACKNOWLEDGEMENT"])
     .describe(
-      "The type of response required for the form. Rephrase it to 'Yes or No' and 'Acknowledgement' when display for user."
+      "The type of response required for the form. Prompt YES_NO to 'Yes or No' and ACKNOWLEDGEMENT to 'Acknowledgement' when display for user."
     ),
   venue: z
     .string()
     .optional()
-    .describe("The location where the event will take place"),
+    .describe(
+      "The location where the event will take place. It is a optional field"
+    ),
   eventStartDate: z
     .object({
       date: z.string().describe("The start date of the event (YYYY-MM-DD)"),
@@ -145,12 +147,12 @@ export const FormDraftSchema = z.object({
     )
     .max(3)
     .optional()
-    .describe("Related website links (max 3). It is optional."),
+    .describe("Related website links (max 3). It is a optional field."),
   shortcuts: z
     .array(z.string())
     .optional()
     .describe(
-      "Shortcut URLs for quick access to other websites/apps. It is optional"
+      "Shortcut URLs for quick access to other websites/apps. It is a optional field."
     ),
   questions: FormQuestionsSchema,
 
