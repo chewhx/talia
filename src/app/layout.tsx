@@ -14,6 +14,7 @@ import { Notifications } from "@mantine/notifications";
 export const metadata: Metadata = {
   title: "Hey Talia",
   description: "Chatbot",
+  icons: "/favicon.png",
 };
 
 const theme = createTheme({

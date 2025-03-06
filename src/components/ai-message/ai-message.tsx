@@ -17,7 +17,6 @@ import {
   SimpleGrid,
   Stack,
   Text,
-  UnstyledButton,
 } from "@mantine/core";
 import { Message, ToolInvocation } from "ai";
 import { useState } from "react";
@@ -26,6 +25,10 @@ import { TALIA_EVENTS } from "../../../shared/constants";
 import Markdown from "../markdown";
 import { PGAnnouncementFields } from "../pg-field-display/pg-announcement-field";
 import { PGFormField } from "../pg-field-display/pg-form-field";
+import { ToolCallButton } from "./tool-call-buttons";
+import { ToolCallConfirmationMessage } from "./tool-call-confirmation-message";
+import { formatKey } from "@/utils/helper";
+import remarkGfm from "remark-gfm";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -78,28 +81,17 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
             </Paper>
             <Paper px="xs" py="5" fz="md" bg="white" w="100%">
               <div dangerouslySetInnerHTML={{ __html: args.emailContent }} />
-              {/* <Markdown>{args.emailContent}</Markdown> */}
             </Paper>
+
             <SimpleGrid cols={2}>
               {options.map((option: ToolOption) => (
-                <UnstyledButton
-                  key={`toolCall-${toolCallId}-option-${option.title}`}
+                <ToolCallButton
+                  option={option}
                   onClick={() =>
                     addToolResult({ toolCallId, result: option.result })
                   }
-                  className="custom-tool-button"
-                >
-                  <Paper shadow="sm" radius={0} bg="var(--talia-orange)" p="sm">
-                    <Stack gap={0}>
-                      <Text fw={500} m={0} fz="sm">
-                        {option.title}
-                      </Text>
-                      <Text fz="xs" c="gray">
-                        {option.description}
-                      </Text>
-                    </Stack>
-                  </Paper>
-                </UnstyledButton>
+                  toolCallId={toolCallId}
+                />
               ))}
             </SimpleGrid>
           </Stack>
@@ -112,24 +104,29 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
 
         return (
           <Stack key={toolCallId}>
-            <Paper px="md" py="lg" bg="white" shadow="xs" radius="md">
-              <Stack>
-                <Text fz="lg" fw={700} c="var(--mantine-color-dark)">
-                  📌 Draft Information
+            <Paper px="md" py="lg" bg="white" radius="md">
+              <Stack fz="sm">
+                <Text fz="sm" m={0}>
+                  Sure, Jane!
                 </Text>
                 <Divider />
+
                 {isAnnouncement ? (
                   <PGAnnouncementFields data={fields} />
                 ) : (
                   <PGFormField data={fields} />
                 )}
+
+                <Divider />
+
+                <ToolCallConfirmationMessage platform="Parent Gateway (PG)" />
               </Stack>
             </Paper>
             {!isLoading && (
               <SimpleGrid cols={2}>
                 {options.map((option: ToolOption) => (
-                  <UnstyledButton
-                    key={`toolCall-${toolCallId}-option-${option.title}`}
+                  <ToolCallButton
+                    option={option}
                     onClick={() =>
                       createDraft({
                         fields,
@@ -140,24 +137,8 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
                         option,
                       })
                     }
-                    className="custom-tool-button"
-                  >
-                    <Paper
-                      shadow="sm"
-                      radius={0}
-                      bg="var(--talia-orange)"
-                      p="sm"
-                    >
-                      <Stack gap={0}>
-                        <Text fw={500} m={0} fz="sm">
-                          {option.title}
-                        </Text>
-                        <Text fz="xs" c="gray">
-                          {option.description}
-                        </Text>
-                      </Stack>
-                    </Paper>
-                  </UnstyledButton>
+                    toolCallId={toolCallId}
+                  />
                 ))}
               </SimpleGrid>
             )}
@@ -165,16 +146,19 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
         );
 
       case "createSLSAnnouncement":
-      case "createClassroomAnnouncement":
+      case "createClassroomAnnouncement": {
+        const isSLS = toolName === "createSLSAnnouncement";
+
         return (
           <Stack key={toolCallId}>
-            <Paper px="md" py="lg" bg="white" shadow="xs" radius="md">
-              <Stack>
-                <Text fz="lg" fw={700} c="var(--mantine-color-dark)">
-                  📌 Announcement Information
+            <Paper px="md" py="lg" bg="white" radius="md">
+              <Stack fz="sm">
+                <Text fz="sm" m={0}>
+                  Sure, Jane!
                 </Text>
                 <Divider />
-                {toolName === "createSLSAnnouncement" ? (
+
+                {isSLS ? (
                   Object.entries(args.fields).map(
                     ([key, field]: [string, any]) => (
                       <Group key={key} align="flex-start">
@@ -215,9 +199,13 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
                     </Text>
                     <Box style={{ flex: 1 }}>
                       <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
                         components={{
                           p: ({ children }) => (
-                            <Text fz="sm" style={{ margin: 0 }}>
+                            <Text
+                              fz="sm"
+                              style={{ margin: 0, whiteSpace: "pre-wrap" }}
+                            >
                               {children}
                             </Text>
                           ),
@@ -228,15 +216,23 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
                     </Box>
                   </Group>
                 )}
+
+                <Divider />
+
+                <ToolCallConfirmationMessage
+                  platform={
+                    isSLS ? "Student Learning Space (SLS)" : "Google Classroom"
+                  }
+                />
               </Stack>
             </Paper>
             <SimpleGrid cols={2}>
               {!isLoading &&
                 options.map((option: ToolOption) => (
-                  <UnstyledButton
-                    key={`toolCall-${toolCallId}-option-${option.title}`}
+                  <ToolCallButton
+                    option={option}
                     onClick={() =>
-                      toolName === "createSLSAnnouncement"
+                      isSLS
                         ? preFillSLSFormHandling(
                             option,
                             args.fields,
@@ -248,28 +244,13 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
                             toolCallId
                           )
                     }
-                    className="custom-tool-button"
-                  >
-                    <Paper
-                      shadow="sm"
-                      radius={0}
-                      bg="var(--talia-orange)"
-                      p="sm"
-                    >
-                      <Stack gap={0}>
-                        <Text fw={500} m={0} fz="sm">
-                          {option.title}
-                        </Text>
-                        <Text fz="xs" c="gray">
-                          {option.description}
-                        </Text>
-                      </Stack>
-                    </Paper>
-                  </UnstyledButton>
+                    toolCallId={toolCallId}
+                  />
                 ))}
             </SimpleGrid>
           </Stack>
         );
+      }
 
       default:
         return null;
@@ -313,12 +294,6 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
 
 /* Helper Functions */
 
-const formatKey = (key: string) => {
-  return key
-    .replace(/([a-z])([A-Z])/g, "$1 $2") // Add space before uppercase letters
-    .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
-};
-
 const useToolActions = (
   addToolResult: AIMessageProps["addToolResult"],
   setIsLoading?: (isLoading: boolean) => void
@@ -336,7 +311,7 @@ const useToolActions = (
           addToolResult({
             toolCallId,
             result:
-              "Error: Please ensure you are logged in and on the correct Student Learning Space (SLS) page before attempting to pre-fill content.",
+              "Error: Ensure you're on the Student Learning Space (SLS) tab and logged in before attempting to pre-fill content.",
           });
           return;
         }
@@ -406,7 +381,7 @@ const useToolActions = (
           addToolResult({
             toolCallId,
             result:
-              "Error: Please ensure you are on the Parent Gateway (PG) website. You may need to log in if you're not already logged in, or navigate to the Parent Gateway website if you're on the wrong one.",
+              "Error: Ensure you're on the Parent Gateway (PG) tab and logged in before attempting to create draft.",
           });
           return;
         }
@@ -494,7 +469,7 @@ const useToolActions = (
           addToolResult({
             toolCallId,
             result:
-              "Error: Please ensure you are on the Google Classroom website and on the specific class you want to post or pre-fill content for. You may need to log in if you're not already logged in, or navigate to the correct page if you're on the wrong one.",
+              "Error: Ensure you're on the Google Classroom tab and logged in before attempting to pre-fill content.",
           });
           return;
         }

@@ -5,12 +5,15 @@ import {
   AppShellMain,
   Container,
   Group,
+  Image,
   Space,
   Text,
 } from "@mantine/core";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
+
+const logoImg = "/favicon.png";
 
 export default function Layout({ children }: { readonly children: ReactNode }) {
   const cookieStore = cookies();
@@ -21,12 +24,18 @@ export default function Layout({ children }: { readonly children: ReactNode }) {
   }
 
   return (
-    <AppShell header={{ height: 50 }} withBorder={false}>
+    <AppShell
+      header={{ height: 50 }}
+      withBorder={false}
+      bg={"var(--talia-background)"}
+    >
       <AppShellHeader>
         <Container size="sm">
           <Group align="center" h="50">
-            <Text fz="lg" fw={600} style={{ letterSpacing: "-0.03em" }}>
-              HeyTalia
+            <Image radius="md" src={logoImg} fit="contain" w="auto" h={28} />
+            <Text fz="lg" fw={600}>
+              <span>Hey</span>
+              <span style={{ color: "var(--talia-purple-1)" }}>Talia</span>
             </Text>
           </Group>
         </Container>

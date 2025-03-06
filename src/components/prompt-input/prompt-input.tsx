@@ -40,6 +40,7 @@ export default function PromptInput({
   reload,
   error,
 }: {
+  customSubmit?: (ev: any) => void;
   disabled?: boolean;
 } & Pick<
   ReturnType<typeof useChat>,
@@ -77,21 +78,17 @@ export default function PromptInput({
         width: "100%",
         background: "var(--talia-gray)",
         zIndex: 100,
-        padding: "12px 0",
+        padding: "12px 0 0 0",
       }}
     >
       <Container size="sm">
         {error && (
           <Flex align="center" justify="center" my={10} gap="md">
-            <Text c="red" fw={600} size="md">
-              Oops! Something went wrong.
-            </Text>
             <Button
-              leftSection={<IconReload size={18} />}
+              leftSection={<IconReload size={16} />}
               onClick={() => reload()}
-              variant="light"
-              color="red"
-              radius="md"
+              radius="sm"
+              fw="bold"
             >
               Retry
             </Button>
@@ -126,6 +123,7 @@ export default function PromptInput({
               >
                 <Textarea
                   disabled={disabled}
+                  autoFocus={true}
                   name="prompt"
                   value={input}
                   onChange={handleInputChange}
@@ -248,6 +246,12 @@ export default function PromptInput({
             </Stack>
           </form>
         </Paper>
+
+        <Flex align="center" justify="center" my={5}>
+          <Text fz="xs" c="var(--talia-dimmed)">
+            HeyTalia can make mistakes. Please double-check responses.
+          </Text>
+        </Flex>
       </Container>
     </Box>
   );

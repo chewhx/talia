@@ -81,64 +81,36 @@ export async function processToolCalls<
 
       let result;
 
-      try {
-        if (toolInvocation.result === APPROVAL.YES) {
-          // Get the tool and check if the tool has an execute function.
-          if (
-            !isValidToolName(toolName, executeFunctions) ||
-            toolInvocation.state !== "result"
-          ) {
-            return part;
-          }
-
-          const toolInstance = executeFunctions[toolName];
-          if (toolInstance) {
-            result = await toolInstance(
-              {
-                ...toolInvocation.args,
-                postType: toolInvocation.result || "",
-              },
-              {
-                messages: convertToCoreMessages(messages),
-                toolCallId: toolInvocation.toolCallId,
-              }
-            );
-          } else {
-            result =
-              "I'm sorry, but I'm unable to perform this action at the moment. The requested feature isn't available.";
-          }
-        } else if (toolInvocation.result === APPROVAL.NO) {
-          result = "I understand. I won't proceed with this action.";
-        } else {
-          // For any unhandled responses, return the original part.
+      if (toolInvocation.result === APPROVAL.YES) {
+        // Get the tool and check if the tool has an execute function.
+        if (
+          !isValidToolName(toolName, executeFunctions) ||
+          toolInvocation.state !== "result"
+        ) {
           return part;
         }
-      } catch (error) {
-        console.error(`Error executing tool ${toolName}:`, error);
 
-        let errorMessage: string;
-
-        if (error instanceof z.ZodError) {
-          // Format Zod validation errors
-          const issues = error.issues
-            .map((issue) => `${issue.path.join(".")} - ${issue.message}`)
-            .join(". ");
-
-          errorMessage = `I couldn't complete that action because some information was missing or invalid: ${issues}`;
-        } else if (error instanceof Error) {
-          // For standard errors, use the message but don't expose technical details
-          errorMessage = `I encountered a problem: ${formatErrorMessage(
-            error.message
-          )}`;
+        const toolInstance = executeFunctions[toolName];
+        if (toolInstance) {
+          result = await toolInstance(
+            {
+              ...toolInvocation.args,
+              postType: toolInvocation.result || "",
+            },
+            {
+              messages: convertToCoreMessages(messages),
+              toolCallId: toolInvocation.toolCallId,
+            }
+          );
         } else {
-          // For unknown error types
-          errorMessage =
-            "I encountered an unexpected issue while trying to complete that action. Please try again with different information.";
+          result =
+            "I'm sorry, but I'm unable to perform this action at the moment. The requested feature isn't available.";
         }
-
-        result = errorMessage;
-
-        dataStream.write(formatDataStreamPart("text", errorMessage));
+      } else if (toolInvocation.result === APPROVAL.NO) {
+        result = "I understand. I won't proceed with this action.";
+      } else {
+        // For any unhandled responses, return the original part.
+        return part;
       }
 
       // Forward updated tool result to the client.

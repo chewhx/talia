@@ -5,6 +5,12 @@
 :root {
   --talia-gray: #f5f7fa;
   --talia-orange: #fff0e8;
+  --talia-background: #f5f7fa;
+  --talia-purple-1: #9575cd;
+  --talia-purple-2: #ede7f6;
+  --talia-disabled: #e9ecef;
+  --talia-title: #21273f;
+  --talia-dimmed: #777b8a;
 }
 
 body {
