@@ -21,7 +21,7 @@ export default function Home() {
       </Center>
 
       <Center>
-        <Text size="sm">version 0.0.1</Text>
+        <Text size="sm">v2.0.0</Text>
       </Center>
     </Container>
   );
