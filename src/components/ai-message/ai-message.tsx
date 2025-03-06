@@ -5,7 +5,10 @@ import {
   callExtensionFunction,
   getToolsRequiringConfirmation,
 } from "@/app/api/chat/utils";
-import { parseToTiptap } from "@/app/api/generateRichText/utils";
+import {
+  getSupportedExtensions,
+  parseToTiptap,
+} from "@/app/api/generateRichText/utils";
 import { mapFieldsToSchema } from "@/schema/studentLearningSpace.schema";
 import { useChat } from "@ai-sdk/react";
 import {
@@ -31,6 +34,7 @@ import { formatKey } from "@/utils/helper";
 import remarkGfm from "remark-gfm";
 import { useUserNeedToCallTool } from "./user-need-call-tool-hook";
 import { md } from "./markdown-it.util";
+import { generateJSON } from "@tiptap/html";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -394,33 +398,16 @@ const useToolActions = (
           return;
         }
 
-        const richTextContent = await fetch("/api/generateRichText", {
-          method: "POST",
-          body: JSON.stringify({ content: fields?.content }),
-        });
+        const html = md.render(fields?.content);
 
-        const formattedContent =
-          (await richTextContent.json())?.object?.content ?? "";
-        if (formattedContent) {
-          const parsedContent = JSON.stringify(
-            parseToTiptap(formattedContent, true)
-          );
+        const json = generateJSON(
+          html.replaceAll("\n", "<p><br/></p>"),
+          getSupportedExtensions()
+        );
 
-          fields.content = parsedContent ?? fields.content;
-        }
+        fields.content = JSON.stringify(json);
 
         const draftDetails = await callExtensionFunction({
-          requestBody: {
-            action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
-            data: fields,
-            type: postType,
-          },
-          responseAction: TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE,
-        });
-
-        console.log({
-          richTextContent,
-          formattedContent,
           requestBody: {
             action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
             data: fields,
