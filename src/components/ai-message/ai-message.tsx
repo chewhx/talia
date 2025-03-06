@@ -5,7 +5,10 @@ import {
   callExtensionFunction,
   getToolsRequiringConfirmation,
 } from "@/app/api/chat/utils";
-import { parseToTiptap } from "@/app/api/generateRichText/utils";
+import {
+  getSupportedExtensions,
+  parseToTiptap,
+} from "@/app/api/generateRichText/utils";
 import { mapFieldsToSchema } from "@/schema/studentLearningSpace.schema";
 import { useChat } from "@ai-sdk/react";
 import {
@@ -29,6 +32,9 @@ import { ToolCallButton } from "./tool-call-buttons";
 import { ToolCallConfirmationMessage } from "./tool-call-confirmation-message";
 import { formatKey } from "@/utils/helper";
 import remarkGfm from "remark-gfm";
+import { useUserNeedToCallTool } from "./user-need-call-tool-hook";
+import { md } from "./markdown-it.util";
+import { generateJSON } from "@tiptap/html";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -41,6 +47,8 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { createDraft, preFillClassroomFormHandling, preFillSLSFormHandling } =
     useToolActions(addToolResult, setIsLoading);
+
+  const { toggleUserNeedToCallTool } = useUserNeedToCallTool();
 
   const renderToolInvocation = (toolInvocation: ToolInvocation) => {
     const { toolName, toolCallId, args } = toolInvocation;
@@ -129,7 +137,8 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
                   <ToolCallButton
                     key={`tool-call-button-${toolCallId}-${index}`}
                     option={option}
-                    onClick={() =>
+                    onClick={() => {
+                      toggleUserNeedToCallTool();
                       createDraft({
                         fields,
                         toolCallId,
@@ -137,8 +146,8 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
                           ? "PG_ANNOUNCEMENT"
                           : "PG_CONSENT_FORM",
                         option,
-                      })
-                    }
+                      });
+                    }}
                     toolCallId={toolCallId}
                   />
                 ))}
@@ -389,20 +398,14 @@ const useToolActions = (
           return;
         }
 
-        const richTextContent = await fetch("/api/generateRichText", {
-          method: "POST",
-          body: JSON.stringify({ content: fields?.content }),
-        });
+        const html = md.render(fields?.content);
 
-        const formattedContent =
-          (await richTextContent.json())?.object?.content ?? "";
-        if (formattedContent) {
-          const parsedContent = JSON.stringify(
-            parseToTiptap(formattedContent, true)
-          );
+        const json = generateJSON(
+          html.replaceAll("\n", "<p><br/></p>"),
+          getSupportedExtensions()
+        );
 
-          fields.content = parsedContent ?? fields.content;
-        }
+        fields.content = JSON.stringify(json);
 
         const draftDetails = await callExtensionFunction({
           requestBody: {
@@ -477,10 +480,13 @@ const useToolActions = (
           return;
         }
 
+        // commonmark mode
+        const data = md.render(content).replaceAll("\n", "<p></br></p>");
+
         await callExtensionFunction({
           requestBody: {
             action: TALIA_EVENTS.actions.FILL_FORM_REQUEST,
-            data: content,
+            data,
           },
           callback: () => addToolResult({ toolCallId, result: option.result }),
         });

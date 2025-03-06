@@ -1,6 +1,7 @@
 "use client";
 
 import AIMessage from "@/components/ai-message/ai-message";
+import { useUserNeedToCallTool } from "@/components/ai-message/user-need-call-tool-hook";
 import HumanMessage from "@/components/human-message";
 import PromptInput from "@/components/prompt-input/prompt-input";
 import { PromptShortcuts } from "@/components/prompt-shortcuts";
@@ -17,10 +18,13 @@ import {
 } from "@mantine/core";
 import { ChatRequestOptions, generateId } from "ai";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { useInViewport, useMergedRef, useScrollIntoView } from "@mantine/hooks";
+import React from "react";
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
 
 export default function MainPage() {
+  const { userNeedToCallTool } = useUserNeedToCallTool();
   const {
     messages,
     input,
@@ -76,35 +80,18 @@ export default function MainPage() {
   // Scrolling state and refs
   const contentRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isFirstRender = useRef(true);
 
-  const scrollToBottom = useCallback((smooth = true) => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+  const { targetRef, scrollIntoView } = useScrollIntoView<HTMLDivElement>();
+  const { ref, inViewport } = useInViewport();
+
+  const mergedRef = useMergedRef(targetRef, ref);
+
+  React.useEffect(() => {
+    console.log({ inViewport, status });
+    if (!inViewport && status === "streaming") {
+      scrollIntoView();
     }
-  }, []);
-
-  // Scroll on first render and when new messages are added
-  useLayoutEffect(() => {
-    if (isFirstRender.current) {
-      scrollToBottom();
-      isFirstRender.current = false;
-    }
-  }, [scrollToBottom]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
-
-  useEffect(() => {
-    if (status === "submitted") {
-      const scrollInterval = setInterval(scrollToBottom, 3000);
-      return () => clearInterval(scrollInterval);
-    }
-  }, [status, scrollToBottom]);
+  }, [inViewport, scrollIntoView, status]);
 
   return (
     <Box style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
@@ -122,8 +109,8 @@ export default function MainPage() {
           style={{
             flex: 1,
             overflowY: "auto",
-            paddingBottom: "20px",
             width: "100%",
+            position: "relative",
           }}
         >
           <TypographyStylesProvider>
@@ -154,7 +141,7 @@ export default function MainPage() {
                   );
                 })}
 
-                {(pendingToolCallConfirmation ||
+                {((pendingToolCallConfirmation && !userNeedToCallTool) ||
                   status === "streaming" ||
                   status === "submitted") && (
                   <Group justify="center" py="md">
@@ -166,9 +153,9 @@ export default function MainPage() {
               </Stack>
             )}
           </TypographyStylesProvider>
+          <Box h={20} ref={mergedRef} />
         </Box>
       </Container>
-
       <PromptInput
         customSubmit={customReload}
         error={error}

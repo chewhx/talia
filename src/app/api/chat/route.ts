@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     }
 
     // Logging to check the messages sent are correct
-    console.log(JSON.stringify(messages, null, 2));
+    // console.log(JSON.stringify(messages, null, 2));
 
     return createDataStreamResponse({
       execute: async (dataStream) => {
