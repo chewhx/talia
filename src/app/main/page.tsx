@@ -19,8 +19,12 @@ import { ChatRequestOptions, generateId } from "ai";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
+import { ExtensionActionButton } from "@/components/extension-action-buttons";
+import { create } from "zustand";
+import { useUserNeedToCallTool } from "@/components/ai-message/user-need-call-tool-hook";
 
 export default function MainPage() {
+  const { userNeedToCallTool } = useUserNeedToCallTool();
   const {
     messages,
     input,
@@ -154,7 +158,7 @@ export default function MainPage() {
                   );
                 })}
 
-                {(pendingToolCallConfirmation ||
+                {((pendingToolCallConfirmation && !userNeedToCallTool) ||
                   status === "streaming" ||
                   status === "submitted") && (
                   <Group justify="center" py="md">

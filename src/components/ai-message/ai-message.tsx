@@ -29,6 +29,7 @@ import { ToolCallButton } from "./tool-call-buttons";
 import { ToolCallConfirmationMessage } from "./tool-call-confirmation-message";
 import { formatKey } from "@/utils/helper";
 import remarkGfm from "remark-gfm";
+import { useUserNeedToCallTool } from "./user-need-call-tool-hook";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -41,6 +42,8 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { createDraft, preFillClassroomFormHandling, preFillSLSFormHandling } =
     useToolActions(addToolResult, setIsLoading);
+
+  const { toggleUserNeedToCallTool } = useUserNeedToCallTool();
 
   const renderToolInvocation = (toolInvocation: ToolInvocation) => {
     const { toolName, toolCallId, args } = toolInvocation;
@@ -129,7 +132,8 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
                   <ToolCallButton
                     key={`tool-call-button-${toolCallId}-${index}`}
                     option={option}
-                    onClick={() =>
+                    onClick={() => {
+                      toggleUserNeedToCallTool();
                       createDraft({
                         fields,
                         toolCallId,
@@ -137,8 +141,8 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
                           ? "PG_ANNOUNCEMENT"
                           : "PG_CONSENT_FORM",
                         option,
-                      })
-                    }
+                      });
+                    }}
                     toolCallId={toolCallId}
                   />
                 ))}
