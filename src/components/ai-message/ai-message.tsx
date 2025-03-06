@@ -84,8 +84,9 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
             </Paper>
 
             <SimpleGrid cols={2}>
-              {options.map((option: ToolOption) => (
+              {options.map((option: ToolOption, index) => (
                 <ToolCallButton
+                  key={`tool-call-button-${toolCallId}-${index}`}
                   option={option}
                   onClick={() =>
                     addToolResult({ toolCallId, result: option.result })
@@ -124,8 +125,9 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
             </Paper>
             {!isLoading && (
               <SimpleGrid cols={2}>
-                {options.map((option: ToolOption) => (
+                {options.map((option: ToolOption, index) => (
                   <ToolCallButton
+                    key={`tool-call-button-${toolCallId}-${index}`}
                     option={option}
                     onClick={() =>
                       createDraft({
@@ -228,8 +230,9 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
             </Paper>
             <SimpleGrid cols={2}>
               {!isLoading &&
-                options.map((option: ToolOption) => (
+                options.map((option: ToolOption, index) => (
                   <ToolCallButton
+                    key={`tool-call-button-${toolCallId}-${index}`}
                     option={option}
                     onClick={() =>
                       isSLS

@@ -9,7 +9,7 @@ export const ToolCallConfirmationMessage = ({
 }: ToolCallConfirmationMessageProps) => {
   return (
     <Text fw={500} m={0} fz="sm">
-      📌 Ensure you're on the{" "}
+      📌 Ensure you are on the{" "}
       <span
         style={{
           fontWeight: "bold",

@@ -32,7 +32,14 @@ export default function Layout({ children }: { readonly children: ReactNode }) {
       <AppShellHeader>
         <Container size="sm">
           <Group align="center" h="50">
-            <Image radius="md" src={logoImg} fit="contain" w="auto" h={28} />
+            <Image
+              radius="md"
+              src={logoImg}
+              fit="contain"
+              w="auto"
+              h={28}
+              alt="logo"
+            />
             <Text fz="lg" fw={600}>
               <span>Hey</span>
               <span style={{ color: "var(--talia-purple-1)" }}>Talia</span>
