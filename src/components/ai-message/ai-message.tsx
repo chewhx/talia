@@ -30,7 +30,7 @@ import { ToolCallConfirmationMessage } from "./tool-call-confirmation-message";
 import { formatKey } from "@/utils/helper";
 import remarkGfm from "remark-gfm";
 import { useUserNeedToCallTool } from "./user-need-call-tool-hook";
-import markdownit from "markdown-it";
+import { md } from "./markdown-it.util";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -418,6 +418,17 @@ const useToolActions = (
           responseAction: TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE,
         });
 
+        console.log({
+          richTextContent,
+          formattedContent,
+          requestBody: {
+            action: TALIA_EVENTS.actions.PG_DRAFT_REQUEST,
+            data: fields,
+            type: postType,
+          },
+          responseAction: TALIA_EVENTS.listeners.PG_DRAFT_RESPONSE,
+        });
+
         if (draftDetails?.result?.error) {
           throw new Error(
             `Unexpected error while creating the draft. ${draftDetails?.result?.error}`
@@ -483,12 +494,12 @@ const useToolActions = (
         }
 
         // commonmark mode
+        const data = md.render(content).replaceAll("\n", "<p></br></p>");
 
-        const md = markdownit({ breaks: true });
         await callExtensionFunction({
           requestBody: {
             action: TALIA_EVENTS.actions.FILL_FORM_REQUEST,
-            data: md.render(content),
+            data,
           },
           callback: () => addToolResult({ toolCallId, result: option.result }),
         });
