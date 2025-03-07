@@ -14,7 +14,15 @@ import Markdown from "./markdown";
 export default function HumanMessage({ message }: { message: UIMessage }) {
   return (
     <Stack align="end">
-      <Paper px="10" py="10" fz="sm" bg="var(--talia-orange)" maw="80%">
+      <Paper
+        px="md"
+        py="xs"
+        radius="md"
+        fz="sm"
+        bg="var(--talia-purple-3)"
+        maw="80%"
+        c="var(--talia-title)"
+      >
         <Markdown>{message.content}</Markdown>
       </Paper>
       {message?.experimental_attachments?.map((attachment, index) => (
@@ -36,7 +44,14 @@ function AttachmentMessage({ attachment }: { attachment: Attachment }) {
 
   return (
     <UnstyledButton>
-      <Paper withBorder p="xs" px="sm" radius="lg" miw={200}>
+      <Paper
+        withBorder
+        p="xs"
+        px="sm"
+        radius="lg"
+        miw={200}
+        c="var(--talia-title)"
+      >
         <Group>
           <ThemeIcon size="lg">
             <IconPaperclip size="18" />

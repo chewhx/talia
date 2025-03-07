@@ -5,11 +5,9 @@ import {
   callExtensionFunction,
   getToolsRequiringConfirmation,
 } from "@/app/api/chat/utils";
-import {
-  getSupportedExtensions,
-  parseToTiptap,
-} from "@/app/api/generateRichText/utils";
+import { getSupportedExtensions } from "@/app/api/generateRichText/utils";
 import { mapFieldsToSchema } from "@/schema/studentLearningSpace.schema";
+import { formatKey } from "@/utils/helper";
 import { useChat } from "@ai-sdk/react";
 import {
   Box,
@@ -21,20 +19,19 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { generateJSON } from "@tiptap/html";
 import { Message, ToolInvocation } from "ai";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { TALIA_EVENTS } from "../../../shared/constants";
 import Markdown from "../markdown";
 import { PGAnnouncementFields } from "../pg-field-display/pg-announcement-field";
 import { PGFormField } from "../pg-field-display/pg-form-field";
+import { md } from "./markdown-it.util";
 import { ToolCallButton } from "./tool-call-buttons";
 import { ToolCallConfirmationMessage } from "./tool-call-confirmation-message";
-import { formatKey } from "@/utils/helper";
-import remarkGfm from "remark-gfm";
 import { useUserNeedToCallTool } from "./user-need-call-tool-hook";
-import { md } from "./markdown-it.util";
-import { generateJSON } from "@tiptap/html";
 
 const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 
@@ -58,28 +55,35 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
       case "sendEmail":
         return (
           <Stack key={toolCallId}>
-            <Paper px="xs" py="5" fz="sm" bg="white" ml="auto">
+            <Paper
+              p="md"
+              radius="md"
+              fz="sm"
+              bg="white"
+              w="100%"
+              c="var(--talia-title)"
+            >
               <Stack>
-                <Text fz="md" fw={500} mb={0}>
+                <Text fz="sm" fw={500} mb={0}>
                   Send email to:
                 </Text>
                 <List spacing="xs" withPadding>
                   {args.emailAddresses.map((email: string) => (
                     <List.Item key={email}>
-                      <Text fz="md">{email}</Text>
+                      <Text fz="sm">{email}</Text>
                     </List.Item>
                   ))}
                 </List>
 
                 {args.emailCCAddress?.length > 0 && (
                   <>
-                    <Text fz="md" fw={500} mb={0}>
+                    <Text fz="sm" fw={500} mb={0}>
                       CC:
                     </Text>
                     <List spacing="xs" withPadding>
                       {args.emailCCAddress.map((ccEmail: string) => (
                         <List.Item key={ccEmail}>
-                          <Text fz="md">{ccEmail}</Text>
+                          <Text fz="sm">{ccEmail}</Text>
                         </List.Item>
                       ))}
                     </List>
@@ -87,7 +91,14 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
                 )}
               </Stack>
             </Paper>
-            <Paper px="xs" py="5" fz="md" bg="white" w="100%">
+            <Paper
+              px="10"
+              py="10"
+              fz="sm"
+              bg="white"
+              w="100%"
+              c="var(--talia-title)"
+            >
               <div dangerouslySetInnerHTML={{ __html: args.emailContent }} />
             </Paper>
 
@@ -113,9 +124,9 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
 
         return (
           <Stack key={toolCallId}>
-            <Paper px="md" py="lg" bg="white" radius="md">
+            <Paper p="md" radius="md" bg="white" c="var(--talia-title)" fz="sm">
               <Stack fz="sm">
-                <Text fz="sm" m={0}>
+                <Text m={0} fz="sm">
                   Sure, Jane!
                 </Text>
                 <Divider />
@@ -162,9 +173,9 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
 
         return (
           <Stack key={toolCallId}>
-            <Paper px="md" py="lg" bg="white" radius="md">
+            <Paper p="md" radius="md" bg="white" c="var(--talia-title)">
               <Stack fz="sm">
-                <Text fz="sm" m={0}>
+                <Text m={0} fz="sm">
                   Sure, Jane!
                 </Text>
                 <Divider />
@@ -184,9 +195,16 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
                         <Box style={{ flex: 1 }}>
                           {key === "message" ? (
                             <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
                               components={{
                                 p: ({ children }) => (
-                                  <Text fz="sm" style={{ margin: 0 }}>
+                                  <Text
+                                    fz="sm"
+                                    style={{
+                                      margin: 0,
+                                      whiteSpace: "pre-wrap",
+                                    }}
+                                  >
                                     {children}
                                   </Text>
                                 ),
@@ -276,12 +294,14 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
           case "text":
             return (
               <Paper
-                px="10"
-                py="10"
+                px="md"
+                py="lg"
+                radius="md"
                 fz="sm"
                 bg="white"
                 w="100%"
                 key={`text-${idx}`}
+                c="var(--talia-title)"
               >
                 <Markdown>{part.text}</Markdown>
               </Paper>
