@@ -16,10 +16,9 @@ import {
   Text,
   TypographyStylesProvider,
 } from "@mantine/core";
-import { ChatRequestOptions, generateId } from "ai";
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { useInViewport, useMergedRef, useScrollIntoView } from "@mantine/hooks";
-import React from "react";
+import { ChatRequestOptions, generateId } from "ai";
+import React, { useRef } from "react";
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
 
@@ -88,7 +87,10 @@ export default function MainPage() {
 
   React.useEffect(() => {
     console.log({ inViewport, status });
-    if (!inViewport && status === "streaming") {
+    if (
+      !inViewport &&
+      (status === "streaming" || pendingToolCallConfirmation)
+    ) {
       scrollIntoView();
     }
   }, [inViewport, scrollIntoView, status]);
@@ -120,7 +122,7 @@ export default function MainPage() {
                 <Text c="var(--talia-purple-1)" fw={700} fz="xl" m={0}>
                   Hey Jane!
                 </Text>
-                <Text fz="xl" fw={600}>
+                <Text fz="xl" fw={600} c="var(--talia-title)">
                   How may I help you today?
                 </Text>
 
@@ -141,9 +143,7 @@ export default function MainPage() {
                   );
                 })}
 
-                {((pendingToolCallConfirmation && !userNeedToCallTool) ||
-                  status === "streaming" ||
-                  status === "submitted") && (
+                {(status === "streaming" || status === "submitted") && (
                   <Group justify="center" py="md">
                     <Loader type="dots" />
                   </Group>

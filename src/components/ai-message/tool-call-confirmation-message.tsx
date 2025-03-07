@@ -8,7 +8,7 @@ export const ToolCallConfirmationMessage = ({
   platform,
 }: ToolCallConfirmationMessageProps) => {
   return (
-    <Text fw={500} m={0} fz="sm">
+    <Text fw={500} m={0} fz="sm" c="var(--talia-title)">
       📌 Ensure you are on the{" "}
       <span
         style={{

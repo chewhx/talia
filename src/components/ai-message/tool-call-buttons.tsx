@@ -20,7 +20,7 @@ export const ToolCallButton = ({
     >
       <Paper shadow="sm" radius={0} bg={"var(--talia-purple-2)"} p="sm">
         <Stack gap={0}>
-          <Text fw="bold" m={0} fz="sm">
+          <Text fw="bold" m={0} fz="sm" c="var(--talia-title)">
             {option.title}
           </Text>
           <Text fz="xs" c="var(--talia-dimmed)">
