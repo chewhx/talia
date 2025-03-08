@@ -86,7 +86,6 @@ export default function MainPage() {
   const mergedRef = useMergedRef(targetRef, ref);
 
   React.useEffect(() => {
-    console.log({ inViewport, status });
     if (
       !inViewport &&
       (status === "streaming" || pendingToolCallConfirmation)
@@ -130,17 +129,22 @@ export default function MainPage() {
               </Stack>
             ) : (
               <Stack>
-                {messages.map((message) => {
-                  const MessageComponent =
-                    message.role === "user" ? HumanMessage : AIMessage;
-
-                  return (
-                    <MessageComponent
-                      key={message.id}
-                      message={message}
-                      addToolResult={addToolResult}
-                    />
-                  );
+                {messages.map((message, index) => {
+                  if (message.role === "user") {
+                    return <HumanMessage key={message.id} message={message} />;
+                  } else {
+                    const isLastAIMessage = index === messages.length - 1;
+                    return (
+                      <AIMessage
+                        key={message.id}
+                        message={message}
+                        addToolResult={addToolResult}
+                        append={append}
+                        isLastAIMessage={isLastAIMessage}
+                        messageStatus={status}
+                      />
+                    );
+                  }
                 })}
 
                 {(status === "streaming" || status === "submitted") && (

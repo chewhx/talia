@@ -8,7 +8,7 @@ import {
 import { getSupportedExtensions } from "@/app/api/generateRichText/utils";
 import { mapFieldsToSchema } from "@/schema/studentLearningSpace.schema";
 import { formatKey } from "@/utils/helper";
-import { useChat } from "@ai-sdk/react";
+import { UseChatHelpers, useChat } from "@ai-sdk/react";
 import {
   Box,
   Divider,
@@ -20,14 +20,14 @@ import {
   Text,
 } from "@mantine/core";
 import { generateJSON } from "@tiptap/html";
-import { Message, ToolInvocation } from "ai";
+import { ChatRequestOptions, CreateMessage, Message, ToolInvocation } from "ai";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { TALIA_EVENTS } from "../../../shared/constants";
-import Markdown from "../markdown";
 import { PGAnnouncementFields } from "../pg-field-display/pg-announcement-field";
 import { PGFormField } from "../pg-field-display/pg-form-field";
+import { EditableAIMessage } from "./editable-ai-message";
 import { md } from "./markdown-it.util";
 import { ToolCallButton } from "./tool-call-buttons";
 import { ToolCallConfirmationMessage } from "./tool-call-confirmation-message";
@@ -38,9 +38,21 @@ const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
 type AIMessageProps = {
   message: Message;
   addToolResult: ReturnType<typeof useChat>["addToolResult"];
+  append: (
+    message: Message | CreateMessage,
+    chatRequestOptions?: ChatRequestOptions | undefined
+  ) => Promise<string | null | undefined>;
+  isLastAIMessage: boolean;
+  messageStatus: UseChatHelpers["status"];
 };
 
-export default function AIMessage({ message, addToolResult }: AIMessageProps) {
+export default function AIMessage({
+  message,
+  isLastAIMessage,
+  messageStatus,
+  addToolResult,
+  append,
+}: AIMessageProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { createDraft, preFillClassroomFormHandling, preFillSLSFormHandling } =
     useToolActions(addToolResult, setIsLoading);
@@ -287,24 +299,28 @@ export default function AIMessage({ message, addToolResult }: AIMessageProps) {
     }
   };
 
+  // Edit Content
+  const onContentChange = async (content: string) => {
+    await append({
+      role: "user",
+      content: content,
+    });
+  };
+
   return (
     <Stack gap="xs">
       {message?.parts?.map((part, idx) => {
         switch (part.type) {
           case "text":
             return (
-              <Paper
-                px="md"
-                py="lg"
-                radius="md"
-                fz="sm"
-                bg="white"
-                w="100%"
+              <EditableAIMessage
+                content={part.text}
+                index={idx}
                 key={`text-${idx}`}
-                c="var(--talia-title)"
-              >
-                <Markdown>{part.text}</Markdown>
-              </Paper>
+                onContentChange={onContentChange}
+                isLastAIMessage={isLastAIMessage}
+                messageStatus={messageStatus}
+              />
             );
           case "tool-invocation": {
             const toolInvocation = part.toolInvocation;

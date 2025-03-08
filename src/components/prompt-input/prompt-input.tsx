@@ -114,38 +114,30 @@ export default function PromptInput({
             }}
           >
             <Stack>
-              <div
+              <Textarea
+                disabled={disabled}
+                autoFocus={true}
+                name="prompt"
+                value={input}
+                onChange={handleInputChange}
+                rows={2}
+                variant="unstyled"
+                placeholder="How may I help you?"
+                ref={textareaRef}
                 style={{
-                  position: "relative",
-                  maxHeight: "150px",
-                  overflow: "auto",
+                  resize: "none",
+                  overflow: "hidden",
                 }}
-              >
-                <Textarea
-                  disabled={disabled}
-                  autoFocus={true}
-                  name="prompt"
-                  value={input}
-                  onChange={handleInputChange}
-                  rows={2}
-                  variant="unstyled"
-                  placeholder="How may I help you?"
-                  ref={textareaRef}
-                  style={{
-                    resize: "none",
-                    overflow: "hidden",
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      if (e.altKey || e.shiftKey) {
-                        return;
-                      }
-                      e.preventDefault();
-                      btnRef?.current?.click();
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    if (e.altKey || e.shiftKey) {
+                      return;
                     }
-                  }}
-                />
-              </div>
+                    e.preventDefault();
+                    btnRef?.current?.click();
+                  }
+                }}
+              />
               <Group justify="space-between">
                 <Group>
                   <FileButton
