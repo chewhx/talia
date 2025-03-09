@@ -14,14 +14,15 @@ async function scanClassroom() {
 async function fillGoogleClassroom(
   title = "Demo purpose" // Can be richtext
 ) {
-  const placeholder = "Announce something to your class"; // Hardcore placeholder
   // // if (!isClassroomModalOpen) {
   openClassroomCreateAnnouncementModal();
   await waitForClassroomModal();
   // // }
 
   // Find the element with the matching aria-label
-  const element = document.querySelector(`[aria-label="${placeholder}"]`);
+  const element = document.querySelector(
+    `[aria-label="Announce something to your class"]`
+  );
 
   // if (element) {
   //   // Clear existing content
@@ -66,7 +67,28 @@ async function fillGoogleClassroom(
 
     // Use `document.execCommand` to insert text as if the user typed it
     element.focus();
-    document.execCommand("insertText", false, formattedText);
+
+    // Create a policy to bypass TrustHTML on Google Classroom, which protects the 'element' from HTML injection
+
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+      try {
+        // Try to create the policy only if it hasn't been created yet
+        if (!window.trustedTypes.defaultPolicy) {
+          window.trustedTypes.createPolicy("default", {
+            createHTML: (input) => input,
+          });
+        }
+        element.insertAdjacentHTML("beforeend", formattedText);
+      } catch (error) {
+        // Policy might already exist or there was an issue with creating it
+        console.error(
+          "Trusted Types policy could not be created or already exists:",
+          error
+        );
+      }
+    } else {
+      console.warn("Trusted Types are not supported in this browser.");
+    }
 
     // Alternative: Use InputEvent for modern browsers
     element.dispatchEvent(new InputEvent("input", { bubbles: true }));

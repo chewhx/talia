@@ -147,7 +147,9 @@ export default function MainPage() {
                   }
                 })}
 
-                {(status === "streaming" || status === "submitted") && (
+                {(userNeedToCallTool ||
+                  status === "streaming" ||
+                  status === "submitted") && (
                   <Group justify="center" py="md">
                     <Loader type="dots" />
                   </Group>
