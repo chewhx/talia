@@ -170,9 +170,10 @@ export const EditableAIMessage = ({
                     <Text fw="bold" mb="0" fz="sm">
                       References:
                     </Text>
-                    {referenceUrls.map((url, i) => {
+                    {referenceUrls.map((url, referenceIndex) => {
                       const fileDetails = parseS3Uri(url);
-                      const fileName = fileDetails?.key ?? `Reference ${i + 1}`;
+                      const fileName =
+                        fileDetails?.key ?? `Reference ${referenceIndex + 1}`;
                       const truncatedFileName =
                         fileName.length > 50
                           ? `${fileName.slice(0, 35)}...${fileName.slice(-10)}`
@@ -180,6 +181,7 @@ export const EditableAIMessage = ({
 
                       return (
                         <Button
+                          key={`references-${referenceIndex}-message-${index}`}
                           leftSection={<IconExternalLink />}
                           onClick={async () => await openReference(url)}
                           justify="flex-start"

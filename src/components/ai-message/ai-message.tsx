@@ -276,17 +276,20 @@ export default function AIMessage({
                     option={option}
                     onClick={async () => {
                       toggleUserNeedToCallTool();
-                      isSLS
-                        ? await preFillSLSFormHandling(
-                            option,
-                            args.fields,
-                            toolCallId
-                          )
-                        : await preFillClassroomFormHandling(
-                            option,
-                            args.content,
-                            toolCallId
-                          );
+
+                      if (isSLS) {
+                        await preFillSLSFormHandling(
+                          option,
+                          args.fields,
+                          toolCallId
+                        );
+                      } else {
+                        await preFillClassroomFormHandling(
+                          option,
+                          args.content,
+                          toolCallId
+                        );
+                      }
                       toggleUserNeedToCallTool();
                     }}
                     toolCallId={toolCallId}
@@ -310,12 +313,14 @@ export default function AIMessage({
     });
   };
 
-  const referenceUrls = message?.toolInvocations?.[0]?.result?.urls ?? [];
+  const referenceUrls =
+    (message as any)?.toolInvocations?.[0]?.result?.urls ?? [];
+  const messagePartLength = (message?.parts ?? []).length;
 
   return (
     <Stack gap="xs">
       {message?.parts?.map((part, idx) => {
-        const isLastPart = idx === message?.parts.length - 1;
+        const isLastPart = idx === messagePartLength - 1;
 
         switch (part.type) {
           case "text": {

@@ -92,7 +92,7 @@ export default function MainPage() {
     ) {
       scrollIntoView();
     }
-  }, [inViewport, scrollIntoView, status]);
+  }, [inViewport, scrollIntoView, status, pendingToolCallConfirmation]);
 
   return (
     <Box style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
