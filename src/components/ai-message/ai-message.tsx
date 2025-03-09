@@ -160,9 +160,9 @@ export default function AIMessage({
                   <ToolCallButton
                     key={`tool-call-button-${toolCallId}-${index}`}
                     option={option}
-                    onClick={() => {
+                    onClick={async () => {
                       toggleUserNeedToCallTool();
-                      createDraft({
+                      await createDraft({
                         fields,
                         toolCallId,
                         postType: isAnnouncement
@@ -170,6 +170,7 @@ export default function AIMessage({
                           : "PG_CONSENT_FORM",
                         option,
                       });
+                      toggleUserNeedToCallTool();
                     }}
                     toolCallId={toolCallId}
                   />
@@ -273,19 +274,24 @@ export default function AIMessage({
                   <ToolCallButton
                     key={`tool-call-button-${toolCallId}-${index}`}
                     option={option}
-                    onClick={() =>
-                      isSLS
-                        ? preFillSLSFormHandling(
-                            option,
-                            args.fields,
-                            toolCallId
-                          )
-                        : preFillClassroomFormHandling(
-                            option,
-                            args.content,
-                            toolCallId
-                          )
-                    }
+                    onClick={async () => {
+                      toggleUserNeedToCallTool();
+
+                      if (isSLS) {
+                        await preFillSLSFormHandling(
+                          option,
+                          args.fields,
+                          toolCallId
+                        );
+                      } else {
+                        await preFillClassroomFormHandling(
+                          option,
+                          args.content,
+                          toolCallId
+                        );
+                      }
+                      toggleUserNeedToCallTool();
+                    }}
                     toolCallId={toolCallId}
                   />
                 ))}
@@ -307,21 +313,29 @@ export default function AIMessage({
     });
   };
 
+  const referenceUrls =
+    (message as any)?.toolInvocations?.[0]?.result?.urls ?? [];
+  const messagePartLength = (message?.parts ?? []).length;
+
   return (
     <Stack gap="xs">
       {message?.parts?.map((part, idx) => {
+        const isLastPart = idx === messagePartLength - 1;
+
         switch (part.type) {
-          case "text":
+          case "text": {
             return (
               <EditableAIMessage
                 content={part.text}
+                referenceUrls={referenceUrls}
                 index={idx}
                 key={`text-${idx}`}
                 onContentChange={onContentChange}
-                isLastAIMessage={isLastAIMessage}
+                isLastAIMessage={isLastAIMessage && isLastPart}
                 messageStatus={messageStatus}
               />
             );
+          }
           case "tool-invocation": {
             const toolInvocation = part.toolInvocation;
             if (
@@ -359,7 +373,7 @@ const useToolActions = (
           addToolResult({
             toolCallId,
             result:
-              "Error: Ensure you're on the Student Learning Space (SLS) tab and logged in before attempting to pre-fill content.",
+              "Error: Inform user that need to on the Student Learning Space (SLS) tab and logged in before attempting to pre-fill content. Action needed for user.",
           });
           return;
         }
@@ -397,7 +411,8 @@ const useToolActions = (
         console.error("Error in preFillSLSFormHandling:", error);
         addToolResult({
           toolCallId,
-          result: "Error occurred while processing the form.",
+          result:
+            "Error occurred while processing the form. Please ensure that user has been logged in.",
         });
       } finally {
         setIsLoading?.(false);
@@ -429,7 +444,7 @@ const useToolActions = (
           addToolResult({
             toolCallId,
             result:
-              "Error: Ensure you're on the Parent Gateway (PG) tab and logged in before attempting to create draft.",
+              "Error: Inform user that need to on the Parent Gateway (PG) tab and logged in before attempting to create a draft. Action needed for user.",
           });
           return;
         }
@@ -479,7 +494,9 @@ const useToolActions = (
               addToolResult({ toolCallId, result: option.result }),
           });
         } else {
-          throw new Error("Unexpected error while creating the draft.");
+          throw new Error(
+            "Unexpected error while creating the draft. Please ensure that user has been logged in."
+          );
         }
       } else {
         addToolResult({
@@ -511,7 +528,7 @@ const useToolActions = (
           addToolResult({
             toolCallId,
             result:
-              "Error: Ensure you're on the Google Classroom tab and logged in before attempting to pre-fill content.",
+              "Error: Inform user that need to on the Google Classroom tab and logged in before attempting to pre-fill content. Action needed for user.",
           });
           return;
         }
@@ -530,7 +547,8 @@ const useToolActions = (
         console.error("Error in preFillClassroomFormHandling:", error);
         addToolResult({
           toolCallId,
-          result: "Error occurred while processing the form.",
+          result:
+            "Error occurred while processing the form. Please ensure that user has been logged in.",
         });
       } finally {
         setIsLoading?.(false);

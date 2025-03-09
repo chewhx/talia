@@ -65,13 +65,18 @@ const sendEmail = tool({
 });
 
 const retrieveResource = tool({
-  description:
-    "Retrieve a relevant resource from database, should the user mention to reference to past materials",
+  description: `
+    - You should trigger a retrieval of relevant past resources from the knowledge base **only when drafting a new announcement or form from scratch.**
+    - This ensures consistency in tone, structure, and formatting.
+    - Do **not** retrieve resources when modifying or adding to an existing draft. Do not include reference links in the content!
+    - It is apply to SLS, Google Classroom and PG drafts.
+    -
+  `,
   parameters: z.object({
     query: z
       .string()
       .describe(
-        "the user prompt or query string to search the database for relevant resources"
+        "The input query used to search the knowledge base for relevant past content. This can be a topic, title, date, name, or other relevant keyword."
       ),
   }),
   execute: async ({ query }) => {
@@ -81,6 +86,7 @@ const retrieveResource = tool({
         credentials: {
           accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+          sessionToken: process.env.AWS_SESSION_TOKEN,
         },
       });
 
@@ -93,14 +99,32 @@ const retrieveResource = tool({
 
       const response = await awsBedrockClient.send(retrieveCommand);
 
-      const relevantPastContent = response.retrievalResults
-        ?.filter((e) => (e?.score || 0) >= 0.5)
-        .slice(0, 5)
-        .map((e) => e.content?.text);
+      const relevantPastContent = response.retrievalResults?.slice(0, 2) ?? [];
 
-      return `Based the tone and style of your writing on the following past references (if any):
-      ${relevantPastContent?.join("\n----\n")}
-      `;
+      const contents: string[] = [];
+      const urls: string[] = [];
+
+      relevantPastContent?.forEach((pastContent) => {
+        if (!pastContent) return;
+        const { content, location } = pastContent;
+
+        if (content && content?.text) {
+          contents.push(content.text);
+        }
+
+        if (location && location?.s3Location && location?.s3Location?.uri) {
+          urls.push(location?.s3Location?.uri);
+        }
+      });
+
+      console.log("Retrieve past content: ", urls);
+
+      return {
+        content: `
+        "Generate a draft for my topic by following the provided template and ensuring it aligns with the tone, style, and structure of past references (if available). Do not include or return the reference content directly. Instead, adapt the language, phrasing, and formatting to match the established pattern while maintaining consistency in writing style.
+        ${contents?.join("\n----\n")}`,
+        urls: urls,
+      };
     } catch (err) {
       console.error(err);
       return "";

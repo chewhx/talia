@@ -92,7 +92,7 @@ export default function MainPage() {
     ) {
       scrollIntoView();
     }
-  }, [inViewport, scrollIntoView, status]);
+  }, [inViewport, scrollIntoView, status, pendingToolCallConfirmation]);
 
   return (
     <Box style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
@@ -147,7 +147,9 @@ export default function MainPage() {
                   }
                 })}
 
-                {(status === "streaming" || status === "submitted") && (
+                {(userNeedToCallTool ||
+                  status === "streaming" ||
+                  status === "submitted") && (
                   <Group justify="center" py="md">
                     <Loader type="dots" />
                   </Group>
