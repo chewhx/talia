@@ -22,7 +22,7 @@ export const AnnouncementDraftSchema = z.object({
   enquiryEmailAddress: z
     .string()
     .email()
-    .default("jane@gmail.com")
+    .default("jane_tan@schools.gov.sg")
     .refine(
       (email) =>
         ["@gmail.com", "@moe.edu.sg", "@schools.gov.sg"].some((domain) =>

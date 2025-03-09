@@ -134,7 +134,7 @@ const retrieveResource = tool({
 
 const createPGFormDraft = tool({
   description: `Create a consent form with the following details:
-  - **Default Email**: **jane@gmail.com** (Custom email allowed only from @gmail.com, @moe.edu.sg, @schools.gov.sg).
+  - **Default Email**: **jane_tan@schools.gov.sg** (Custom email allowed only from @gmail.com, @moe.edu.sg, @schools.gov.sg).
 
   Include up to **5 custom questions** with these types:
     - **Single Selection**: Up to 2 choices, one selectable.
@@ -166,7 +166,7 @@ const createPGFormDraft = tool({
 });
 
 // const createPGFormDraft = tool({
-//   description: `Create a Parent Gateway (PG) consent form draft. Default email: jane@gmail.com. Custom email allowed only from @gmail.com, @moe.edu.sg, @schools.gov.sg.
+//   description: `Create a Parent Gateway (PG) consent form draft. Default email: jane_tan@schools.gov.sg. Custom email allowed only from @gmail.com, @moe.edu.sg, @schools.gov.sg.
 
 //   Include custom questions using FormQuestionsSchema and is only for YES_NO response type:
 //   1. Single Selection: Up to 2 choices, one selectable.
@@ -203,7 +203,7 @@ const createPGAnnouncementDraft = tool({
   Required:
     Title (1-120 characters): Please provide the title of the announcement.
     Content (50-2000 characters): Please provide the detailed content of the announcement.
-    Enquiry Email: The default email is jane@gmail.com. You can provide an official contact email (must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg).
+    Enquiry Email: The default email is jane_tan@schools.gov.sg. You can provide an official contact email (must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg).
   Optional:
     Related Links: Provide up to 3 related website links with brief descriptions.
     Shortcuts: Provide any predefined system shortcut URLs.
