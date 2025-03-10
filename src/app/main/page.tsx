@@ -24,6 +24,7 @@ import { getToolsRequiringConfirmation } from "../api/chat/utils";
 
 export default function MainPage() {
   const { userNeedToCallTool } = useUserNeedToCallTool();
+
   const {
     messages,
     input,

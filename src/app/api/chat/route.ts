@@ -3,9 +3,13 @@ import { formatKey } from "@/utils/helper";
 import { bedrock } from "@ai-sdk/amazon-bedrock";
 import { openai } from "@ai-sdk/openai";
 import {
+  appendClientMessage,
+  appendResponseMessages,
   createDataStreamResponse,
+  createIdGenerator,
   generateId,
   InvalidToolArgumentsError,
+  Message,
   NoSuchToolError,
   streamText,
   ToolExecutionError,
@@ -15,6 +19,7 @@ import dayjs from "dayjs";
 import { Resend } from "resend";
 import { tools } from "./tools";
 import { processToolCalls } from "./utils";
+import { loadChat, saveChat } from "@/app/chat/chat-store";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -22,18 +27,32 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   try {
     const {
-      messages,
+      id,
       data,
+      message,
     }: {
-      messages: UIMessage[];
+      id: string;
       data: any;
+      message: Message;
     } = await req.json();
 
-    const messagesHavePDF = messages.some((message) =>
-      message.experimental_attachments?.some(
-        (a) => a.contentType === "application/pdf"
-      )
-    );
+    console.log({ id, data, message });
+
+    // load the previous messages from the server:
+    const previousMessages = await loadChat(id);
+
+    const messages = appendClientMessage({
+      messages: previousMessages,
+      message: message,
+    });
+
+    // const messagesHavePDF = messages.some((message) =>
+    //   message.experimental_attachments?.some(
+    //     (a) => a.contentType === "application/pdf"
+    //   )
+    // );
+
+    const messagesHavePDF = false;
 
     if (data?.error) {
       const content = `Please refine the content while considering the following restriction: "${
@@ -150,7 +169,25 @@ export async function POST(req: Request) {
           messages: processedMessages,
           tools,
           maxSteps: 5,
+          async onFinish({ response }) {
+            await saveChat({
+              id,
+              messages: appendResponseMessages({
+                messages,
+                responseMessages: response.messages,
+              }),
+            });
+          },
+          // id format for server-side messages:
+          experimental_generateMessageId: createIdGenerator({
+            prefix: "msgs",
+            size: 16,
+          }),
         });
+
+        // consume the stream to ensure it runs to completion & triggers onFinish
+        // even when the client response is aborted:
+        result.consumeStream(); // no await
 
         result.mergeIntoDataStream(dataStream);
       },
