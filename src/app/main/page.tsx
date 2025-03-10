@@ -21,8 +21,10 @@ import { ChatRequestOptions, generateId } from "ai";
 import React, { useRef } from "react";
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
+import { useUser } from "@/context/userContext";
 
 export default function MainPage() {
+  const { calendarEvents, displayName } = useUser();
   const { userNeedToCallTool } = useUserNeedToCallTool();
   const {
     messages,
@@ -37,6 +39,9 @@ export default function MainPage() {
     setMessages,
     append,
   } = useChat({
+    body: {
+      calendarEvents,
+    },
     async onError(error) {
       setMessages((existingMessage) => [
         ...existingMessage,
@@ -119,7 +124,7 @@ export default function MainPage() {
               <Stack gap={0}>
                 <Space h={100} />
                 <Text c="var(--talia-purple-1)" fw={700} fz="xl" m={0}>
-                  Hey Jane!
+                  Hey {displayName}!
                 </Text>
                 <Text fz="xl" fw={600} c="var(--talia-title)">
                   How may I help you today?
@@ -142,6 +147,9 @@ export default function MainPage() {
                         append={append}
                         isLastAIMessage={isLastAIMessage}
                         messageStatus={status}
+                        pendingToolCallConfirmation={
+                          pendingToolCallConfirmation
+                        }
                       />
                     );
                   }

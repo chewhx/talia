@@ -22,7 +22,6 @@ export const AnnouncementDraftSchema = z.object({
   enquiryEmailAddress: z
     .string()
     .email()
-    .default("jane_tan@schools.gov.sg")
     .refine(
       (email) =>
         ["@gmail.com", "@moe.edu.sg", "@schools.gov.sg"].some((domain) =>
@@ -31,7 +30,7 @@ export const AnnouncementDraftSchema = z.object({
       "Email must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg"
     )
     .describe(
-      "Official contact email for inquiries. Only request changes when the user asks. The official contact email must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg. This email will be visible to parents for any questions regarding the consent form."
+      "The default value is the user's email address. Official contact email for inquiries. Only request changes when the user asks. The official contact email must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg. This email will be visible to parents for any questions regarding the consent form."
     ),
   urls: z
     .array(

@@ -1,0 +1,50 @@
+{
+  "jane_tan@schools.gov.sg": {
+    "username": "jane_tan",
+    "displayName": "Jane Tan",
+    "emailAddress": "jane_tan@schools.gov.sg",
+    "HODName": "Grace",
+    "HODEmail": "grace@estl.sg",
+    "calendarIDs": ["classroom106447407036691032465@group.calendar.google.com"]
+  },
+  "shara@schools.gov.sg": {
+    "username": "shara",
+    "displayName": "Shara",
+    "emailAddress": "shara@schools.gov.sg",
+    "HODName": "Grace",
+    "HODEmail": "grace@estl.sg",
+    "calendarIDs": [
+      "be0e0aaf2029fdddcc81685505f5e9d75f2e54210e3dfca12559c2c45cf19e26@group.calendar.google.com"
+    ]
+  },
+  "cheekean1997@gmail.com": {
+    "username": "cheekean1997",
+    "displayName": "Chee Kean",
+    "emailAddress": "cheekean1997@gmail.com",
+    "HODName": "Grace",
+    "HODEmail": "grace@estl.sg",
+    "calendarIDs": [
+      "13b73b01efdcddaf6bdb2e0b129f092dc05ca952fc25156865ee584a7366fd54@group.calendar.google.com"
+    ]
+  },
+  "hanxiang@gmail.com": {
+    "username": "hanxiang",
+    "displayName": "Han Xiang",
+    "emailAddress": "hanxiang@gmail.com",
+    "HODName": "Grace",
+    "HODEmail": "grace@estl.sg",
+    "calendarIDs": [
+      "be0e0aaf2029fdddcc81685505f5e9d75f2e54210e3dfca12559c2c45cf19e26@group.calendar.google.com"
+    ]
+  },
+  "grace@schools.gov.sg": {
+    "username": "grace",
+    "displayName": "Grace",
+    "emailAddress": "grace@schools.gov.sg",
+    "HODName": "Chee Kean",
+    "HODEmail": "cheekean1997@gmail.com",
+    "calendarIDs": [
+      "be0e0aaf2029fdddcc81685505f5e9d75f2e54210e3dfca12559c2c45cf19e26@group.calendar.google.com"
+    ]
+  }
+}

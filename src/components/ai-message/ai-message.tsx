@@ -43,6 +43,7 @@ type AIMessageProps = {
     chatRequestOptions?: ChatRequestOptions | undefined
   ) => Promise<string | null | undefined>;
   isLastAIMessage: boolean;
+  pendingToolCallConfirmation: boolean;
   messageStatus: UseChatHelpers["status"];
 };
 
@@ -50,6 +51,7 @@ export default function AIMessage({
   message,
   isLastAIMessage,
   messageStatus,
+  pendingToolCallConfirmation,
   addToolResult,
   append,
 }: AIMessageProps) {
@@ -333,6 +335,7 @@ export default function AIMessage({
                 onContentChange={onContentChange}
                 isLastAIMessage={isLastAIMessage && isLastPart}
                 messageStatus={messageStatus}
+                pendingToolCallConfirmation={pendingToolCallConfirmation}
               />
             );
           }
