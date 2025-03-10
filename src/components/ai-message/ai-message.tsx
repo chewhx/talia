@@ -451,9 +451,15 @@ const useToolActions = (
 
         const html = md.render(fields?.content);
 
+        console.log({
+          Content: fields?.content,
+          Html: html,
+          ReplacedHtml: html.replaceAll("\n", "<p><br/></p>"),
+        });
+
         const json = removeEmptyListItems(
           generateJSON(
-            html.replaceAll("\n", "<p><br/></p>"),
+            html.replaceAll("<br>", "</p><p>").replaceAll("\n", "<p><br/></p>"),
             getSupportedExtensions()
           )
         );

@@ -74,9 +74,12 @@ export function removeEmptyListItems(doc: TiptapNode): TiptapNode {
         if (node.type === "listItem" && node.content) {
           // Check if the only content is an empty paragraph
           const isEmptyParagraph =
-            node.content.length === 1 &&
-            node.content[0].type === "paragraph" &&
-            (!node.content[0].content || node.content[0].content.length === 0);
+            !node.content ||
+            node.content.length === 0 ||
+            (node.content.length === 1 &&
+              node.content[0].type === "paragraph" &&
+              (!node.content[0].content ||
+                node.content[0].content.length === 0));
           return !isEmptyParagraph;
         }
         return true; // Keep other nodes
