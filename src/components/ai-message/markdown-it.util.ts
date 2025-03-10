@@ -55,3 +55,38 @@ function lineBreakToEmptyParagraph(md: MarkdownIt) {
 const md = new MarkdownIt({ breaks: true, html: true, typographer: true });
 
 export { md };
+
+type TiptapNode = Record<string, any>;
+
+export function removeEmptyListItems(doc: TiptapNode): TiptapNode {
+  // Recursively filter out empty listItems
+  const filterEmptyParagraphs = (nodes: TiptapNode[]): TiptapNode[] => {
+    return nodes
+      .map((node) => {
+        // Recursively process child nodes if the node has content
+        if (node.content) {
+          node.content = filterEmptyParagraphs(node.content);
+        }
+        return node;
+      })
+      .filter((node) => {
+        // Check for 'listItem' type with empty paragraph content
+        if (node.type === "listItem" && node.content) {
+          // Check if the only content is an empty paragraph
+          const isEmptyParagraph =
+            node.content.length === 1 &&
+            node.content[0].type === "paragraph" &&
+            (!node.content[0].content || node.content[0].content.length === 0);
+          return !isEmptyParagraph;
+        }
+        return true; // Keep other nodes
+      });
+  };
+
+  // Process the document's content recursively
+  if (doc.content) {
+    doc.content = filterEmptyParagraphs(doc.content);
+  }
+
+  return doc;
+}

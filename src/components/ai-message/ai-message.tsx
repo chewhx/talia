@@ -28,7 +28,7 @@ import { TALIA_EVENTS } from "../../../shared/constants";
 import { PGAnnouncementFields } from "../pg-field-display/pg-announcement-field";
 import { PGFormField } from "../pg-field-display/pg-form-field";
 import { EditableAIMessage } from "./editable-ai-message";
-import { md } from "./markdown-it.util";
+import { md, removeEmptyListItems } from "./markdown-it.util";
 import { ToolCallButton } from "./tool-call-buttons";
 import { ToolCallConfirmationMessage } from "./tool-call-confirmation-message";
 import { useUserNeedToCallTool } from "./user-need-call-tool-hook";
@@ -451,9 +451,11 @@ const useToolActions = (
 
         const html = md.render(fields?.content);
 
-        const json = generateJSON(
-          html.replaceAll("\n", "<p><br/></p>"),
-          getSupportedExtensions()
+        const json = removeEmptyListItems(
+          generateJSON(
+            html.replaceAll("\n", "<p><br/></p>"),
+            getSupportedExtensions()
+          )
         );
 
         fields.content = JSON.stringify(json);
