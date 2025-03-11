@@ -1,4 +1,3 @@
-// app/actions/calendar.ts
 "use server";
 
 import { google } from "googleapis";
@@ -39,8 +38,8 @@ export async function fetchCalendarEvents(
           title: event.summary || "Untitled Event",
           start: event.start?.dateTime || event.start?.date || "",
           end: event.end?.dateTime || event.end?.date || "",
-          description: event.description,
-          location: event.location,
+          description: event.description || "",
+          location: event.location || "",
           calendarId,
         })) || [];
 

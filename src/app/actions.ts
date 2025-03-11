@@ -3,78 +3,67 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import data from "../config/user-data.json";
+import UserData from "../mock-user-data/user-data.json";
+
+const COOKIE_MAX_AGE = 60 * 60 * 24; // 24 hours in seconds
 
 export async function setPasswordCookie(formData: FormData) {
-  const talia_password = formData.get("talia-password");
+  const talia_password = formData.get("talia-password") as string;
   const cookieStore = cookies();
 
-  cookieStore.set("talia_password", String(talia_password) || "", {
-    maxAge: 60 * 60 * 24 * 24, // 24 days in seconds
+  cookieStore.set("talia_password", talia_password, {
+    maxAge: COOKIE_MAX_AGE,
   });
 
   redirect("/main");
 }
 
 export async function verifyUserAuthStatus() {
-  const cookieStore = cookies();
-  const userEmail = cookieStore.get("user_email")?.value;
+  const userEmail = await getCookie("user_email");
 
-  if (!userEmail) {
+  if (!userEmail || !(userEmail in UserData)) {
+    console.log(
+      `User authentication failed. Email: ${userEmail || "Not provided"}`
+    );
     redirect("/");
   }
+
+  console.log(`User authenticated successfully. Email: ${userEmail}`);
 }
 
 export async function setUserCookie(formData: FormData) {
-  const userEmail = formData.get("user_email");
+  const userEmail = formData.get("user_email") as string;
 
-  if (data?.[userEmail as keyof typeof data]) {
-    const cookieStore = cookies();
-
-    cookieStore.set("user_email", String(userEmail) || "", {
-      maxAge: 60 * 60 * 24 * 24, // 24 hours
+  if (userEmail in UserData) {
+    setCookie("user_email", userEmail, {
+      maxAge: COOKIE_MAX_AGE,
     });
-
     redirect("/main");
   }
-
   redirect("/");
 }
 
-// Function to get all cookies
 export async function getAllCookies() {
-  const cookieStore = cookies();
-  const allCookies = cookieStore.getAll();
-  return allCookies; // Returns an array of all cookies
+  return cookies().getAll();
 }
 
-// Function to get a specific cookie by key
-export async function getCookie(key: string) {
-  const cookieStore = cookies();
-  return cookieStore.get(key)?.value || null; // Returns the cookie value or null if not found
+export async function getCookie(key: string): Promise<string | null> {
+  return cookies().get(key)?.value ?? null;
 }
 
-// Function to set a specific cookie
 export async function setCookie(
   key: string,
   value: string,
   options: Record<string, any> = {}
 ) {
-  const cookieStore = cookies();
-  cookieStore.set(key, value, options); // Options like { httpOnly: true, secure: true, maxAge: 3600 }
+  cookies().set(key, value, options);
 }
 
-// Function to clear all cookies (remove cookies)
 export async function clearCookies() {
-  const cookieStore = cookies();
-  const allCookies = cookieStore.getAll();
-  allCookies.forEach((cookie) => {
-    cookieStore.delete(cookie.name); // Delete each cookie
-  });
+  const allCookies = await getAllCookies();
+  allCookies.forEach((cookie) => cookies().delete(cookie.name));
 }
 
-// Function to delete a specific cookie
 export async function deleteCookie(key: string) {
-  const cookieStore = cookies();
-  cookieStore.delete(key); // Deletes the specific cookie
+  cookies().delete(key);
 }

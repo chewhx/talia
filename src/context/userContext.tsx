@@ -1,5 +1,5 @@
+"use client";
 import { getCookie } from "@/app/actions";
-import { useRouter } from "next/router";
 import React, {
   ReactNode,
   createContext,
@@ -7,54 +7,68 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import UserData from "../config/user-data.json";
+import UserData from "../mock-user-data/user-data.json";
 import { CalendarEvent } from "@/utils/calendar";
+import { useRouter } from "next/navigation";
 
-interface UserContextType {
-  displayName: string | null;
-  setDisplayName: (name: string | null) => void;
+export type UserDataProps = {
+  username: string;
+  displayName: string;
+  emailAddress: string;
+  HODName: string;
+  HODEmail: string;
+  calendarIDs: string[];
+};
+
+type UserContextType = {
+  userDetails: UserDataProps | null;
   isLoading: boolean;
   calendarEvents: CalendarEvent[];
-}
+};
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{
-  calendarEvents: CalendarEvent[];
+  calendarEvents?: CalendarEvent[];
   children: ReactNode;
-}> = ({ calendarEvents, children }) => {
-  const [displayName, setDisplayName] = useState<string | null>(null);
+}> = ({ calendarEvents = [], children }) => {
+  const [userDetails, setUserDetails] = useState<UserDataProps | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const loadDisplayName = async () => {
-      const userEmail = (await getCookie(
-        "user_email"
-      )) as keyof typeof UserData;
+      try {
+        const userEmail = await getCookie("user_email");
 
-      if (!userEmail || !UserData?.[userEmail]) {
-        useRouter().push("/");
+        if (!userEmail || !(userEmail in UserData)) {
+          router.push("/");
+          return;
+        }
+
+        setUserDetails(UserData[userEmail as keyof typeof UserData] ?? null);
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        router.push("/");
+      } finally {
+        setIsLoading(false);
       }
-
-      const userDetails = UserData?.[userEmail];
-      setDisplayName(userDetails.displayName);
-      setIsLoading(false);
     };
 
     loadDisplayName();
-  }, []);
+  }, [router]);
+
+  const contextValue = React.useMemo(
+    () => ({
+      userDetails,
+      calendarEvents,
+      isLoading,
+    }),
+    [calendarEvents, isLoading, userDetails]
+  );
 
   return (
-    <UserContext.Provider
-      value={{
-        displayName,
-        calendarEvents,
-        setDisplayName,
-        isLoading,
-      }}
-    >
-      {children}
-    </UserContext.Provider>
+    <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
   );
 };
 

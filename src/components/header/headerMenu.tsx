@@ -12,7 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 
 export function HeaderMenu() {
-  const { displayName } = useUser();
+  const { userDetails } = useUser();
   const router = useRouter();
 
   const signOut = async () => {
@@ -35,7 +35,7 @@ export function HeaderMenu() {
             padding: "8px 12px",
           }}
         >
-          Hi, {displayName}
+          Hi, {userDetails?.displayName ?? "There!"}
         </Menu.Label>
 
         <Menu.Item

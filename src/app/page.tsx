@@ -14,7 +14,9 @@ export default function Home() {
       </Center>
 
       <Center>
-        <Text size="sm">v3.0.0</Text>
+        <Text size="sm" fw="bold">
+          v3.0.0
+        </Text>
       </Center>
     </Container>
   );

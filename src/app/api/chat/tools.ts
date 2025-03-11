@@ -66,11 +66,10 @@ const sendEmail = tool({
 
 const retrieveResource = tool({
   description: `
-    - You should trigger a retrieval of relevant past resources from the knowledge base **only when drafting a new announcement or form from scratch.**
+    - Trigger a retrieval of relevant past resources from the knowledge base **only when drafting a new announcement or form from scratch on Parent Gateway (PG), Student Learning Space (SLS) and Google Classroom**
     - This ensures consistency in tone, structure, and formatting.
     - Do **not** retrieve resources when modifying or adding to an existing draft. Do not include reference links in the content!
-    - It is apply to SLS, Google Classroom and PG drafts.
-    -
+    - Should replace all the years to current year.
   `,
   parameters: z.object({
     query: z
@@ -122,8 +121,16 @@ const retrieveResource = tool({
 
       return {
         content: `
-        "Generate a draft for my topic by following the provided template and ensuring it aligns with the tone, style, and structure of past references (if available). Do not include or return the reference content directly. Instead, adapt the language, phrasing, and formatting to match the established pattern while maintaining consistency in writing style.
-        ${contents?.join("\n----\n")}`,
+        ## Generate a draft based on the provided template, ensuring alignment with the tone, style, and structure of past content (if available).
+        Use the content below **only** as a reference for language, phrasing, and formatting—**do not** copy event-specific details (e.g., date, time, venue).
+
+        - Extract **event-specific details only from Google Calendar** if a matching topic/title is found.
+        - If no matching Google Calendar event exists, insert **placeholders** for missing details instead of using outdated information.
+        - Ensure the draft is generated **solely based on the provided topic/title**, without assuming details from past content.
+
+        ### Content:
+        ${contents?.join("\n----\n")}
+        `,
         urls: urls,
       };
     } catch (err) {
