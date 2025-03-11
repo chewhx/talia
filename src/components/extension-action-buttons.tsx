@@ -6,7 +6,6 @@ import { TALIA_EVENTS } from "../../shared/constants";
 import { Button, Container, Flex } from "@mantine/core";
 import { mockAnnouncement } from "@/schema/announcementDraft.schema";
 import { mockForm } from "@/schema/formDraft.schema";
-import { parseToTiptap } from "@/app/api/generateRichText/utils";
 
 export const ExtensionActionButton = () => {
   const [draftInfo, setDraftInfo] = useState<{} | null>(null);
@@ -154,15 +153,6 @@ export const ExtensionActionButton = () => {
     window.parent.postMessage(data, `*`); // // Temporary open to all listener
   };
 
-  const parseHTML = () => {
-    const content = `
-    "Dear Parents and Guardians,\n\nWe are excited to announce the upcoming Graduation Ceremony for our students. This is a significant milestone in their educational journey, and we invite you to join us in celebrating their achievements.\n\n- **Date:** [Insert Date Here]\n- **Time:** [Insert Time Here]\n- **Venue:** [Insert Venue Here]\n\nThe ceremony will include speeches, performances, and the presentation of diplomas. We encourage all parents and guardians to attend and support our graduates on this special day.\n\nPlease mark your calendars, and we look forward to seeing you there!\n\nFor any inquiries, please contact us at parentsgateway.otp@gmail.com."
-    `;
-
-    const parsedContent = parseToTiptap(content);
-    console.log(parsedContent);
-  };
-
   return (
     <Container>
       <Flex mt={10} align={"center"} justify={"center"} gap={10}>
@@ -179,7 +169,6 @@ export const ExtensionActionButton = () => {
       <Flex mt={10} align={"center"} justify={"center"} gap={10}>
         <Button onClick={scanFormFields}>Scan</Button>
         <Button onClick={fillForm}>Fill</Button>
-        <Button onClick={parseHTML}>Parse</Button>
       </Flex>
     </Container>
   );

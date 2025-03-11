@@ -7,12 +7,6 @@ import {
 } from "ai";
 import { z } from "zod";
 
-// PG Posts types to be shared across frontend and backend
-export const PG_POSTS_TYPE = {
-  ANNOUNCEMENT: "PG_ANNOUNCEMENT",
-  CONSENT_FORM: "PG_CONSENT_FORM",
-} as const;
-
 // Approval string to be shared across frontend and backend
 export const APPROVAL = {
   YES: "Yes, confirmed.",
@@ -179,29 +173,4 @@ export function callExtensionFunction({
 
     callback?.();
   });
-}
-
-/**
- * Formats error messages to be user-friendly and non-technical
- */
-function formatErrorMessage(errorMessage: string): string {
-  // Remove technical details that wouldn't be meaningful to users
-  const sanitizedMessage = errorMessage
-    .replace(/Error:.+?:/g, "")
-    .replace(/\[.+?\]/g, "")
-    .replace(/\{.+?\}/g, "")
-    .replace(/at.+?\)/g, "")
-    .trim();
-
-  // If the message is empty after sanitizing, provide a generic message
-  if (!sanitizedMessage || sanitizedMessage.length < 5) {
-    return "Something went wrong with this request.";
-  }
-
-  // Capitalize first letter and ensure there's a period at the end
-  return (
-    sanitizedMessage.charAt(0).toUpperCase() +
-    sanitizedMessage.slice(1) +
-    (sanitizedMessage.endsWith(".") ? "" : ".")
-  );
 }

@@ -1,27 +1,22 @@
-import {
-  Button,
-  Center,
-  Container,
-  Group,
-  PasswordInput,
-  Text,
-} from "@mantine/core";
-import { setPasswordCookie } from "./actions";
+import { Button, Center, Container, Group, Input, Text } from "@mantine/core";
+import { setUserCookie } from "./actions";
 
 export default function Home() {
   return (
     <Container size="sm">
       <Center h="97vh">
-        <form action={setPasswordCookie}>
+        <form action={setUserCookie}>
           <Group align="end">
-            <PasswordInput name="talia-password" w={300} label="Password" />
+            <Input name="user_email" w={300} placeholder="Your email" />
             <Button type="submit">Enter</Button>
           </Group>
         </form>
       </Center>
 
       <Center>
-        <Text size="sm">v2.0.0</Text>
+        <Text size="sm" fw="bold">
+          v3.0.0
+        </Text>
       </Center>
     </Container>
   );

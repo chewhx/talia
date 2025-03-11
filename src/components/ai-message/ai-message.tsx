@@ -5,7 +5,7 @@ import {
   callExtensionFunction,
   getToolsRequiringConfirmation,
 } from "@/app/api/chat/utils";
-import { getSupportedExtensions } from "@/app/api/generateRichText/utils";
+import { getSupportedExtensions } from "@/utils/tipTapUtils";
 import { mapFieldsToSchema } from "@/schema/studentLearningSpace.schema";
 import { formatKey } from "@/utils/helper";
 import { UseChatHelpers, useChat } from "@ai-sdk/react";
@@ -43,6 +43,7 @@ type AIMessageProps = {
     chatRequestOptions?: ChatRequestOptions | undefined
   ) => Promise<string | null | undefined>;
   isLastAIMessage: boolean;
+  pendingToolCallConfirmation: boolean;
   messageStatus: UseChatHelpers["status"];
 };
 
@@ -50,6 +51,7 @@ export default function AIMessage({
   message,
   isLastAIMessage,
   messageStatus,
+  pendingToolCallConfirmation,
   addToolResult,
   append,
 }: AIMessageProps) {
@@ -333,6 +335,7 @@ export default function AIMessage({
                 onContentChange={onContentChange}
                 isLastAIMessage={isLastAIMessage && isLastPart}
                 messageStatus={messageStatus}
+                pendingToolCallConfirmation={pendingToolCallConfirmation}
               />
             );
           }

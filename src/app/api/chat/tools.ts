@@ -66,11 +66,10 @@ const sendEmail = tool({
 
 const retrieveResource = tool({
   description: `
-    - You should trigger a retrieval of relevant past resources from the knowledge base **only when drafting a new announcement or form from scratch.**
+    - Trigger a retrieval of relevant past resources from the knowledge base **only when drafting a new announcement or form from scratch on Parent Gateway (PG), Student Learning Space (SLS) and Google Classroom**
     - This ensures consistency in tone, structure, and formatting.
     - Do **not** retrieve resources when modifying or adding to an existing draft. Do not include reference links in the content!
-    - It is apply to SLS, Google Classroom and PG drafts.
-    -
+    - Should replace all the years to current year.
   `,
   parameters: z.object({
     query: z
@@ -99,7 +98,8 @@ const retrieveResource = tool({
 
       const response = await awsBedrockClient.send(retrieveCommand);
 
-      const relevantPastContent = response.retrievalResults?.slice(0, 2) ?? [];
+      // Take first reference only
+      const relevantPastContent = response.retrievalResults?.slice(0, 1) ?? [];
 
       const contents: string[] = [];
       const urls: string[] = [];
@@ -121,8 +121,16 @@ const retrieveResource = tool({
 
       return {
         content: `
-        "Generate a draft for my topic by following the provided template and ensuring it aligns with the tone, style, and structure of past references (if available). Do not include or return the reference content directly. Instead, adapt the language, phrasing, and formatting to match the established pattern while maintaining consistency in writing style.
-        ${contents?.join("\n----\n")}`,
+        ## Generate a draft based on the provided template, ensuring alignment with the tone, style, and structure of past content (if available).
+        Use the content below **only** as a reference for language, phrasing, and formatting—**do not** copy event-specific details (e.g., date, time, venue).
+
+        - Extract **event-specific details only from Google Calendar** if a matching topic/title is found.
+        - If no matching Google Calendar event exists, insert **placeholders** for missing details instead of using outdated information.
+        - Ensure the draft is generated **solely based on the provided topic/title**, without assuming details from past content.
+
+        ### Content:
+        ${contents?.join("\n----\n")}
+        `,
         urls: urls,
       };
     } catch (err) {
@@ -134,8 +142,7 @@ const retrieveResource = tool({
 
 const createPGFormDraft = tool({
   description: `Create a consent form with the following details:
-  - **Default Email**: **jane_tan@schools.gov.sg** (Custom email allowed only from @gmail.com, @moe.edu.sg, @schools.gov.sg).
-
+  **Default Email**: user email address (Custom email allowed only from @gmail.com, @moe.edu.sg, @schools.gov.sg).
   Include up to **5 custom questions** with these types:
     - **Single Selection**: Up to 2 choices, one selectable.
     - **Multi Selection**: Up to 7 choices, multiple selectable.
@@ -165,37 +172,6 @@ const createPGFormDraft = tool({
   }),
 });
 
-// const createPGFormDraft = tool({
-//   description: `Create a Parent Gateway (PG) consent form draft. Default email: jane_tan@schools.gov.sg. Custom email allowed only from @gmail.com, @moe.edu.sg, @schools.gov.sg.
-
-//   Include custom questions using FormQuestionsSchema and is only for YES_NO response type:
-//   1. Single Selection: Up to 2 choices, one selectable.
-//   2. Multi Selection: Up to 7 choices, multiple selectable.
-//   3. Text: Free-form response.
-//   Max 5 custom questions. Each question needs:
-//   - Title
-//   - Description
-//   - Unique UUID
-//   - Choices array (for selection types)
-//   Question structure:
-//   {
-//     type: "single_selection" | "multi_selection" | "text",
-//     title: "Question title",
-//     description: "Details/instructions",
-//     id: "uuid",
-//     choices: [{ label: "Choice 1" }, { label: "Choice 2" }],
-//     properties: {
-//       choices: [{ label: "Choice 1" }, { label: "Choice 2" }]
-//     }
-//   }
-//   Draft the form with standard consent language and include custom questions as specified. Ensure all required fields are present and properly formatted.`,
-//   parameters: z.object({
-//     fields: FormDraftSchema.describe(
-//       "Form draft schema. Leave optional fields empty if not applicable. The custom question only apply to YES or NO type of form. Acknowledgement form no need custom question!"
-//     ),
-//   }),
-// });
-
 const createPGAnnouncementDraft = tool({
   description: `Announcement Draft - Required and Optional Fields
   Please fill out the fields below. Required fields must be completed to proceed. Optional fields can be left blank if not needed.
@@ -203,8 +179,8 @@ const createPGAnnouncementDraft = tool({
   Required:
     Title (1-120 characters): Please provide the title of the announcement.
     Content (50-2000 characters): Please provide the detailed content of the announcement.
-    Enquiry Email: The default email is jane_tan@schools.gov.sg. You can provide an official contact email (must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg).
-  Optional:
+    Enquiry Email: The default email is user's email address. You can provide an official contact email (must end with @gmail.com, @moe.edu.sg, or @schools.gov.sg).
+    Optional:
     Related Links: Provide up to 3 related website links with brief descriptions.
     Shortcuts: Provide any predefined system shortcut URLs.
 

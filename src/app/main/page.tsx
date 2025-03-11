@@ -5,12 +5,15 @@ import { useUserNeedToCallTool } from "@/components/ai-message/user-need-call-to
 import HumanMessage from "@/components/human-message";
 import PromptInput from "@/components/prompt-input/prompt-input";
 import { PromptShortcuts } from "@/components/prompt-shortcuts";
+import { useUser } from "@/context/userContext";
 import { Message, useChat } from "@ai-sdk/react";
 import {
   Box,
+  Center,
   Container,
   Group,
   Loader,
+  Skeleton,
   Space,
   Stack,
   Text,
@@ -18,12 +21,31 @@ import {
 } from "@mantine/core";
 import { useInViewport, useMergedRef, useScrollIntoView } from "@mantine/hooks";
 import { ChatRequestOptions, generateId } from "ai";
-import React, { useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { tools } from "../api/chat/tools";
 import { getToolsRequiringConfirmation } from "../api/chat/utils";
 
 export default function MainPage() {
+  const { calendarEvents, userDetails, isLoading } = useUser();
   const { userNeedToCallTool } = useUserNeedToCallTool();
+
+  const chatOptions = useMemo(
+    () => ({
+      body: { calendarEvents },
+      onError: async (error: Error) => {
+        setMessages((existingMessages) => [
+          ...existingMessages,
+          {
+            role: "assistant",
+            content: error.message,
+            id: generateId(),
+          },
+        ]);
+      },
+    }),
+    [calendarEvents]
+  );
+
   const {
     messages,
     input,
@@ -36,29 +58,24 @@ export default function MainPage() {
     reload,
     setMessages,
     append,
-  } = useChat({
-    async onError(error) {
-      setMessages((existingMessage) => [
-        ...existingMessage,
-        {
-          role: "assistant",
-          content: error.message,
-          id: generateId(),
-        },
-      ]);
-    },
-  });
+  } = useChat(chatOptions);
 
-  const toolsRequiringConfirmation = getToolsRequiringConfirmation(tools);
+  const toolsRequiringConfirmation = useMemo(
+    () => getToolsRequiringConfirmation(tools),
+    []
+  );
 
-  // used to disable input while confirmation is pending
-  const pendingToolCallConfirmation = messages.some((m: Message) =>
-    m.parts?.some(
-      (part) =>
-        part.type === "tool-invocation" &&
-        part.toolInvocation.state === "call" &&
-        toolsRequiringConfirmation.includes(part.toolInvocation.toolName)
-    )
+  const pendingToolCallConfirmation = useMemo(
+    () =>
+      messages.some((m: Message) =>
+        m.parts?.some(
+          (part) =>
+            part.type === "tool-invocation" &&
+            part.toolInvocation.state === "call" &&
+            toolsRequiringConfirmation.includes(part.toolInvocation.toolName)
+        )
+      ),
+    [messages, toolsRequiringConfirmation]
   );
 
   const customReload = async (_chatRequestOptions?: ChatRequestOptions) => {
@@ -77,15 +94,11 @@ export default function MainPage() {
   };
 
   // Scrolling state and refs
-  const contentRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
   const { targetRef, scrollIntoView } = useScrollIntoView<HTMLDivElement>();
   const { ref, inViewport } = useInViewport();
-
   const mergedRef = useMergedRef(targetRef, ref);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (
       !inViewport &&
       (status === "streaming" || pendingToolCallConfirmation)
@@ -106,7 +119,6 @@ export default function MainPage() {
         }}
       >
         <Box
-          ref={contentRef}
           style={{
             flex: 1,
             overflowY: "auto",
@@ -117,10 +129,14 @@ export default function MainPage() {
           <TypographyStylesProvider>
             {!messages.length ? (
               <Stack gap={0}>
-                <Space h={100} />
-                <Text c="var(--talia-purple-1)" fw={700} fz="xl" m={0}>
-                  Hey Jane!
-                </Text>
+                <Space h={50} />
+
+                <Skeleton visible={isLoading} height={28} width="200">
+                  <Text c="var(--talia-purple-1)" fw={700} fz="xl" m={0}>
+                    Hey {userDetails?.displayName ?? "There"}!
+                  </Text>
+                </Skeleton>
+
                 <Text fz="xl" fw={600} c="var(--talia-title)">
                   How may I help you today?
                 </Text>
@@ -142,6 +158,9 @@ export default function MainPage() {
                         append={append}
                         isLastAIMessage={isLastAIMessage}
                         messageStatus={status}
+                        pendingToolCallConfirmation={
+                          pendingToolCallConfirmation
+                        }
                       />
                     );
                   }
@@ -154,8 +173,6 @@ export default function MainPage() {
                     <Loader type="dots" />
                   </Group>
                 )}
-
-                <div ref={messagesEndRef} style={{ height: "1px" }} />
               </Stack>
             )}
           </TypographyStylesProvider>

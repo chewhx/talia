@@ -26,6 +26,7 @@ type EditableAIMessageProps = {
   content: string;
   index: number;
   isLastAIMessage: boolean;
+  pendingToolCallConfirmation: boolean;
   messageStatus: UseChatHelpers["status"];
   referenceUrls?: string[];
   onContentChange?: (newContent: string) => void;
@@ -35,6 +36,7 @@ export const EditableAIMessage = ({
   content,
   index,
   isLastAIMessage,
+  pendingToolCallConfirmation,
   messageStatus,
   referenceUrls,
   onContentChange,
@@ -175,8 +177,8 @@ export const EditableAIMessage = ({
                       const fileName =
                         fileDetails?.key ?? `Reference ${referenceIndex + 1}`;
                       const truncatedFileName =
-                        fileName.length > 50
-                          ? `${fileName.slice(0, 35)}...${fileName.slice(-10)}`
+                        fileName.length > 35
+                          ? `${fileName.slice(0, 15)}...${fileName.slice(-10)}`
                           : fileName;
 
                       return (
@@ -239,76 +241,53 @@ export const EditableAIMessage = ({
           )}
         </Paper>
 
-        {messageStatus !== "streaming" && !isEditing && showActions && (
-          <Flex
-            gap="xs"
-            justify="flex-start"
-            mt={5}
-            left={0}
-            opacity={showActions ? 1 : 0}
-            display={showActions ? "block" : "none"}
-            style={{
-              transition: "opacity 0.5s ease, transform 0.5s ease",
-              pointerEvents: showActions ? "auto" : "none",
-              transform: showActions ? "translateY(0)" : "translateY(10px)",
-            }}
-          >
-            <Tooltip label="Copy" openDelay={500}>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                aria-label="Copy message"
-                onClick={handleCopy}
-                popover="auto"
-              >
-                <IconCopy
-                  style={{ width: "60%", height: "60%" }}
-                  stroke={1.5}
-                />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="Edit" openDelay={500}>
-              <ActionIcon
-                variant="subtle"
-                color={isEditing ? "blue" : "gray"}
-                aria-label={isEditing ? "Cancel edit" : "Edit message"}
-                onClick={handleToggleEdit}
-              >
-                <IconEdit
-                  style={{ width: "60%", height: "60%" }}
-                  stroke={1.5}
-                />
-              </ActionIcon>
-            </Tooltip>
-          </Flex>
-        )}
-      </div>
-
-      {/* {messageStatus !== "streaming" &&
-        referenceUrls &&
-        referenceUrls.length > 0 && (
-          <Stack align="flex-start" justify="flex-start" gap="xs" mt={10}>
-            {referenceUrls.map((url, i) => {
-              const fileDetails = parseS3Uri(url);
-              const fileName = fileDetails?.key ?? `Reference ${i + 1}`;
-              const truncatedFileName =
-                fileName.length > 50
-                  ? `${fileName.slice(0, 35)}...${fileName.slice(-10)}`
-                  : fileName;
-
-              return (
-                <Button
-                  onClick={async () => await openReference(url)}
-                  justify="flex-start"
-                  w="70%"
-                  variant="default"
+        {messageStatus !== "streaming" &&
+          !pendingToolCallConfirmation &&
+          !isEditing &&
+          showActions && (
+            <Flex
+              gap="xs"
+              justify="flex-start"
+              mt={5}
+              left={0}
+              opacity={showActions ? 1 : 0}
+              display={showActions ? "block" : "none"}
+              style={{
+                transition: "opacity 0.5s ease, transform 0.5s ease",
+                pointerEvents: showActions ? "auto" : "none",
+                transform: showActions ? "translateY(0)" : "translateY(10px)",
+              }}
+            >
+              <Tooltip label="Copy" openDelay={500}>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  aria-label="Copy message"
+                  onClick={handleCopy}
+                  popover="auto"
                 >
-                  {truncatedFileName}
-                </Button>
-              );
-            })}
-          </Stack>
-        )} */}
+                  <IconCopy
+                    style={{ width: "60%", height: "60%" }}
+                    stroke={1.5}
+                  />
+                </ActionIcon>
+              </Tooltip>
+              <Tooltip label="Edit" openDelay={500}>
+                <ActionIcon
+                  variant="subtle"
+                  color={isEditing ? "blue" : "gray"}
+                  aria-label={isEditing ? "Cancel edit" : "Edit message"}
+                  onClick={handleToggleEdit}
+                >
+                  <IconEdit
+                    style={{ width: "60%", height: "60%" }}
+                    stroke={1.5}
+                  />
+                </ActionIcon>
+              </Tooltip>
+            </Flex>
+          )}
+      </div>
     </div>
   );
 };
