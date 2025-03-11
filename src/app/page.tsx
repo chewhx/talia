@@ -1,21 +1,20 @@
-import { Button, Center, Container, Group, Input, Text } from "@mantine/core";
+import Login from "@/components/login";
+import { Center, Container, Text } from "@mantine/core";
 import { setUserCookie } from "./actions";
+import { version } from "../../package.json";
 
 export default function Home() {
   return (
     <Container size="sm">
       <Center h="97vh">
         <form action={setUserCookie}>
-          <Group align="end">
-            <Input name="user_email" w={300} placeholder="Your email" />
-            <Button type="submit">Enter</Button>
-          </Group>
+          <Login />
         </form>
       </Center>
 
       <Center>
         <Text size="sm" fw="bold">
-          v3.0.0
+          v{version}
         </Text>
       </Center>
     </Container>

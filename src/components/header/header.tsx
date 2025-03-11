@@ -7,6 +7,7 @@ import {
   Image,
   Space,
   Text,
+  UnstyledButton,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { HeaderMenu } from "./headerMenu";
@@ -23,11 +24,15 @@ export const Header = () => {
   }, []);
 
   return (
-    !isIframe && (
-      <>
-        <AppShellHeader>
-          <Container size="sm">
-            <Group align="center" h="50" justify="space-between">
+    <>
+      <AppShellHeader>
+        <Container size="sm">
+          <Group align="center" h="50" justify="space-between">
+            <UnstyledButton
+              onClick={() => {
+                window.location.reload();
+              }}
+            >
               <Group>
                 <Image
                   radius="md"
@@ -42,14 +47,14 @@ export const Header = () => {
                   <span style={{ color: "var(--talia-purple-1)" }}>Talia</span>
                 </Text>
               </Group>
+            </UnstyledButton>
 
-              <HeaderMenu />
-            </Group>
-          </Container>
-        </AppShellHeader>
+            <HeaderMenu />
+          </Group>
+        </Container>
+      </AppShellHeader>
 
-        <Space h={10} />
-      </>
-    )
+      <Space h={10} />
+    </>
   );
 };

@@ -1,4 +1,4 @@
-"use Client";
+"use client";
 
 import { clearCookies } from "@/app/actions";
 import { useUser } from "@/context/userContext";
@@ -16,7 +16,7 @@ export function HeaderMenu() {
   const router = useRouter();
 
   const signOut = async () => {
-    await clearCookies();
+    clearCookies();
     router.push("/");
   };
 
