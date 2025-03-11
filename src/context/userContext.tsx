@@ -18,6 +18,7 @@ export type UserDataProps = {
   HODName: string;
   HODEmail: string;
   calendarIDs: string[];
+  school: string;
 };
 
 type UserContextType = {

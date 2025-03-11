@@ -4,6 +4,7 @@ import { StudentLearningSpacePrefillSchema } from "@/schema/studentLearningSpace
 import {
   BedrockAgentRuntimeClient,
   RetrieveCommand,
+  RetrieveCommandInput,
 } from "@aws-sdk/client-bedrock-agent-runtime";
 import { tool } from "ai";
 import dayjs from "dayjs";
@@ -31,7 +32,7 @@ const DAYS_OF_WEEK = {
 
 const getDayOfTheWeek = tool({
   description:
-    "Get the day of the week based on a given date, for assistant to produce response with accurate date and day.",
+    "Get the day of the week based on a given date, for assistant to produce response with accurate date and day when drafting content.",
   parameters: z.object({
     year: z.number().describe("Four-digit year"),
     month: z.number().describe("Month, 2-digits, beginning at 01"),
@@ -77,8 +78,11 @@ const retrieveResource = tool({
       .describe(
         "The input query used to search the knowledge base for relevant past content. This can be a topic, title, date, name, or other relevant keyword."
       ),
+    school: z
+      .string()
+      .describe("The school name which the user is a staff or member of."),
   }),
-  execute: async ({ query }) => {
+  execute: async ({ query, school }) => {
     try {
       const awsBedrockClient = new BedrockAgentRuntimeClient({
         region: process.env.AWS_REGION!,
@@ -89,17 +93,41 @@ const retrieveResource = tool({
         },
       });
 
-      const retrieveCommand = new RetrieveCommand({
+      const retrieveCommandInput: RetrieveCommandInput = {
         knowledgeBaseId: process.env.AWS_BEDROCK_KNOWLEDGEBASE_ID,
         retrievalQuery: {
           text: query,
         },
-      });
+      };
+
+      if (school) {
+        retrieveCommandInput.retrievalConfiguration = {
+          vectorSearchConfiguration: {
+            filter: {
+              equals: {
+                key: "school",
+                value: school,
+              },
+            },
+          },
+        };
+      }
+
+      const retrieveCommand = new RetrieveCommand(retrieveCommandInput);
 
       const response = await awsBedrockClient.send(retrieveCommand);
 
       // Take first reference only
       const relevantPastContent = response.retrievalResults?.slice(0, 1) ?? [];
+
+      console.log(
+        "response.retrievalResults",
+        JSON.stringify(
+          response.retrievalResults?.map((e) => ({ metadata: e.metadata })),
+          null,
+          2
+        )
+      );
 
       const contents: string[] = [];
       const urls: string[] = [];

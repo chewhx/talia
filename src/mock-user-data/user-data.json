@@ -3,6 +3,7 @@
     "username": "jane_tan",
     "displayName": "Jane Tan",
     "emailAddress": "jane_tan@schools.gov.sg",
+    "school": "Crescent Girl's School",
     "HODName": "Grace",
     "HODEmail": "grace@estl.sg",
     "calendarIDs": ["classroom106447407036691032465@group.calendar.google.com"]
@@ -11,6 +12,7 @@
     "username": "shara",
     "displayName": "Shara",
     "emailAddress": "shara@schools.gov.sg",
+    "school": "Crescent Girl's School",
     "HODName": "Grace",
     "HODEmail": "grace@estl.sg",
     "calendarIDs": [
@@ -21,6 +23,7 @@
     "username": "cheekean1997",
     "displayName": "Chee Kean",
     "emailAddress": "cheekean1997@gmail.com",
+    "school": "Crescent Girl's School",
     "HODName": "Grace",
     "HODEmail": "grace@estl.sg",
     "calendarIDs": [
@@ -33,6 +36,7 @@
     "emailAddress": "hanxiang@gmail.com",
     "HODName": "Grace",
     "HODEmail": "grace@estl.sg",
+    "school": "Nan Hua Primary School",
     "calendarIDs": [
       "be0e0aaf2029fdddcc81685505f5e9d75f2e54210e3dfca12559c2c45cf19e26@group.calendar.google.com"
     ]
@@ -43,6 +47,7 @@
     "emailAddress": "grace@schools.gov.sg",
     "HODName": "Chee Kean",
     "HODEmail": "cheekean1997@gmail.com",
+    "school": "Nan Hua Primary School",
     "calendarIDs": [
       "be0e0aaf2029fdddcc81685505f5e9d75f2e54210e3dfca12559c2c45cf19e26@group.calendar.google.com"
     ]

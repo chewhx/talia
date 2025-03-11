@@ -86,13 +86,13 @@ async function generateSystemPrompt(calendarEvents: CalendarEvent[]) {
   const markdownFilePath = path.join(
     process.cwd(),
     "shared",
-    "system-prompt-v5.md"
+    "system-prompt.md"
   );
 
   let prompt = fs.readFileSync(markdownFilePath, "utf-8");
 
   const userEmail = (await getCookie("user_email")) as keyof typeof UserData;
-  const { HODEmail, HODName, displayName, emailAddress } =
+  const { HODEmail, HODName, displayName, emailAddress, school } =
     UserData?.[userEmail] || {};
 
   // User Info Section
@@ -102,6 +102,7 @@ async function generateSystemPrompt(calendarEvents: CalendarEvent[]) {
       - **Email:** ${emailAddress}
       - **User HOD:** ${HODName}
       - **HOD Email:** ${HODEmail}
+      - **School:** ${school}
 
     ## **Additional Context**
 
@@ -119,7 +120,7 @@ async function generateSystemPrompt(calendarEvents: CalendarEvent[]) {
     ---
   `;
 
-  console.log({ prompt });
+  // console.log({ prompt });
 
   // User's calendar events
   // if (calendarEvents && calendarEvents.length > 0) {

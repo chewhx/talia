@@ -2,7 +2,7 @@
 
 import { clearCookies } from "@/app/actions";
 import { useUser } from "@/context/userContext";
-import { ActionIcon, Menu } from "@mantine/core";
+import { ActionIcon, Menu, Stack, Text } from "@mantine/core";
 import {
   IconDashboard,
   IconLogout2,
@@ -28,14 +28,13 @@ export function HeaderMenu() {
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Label
-          style={{
-            fontSize: "14px",
-            fontWeight: 500,
-            padding: "8px 12px",
-          }}
-        >
-          Hi, {userDetails?.displayName ?? "There!"}
+        <Menu.Label>
+          <Stack gap={0}>
+            <Text fz="14px" fw={500}>
+              Hi, {userDetails?.displayName ?? "There!"}
+            </Text>
+            <Text fz="xs">{userDetails?.school}</Text>
+          </Stack>
         </Menu.Label>
 
         <Menu.Item
