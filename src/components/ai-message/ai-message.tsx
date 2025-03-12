@@ -56,10 +56,9 @@ export default function AIMessage({
   append,
 }: AIMessageProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { createDraft, preFillClassroomFormHandling, preFillSLSFormHandling } =
-    useToolActions(addToolResult, setIsLoading);
-
   const { toggleUserNeedToCallTool } = useUserNeedToCallTool();
+  const { createDraft, preFillClassroomFormHandling, preFillSLSFormHandling } =
+    useToolActions(addToolResult, setIsLoading, toggleUserNeedToCallTool);
 
   const renderToolInvocation = (toolInvocation: ToolInvocation) => {
     const { toolName, toolCallId, args } = toolInvocation;
@@ -163,7 +162,6 @@ export default function AIMessage({
                     key={`tool-call-button-${toolCallId}-${index}`}
                     option={option}
                     onClick={async () => {
-                      toggleUserNeedToCallTool();
                       await createDraft({
                         fields,
                         toolCallId,
@@ -172,7 +170,6 @@ export default function AIMessage({
                           : "PG_CONSENT_FORM",
                         option,
                       });
-                      toggleUserNeedToCallTool();
                     }}
                     toolCallId={toolCallId}
                   />
@@ -277,8 +274,6 @@ export default function AIMessage({
                     key={`tool-call-button-${toolCallId}-${index}`}
                     option={option}
                     onClick={async () => {
-                      toggleUserNeedToCallTool();
-
                       if (isSLS) {
                         await preFillSLSFormHandling(
                           option,
@@ -292,7 +287,6 @@ export default function AIMessage({
                           toolCallId
                         );
                       }
-                      toggleUserNeedToCallTool();
                     }}
                     toolCallId={toolCallId}
                   />
@@ -361,8 +355,25 @@ export default function AIMessage({
 
 const useToolActions = (
   addToolResult: AIMessageProps["addToolResult"],
-  setIsLoading?: (isLoading: boolean) => void
+  setIsLoading?: (isLoading: boolean) => void,
+  toggleUserNeedToCallTool?: (userNeedToCallTool?: boolean) => void
 ) => {
+  const extendAddToolResult = ({
+    toolCallId,
+    result,
+    pendingUserCallTool = false,
+  }: {
+    toolCallId: string;
+    result: string;
+    pendingUserCallTool?: boolean;
+  }) => {
+    toggleUserNeedToCallTool?.(pendingUserCallTool);
+    addToolResult({
+      toolCallId,
+      result,
+    });
+  };
+
   const preFillSLSFormHandling = async (
     option: ToolOption,
     fields: any,
@@ -371,9 +382,10 @@ const useToolActions = (
     if (option.result === APPROVAL.YES) {
       try {
         setIsLoading?.(true);
+        toggleUserNeedToCallTool?.(true);
 
         if ((await isCurrentWebsiteMatchAction()) !== "SLS") {
-          addToolResult({
+          extendAddToolResult({
             toolCallId,
             result:
               "Error: Inform user that need to on the Student Learning Space (SLS) tab and logged in before attempting to pre-fill content. Action needed for user.",
@@ -408,20 +420,25 @@ const useToolActions = (
             action: TALIA_EVENTS.actions.FILL_FORM_REQUEST,
             data: JSON.stringify(mappedFields),
           },
-          callback: () => addToolResult({ toolCallId, result: option.result }),
+          callback: () =>
+            extendAddToolResult({
+              toolCallId,
+              result: option.result,
+            }),
         });
       } catch (error) {
         console.error("Error in preFillSLSFormHandling:", error);
-        addToolResult({
+        extendAddToolResult({
           toolCallId,
           result:
             "Error occurred while processing the form. Please ensure that user has been logged in.",
         });
       } finally {
         setIsLoading?.(false);
+        toggleUserNeedToCallTool?.(false);
       }
     } else {
-      addToolResult({
+      extendAddToolResult({
         toolCallId,
         result: "Cancel the action. I want to modify the content.",
       });
@@ -442,13 +459,15 @@ const useToolActions = (
     try {
       if (option.title === "Confirm") {
         setIsLoading?.(true);
+        toggleUserNeedToCallTool?.(true);
 
         if ((await isCurrentWebsiteMatchAction()) !== "PG") {
-          addToolResult({
+          extendAddToolResult({
             toolCallId,
             result:
               "Error: Inform user that need to on the Parent Gateway (PG) tab and logged in before attempting to create a draft. Action needed for user.",
           });
+
           return;
         }
 
@@ -502,7 +521,10 @@ const useToolActions = (
               },
             },
             callback: () =>
-              addToolResult({ toolCallId, result: option.result }),
+              extendAddToolResult({
+                toolCallId,
+                result: option.result,
+              }),
           });
         } else {
           throw new Error(
@@ -510,19 +532,20 @@ const useToolActions = (
           );
         }
       } else {
-        addToolResult({
+        extendAddToolResult({
           toolCallId,
           result: "Cancel the action. I want to modify the content.",
         });
       }
     } catch (error: any) {
       console.error(error);
-      addToolResult({
+      extendAddToolResult({
         toolCallId,
         result: `An error occurred: ${error?.message}`,
       });
     } finally {
       setIsLoading?.(false);
+      toggleUserNeedToCallTool?.(false);
     }
   };
 
@@ -534,13 +557,15 @@ const useToolActions = (
     if (option.result === APPROVAL.YES) {
       try {
         setIsLoading?.(true);
+        toggleUserNeedToCallTool?.(true);
 
         if ((await isCurrentWebsiteMatchAction()) !== "GoogleClassroom") {
-          addToolResult({
+          extendAddToolResult({
             toolCallId,
             result:
               "Error: Inform user that need to on the Google Classroom tab and logged in before attempting to pre-fill content. Action needed for user.",
           });
+
           return;
         }
 
@@ -552,20 +577,25 @@ const useToolActions = (
             action: TALIA_EVENTS.actions.FILL_FORM_REQUEST,
             data,
           },
-          callback: () => addToolResult({ toolCallId, result: option.result }),
+          callback: () =>
+            extendAddToolResult({
+              toolCallId,
+              result: option.result,
+            }),
         });
       } catch (error) {
         console.error("Error in preFillClassroomFormHandling:", error);
-        addToolResult({
+        extendAddToolResult({
           toolCallId,
           result:
             "Error occurred while processing the form. Please ensure that user has been logged in.",
         });
       } finally {
         setIsLoading?.(false);
+        toggleUserNeedToCallTool?.(false);
       }
     } else {
-      addToolResult({
+      extendAddToolResult({
         toolCallId,
         result: "Cancel the action. I want to modify the content.",
       });
