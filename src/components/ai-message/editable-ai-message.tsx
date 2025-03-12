@@ -91,7 +91,10 @@ export const EditableAIMessage = ({
 
   const handleSubmit = () => {
     if (onContentChange) {
-      onContentChange(editedContent);
+      onContentChange(
+        editedContent +
+          `\n\n **Update the content as above and provide the revised draft for my review.**`
+      );
     }
     setIsEditing(false);
   };
