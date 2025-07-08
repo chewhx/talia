@@ -118,12 +118,18 @@ const retrieveResource = tool({
       const response = await awsBedrockClient.send(retrieveCommand);
 
       // Take first reference only
-      const relevantPastContent = response.retrievalResults?.slice(0, 1) ?? [];
+      const relevantPastContent =
+        response.retrievalResults
+          ?.sort((a, b) => (b.score || 0) - (a.score || 0))
+          .slice(0, 1) ?? [];
 
       console.log(
         "response.retrievalResults",
         JSON.stringify(
-          response.retrievalResults?.map((e) => ({ metadata: e.metadata })),
+          response.retrievalResults?.map((e) => ({
+            metadata: e.metadata,
+            score: e.score,
+          })),
           null,
           2
         )
